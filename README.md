@@ -26,6 +26,10 @@ FOSS tools are preferred.
     The config file here `.gtkwaverc` may be symlink/copied to `$HOME` or
     appropriate working directories.
 
+To track the size of this repo by number of lines of code:
+
+    wc -l `find hdl/ prj/ tb/ verif/ -type f | grep -vP '(build|svg)'`
+
 TODO: More writeup
 TODO: Writeup each project.
 TODO: Writeup each testbench.
