@@ -1,0 +1,15 @@
+
+# SMR: Surface Mount Rectangle (all on bottom side of TinyFPGA BX)
+# TH: Through Hole
+
+set_io i_pin_clk_16MHz  B2 # bottom SMR clk
+set_io b_pin_usb_p      B4 # bottom SMR usb_p
+set_io b_pin_usb_n      A4 # bottom SMR usb_n
+set_io o_pin_pu         A3 # bottom SMR usb_pu
+set_io o_pin_led        B3 # bottom SMR led
+
+# Debug-only
+#set_io --warn-no-port o_pins_debug[0] H9 # TH pin14
+#set_io --warn-no-port o_pins_debug[1] D9 # TH pin15
+#set_io --warn-no-port o_pins_debug[2] D8 # TH pin16
+#set_io --warn-no-port o_pins_debug[3] C9 # TH pin17

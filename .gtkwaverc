@@ -1,0 +1,6 @@
+# man gtkwaverc
+# https://linux.die.net/man/5/gtkwaverc
+
+show_grid 1
+splash_disable 1
+highlight_wavewindow 1
