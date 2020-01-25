@@ -43,12 +43,12 @@ apt_prereqs:
 
 tools: iverilog
 tools: verilator
-tools: gtkwave
+#tools: gtkwave
 tools: icestorm
 tools: yosys
 tools: arachne-pnr
 tools: nextpnr-ice40
-tools: tinyprog
+#tools: tinyprog
 
 BUILD_IVERILOG := $(TOOLBUILD)/iverilog
 URL_IVERILOG := https://github.com/steveicarus/iverilog.git
