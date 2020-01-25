@@ -159,7 +159,6 @@ multipnr/%/nextpnr.asc:
 	nextpnr-ice40 -q \
 		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
 		-l $(@D)/nextpnr.log \
-		--freq $(TGT_FMAX) \
 		--seed $* \
 		--opt-timing \
 		--json $(BUILD)/$(PROJ).yosys.json \
