@@ -101,7 +101,7 @@ def plotResults(fname="multipnr/results.csv"): # {{{
     plt.yticks([])
     plt.xlabel("MHz")
     plt.xlim(35, 75)
-    plt.ylim(0, 0.2)
+    plt.ylim(0, 0.25)
     plt.savefig(fname + ".pdf", bbox_inches="tight")
     plt.savefig(fname + ".png", bbox_inches="tight")
     plt.close()
