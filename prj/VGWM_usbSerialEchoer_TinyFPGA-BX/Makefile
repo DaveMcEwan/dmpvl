@@ -160,6 +160,7 @@ SYNPLIFY_PATH := $(ICECUBE2DIR)/synpbase
 TCL_LIBRARY := $(SBT_DIR)/bin/linux/lib/tcl8.4
 
 synp: $(BUILD_ICECUBE2)/$(PROJ).synplifypro.edf
+bknd: $(BUILD_ICECUBE2)/$(PROJ).icecube2.bin
 
 # Synthesize to EDIF netlist.
 # SynplifyPro (a Synopsys tool) is required instead of LSE (Lattice Synthesis
@@ -172,8 +173,11 @@ synp: $(BUILD_ICECUBE2)/$(PROJ).synplifypro.edf
 	rm -f ./stdout.log.bak
 
 # iCEcube2 backend default flow.
-bknd: $(BUILD_ICECUBE2)/$(PROJ).synplifypro.edf
+$(BUILD_ICECUBE2)/$(PROJ).icecube2.bin: $(BUILD_ICECUBE2)/$(PROJ).synplifypro.edf
 	./icecube2Backend.tcl
+	cp $(BUILD_ICECUBE2)/sbt/outputs/bitmap/$(PROJ)_bitmap.bin $@
+
+# TODO: bin to asc, `icepack -u`
 
 # }}} WIP
 
