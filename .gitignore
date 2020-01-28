@@ -1,5 +1,13 @@
 tools/*
 
-prj/*/multipnr/*
+# Build for projects.
 prj/*/build/*
+
+# Alternative builds for projects.
+prj/*/build.*/*
+
+# Build for testbenches.
 tb/*/build/*
+
+# Build and process for multipnr experiments.
+prj/*/multipnr/*

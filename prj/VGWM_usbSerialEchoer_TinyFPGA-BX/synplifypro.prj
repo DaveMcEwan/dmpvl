@@ -1,0 +1,52 @@
+
+set_option -technology SBTiCE40
+set_option -part iCE40LP8K
+set_option -package CM81
+set_option -speed_grade
+set_option -part_companion ""
+set_option -top_module "top"
+
+set_option -vlog_std sysv
+set_option -project_relative_includes 1
+set_option -include_path "../../hdl"
+set_option -distributed_compile 0
+
+add_file -verilog -lib work "../../hdl/edgeDetect.v"
+add_file -verilog -lib work "../../hdl/fifo.v"
+add_file -verilog -lib work "./usbPktRx.v"
+add_file -verilog -lib work "./usbPktTx.v"
+add_file -verilog -lib work "./usbPktTxMux.v"
+add_file -verilog -lib work "./usbEpOutArbiter.v"
+add_file -verilog -lib work "./usbEpInArbiter.v"
+add_file -verilog -lib work "./usbPeOut.v"
+add_file -verilog -lib work "./usbPeIn.v"
+add_file -verilog -lib work "./usbPe.v"
+add_file -verilog -lib work "./usbCtrlSerial.v"
+add_file -verilog -lib work "./usbEpBridge.v"
+add_file -verilog -lib work "./usbSerial.v"
+add_file -verilog -lib work "./top.v"
+add_file -verilog -lib work "./build/pll48.v"
+
+set_option -frequency auto
+set_option -srs_instrumentation 1
+set_option -write_verilog 0
+set_option -write_vhdl 0
+
+set_option -maxfan 10000
+set_option -rw_check_on_ram 0
+set_option -disable_io_insertion 0
+set_option -pipe 1
+set_option -retiming 0
+set_option -update_models_cp 0
+set_option -fix_gated_and_generated_clocks 1
+set_option -run_prop_extract 1
+set_option -no_sequential_opt 0
+set_option -symbolic_fsm_compiler 1
+set_option -compiler_compatible 0
+set_option -resource_sharing 1
+set_option -auto_infer_blackbox 0
+set_option -write_apr_constraint 1
+
+project -result_file "build.icecube2/top.synplifypro.edf"
+project -run synthesis -clean
+
