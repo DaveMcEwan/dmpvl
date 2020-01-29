@@ -510,7 +510,9 @@ assign o_et0Data = descriptor_deviceNotConfig ?
 wire [6:0] nBytesDescriptor = descriptor_deviceNotConfig ?
   DEVICE_BLENGTH`LSb(7) :
   CONFIG_WTOTALLENGTH`LSb(7);
-wire partialDescriptor = ({9'd0, nBytesDescriptor} < wLength);
+// NOTE: Possible bug in Linux USB driver allows bits to be set in upper byte of
+// wLength, same behaviour required in different form in VGWM design.
+wire partialDescriptor = ({1'b0, nBytesDescriptor} < wLength`LSb(8));
 `asrt(wLength, i_clk, !i_rst && beginCtrlTfr && !partialDescriptor, (wLength[15:7] == '0))
 
 // NOTE: Only to meet timing when synthed.
