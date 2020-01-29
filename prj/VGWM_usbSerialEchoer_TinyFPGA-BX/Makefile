@@ -7,9 +7,10 @@ PCF ?= pins.pcf
 PROJ := top
 BUILD := ./build
 
-SRC = \
+SRC := \
 	../../hdl/edgeDetect.v \
 	../../hdl/fifo.v \
+	../../hdl/fpgaReset.v \
 	usbPktTxMux.v \
 	usbPktTx.v \
 	usbPktRx.v \

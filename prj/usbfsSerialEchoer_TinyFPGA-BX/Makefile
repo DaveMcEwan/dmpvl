@@ -11,6 +11,7 @@ BUILD := ./build
 
 SRC := \
 	../../hdl/fifo.v \
+	../../hdl/fpgaReset.v \
 	../../hdl/usbfsPktRx.v \
 	../../hdl/usbfsPktTx.v \
 	../../hdl/usbfsTxn.v \

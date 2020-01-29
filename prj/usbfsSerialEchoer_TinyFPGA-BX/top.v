@@ -18,13 +18,12 @@ pll48 u_pll48 (
   .locked     (pllLocked)
 );
 
-// Generate reset signal
 wire rst;
-reg [5:0] resetCounter_q = 6'd0;
-always @(posedge clk_48MHz)
-  if (pllLocked && rst)
-    resetCounter_q <= resetCounter_q + 6'd1;
-assign rst = !resetCounter_q[5];
+fpgaReset u_rst (
+  .i_clk        (clk_48MHz),
+  .i_pllLocked  (pllLocked),
+  .o_rst        (rst)
+);
 
 reg [22:0] ledCounter_q;
 always @(posedge clk_48MHz)

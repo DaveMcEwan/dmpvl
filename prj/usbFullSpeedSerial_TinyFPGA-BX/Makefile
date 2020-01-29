@@ -11,6 +11,7 @@ BUILD := ./build
 
 SRC := \
 	../../hdl/fifo.v \
+	../../hdl/fpgaReset.v \
 	../../verif/usbFullSpeedPacketReceiver.v \
 	../../verif/usbFullSpeedPacketSender.v \
 	../../verif/usbFullSpeedTransactor.v \

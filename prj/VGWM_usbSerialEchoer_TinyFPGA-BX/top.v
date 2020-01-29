@@ -18,17 +18,16 @@ pll48 u_pll48 (
   .locked     (pllLocked)
 );
 
-// Generate reset signal
-wire reset;
-reg [5:0] resetCounter_q = 6'd0;
-always @(posedge clk_48MHz)
-  if (pllLocked && reset)
-    resetCounter_q <= resetCounter_q + 6'd1;
-assign reset = !resetCounter_q[5];
+wire rst;
+fpgaReset u_rst (
+  .i_clk        (clk_48MHz),
+  .i_pllLocked  (pllLocked),
+  .o_rst        (rst)
+);
 
 reg [22:0] ledCounter_q;
 always @(posedge clk_48MHz)
-  if (reset)
+  if (rst)
     ledCounter_q <= 23'd0;
   else
     ledCounter_q <= ledCounter_q + 23'd1;
@@ -78,7 +77,7 @@ wire       uartOut_ready;
 
 usbSerial u_usbSerial (
   .i_clk_48MHz      (clk_48MHz),
-  .i_rst            (reset),
+  .i_rst            (rst),
 
   .i_usbRx_p        (usbRx_p),
   .i_usbRx_n        (usbRx_n),
