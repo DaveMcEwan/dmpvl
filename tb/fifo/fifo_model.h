@@ -63,6 +63,8 @@ class FifoModel {
             int unsigned o_rdptr,
 
             int unsigned o_valid,
+            int unsigned o_nEntries,
+
             int unsigned o_entries
         );
 };

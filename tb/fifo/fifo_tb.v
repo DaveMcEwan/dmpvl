@@ -21,6 +21,7 @@ module fifo_tb (
   output wire [ 2:0]    fifo_8_8_mem_o_wrptr,
   output wire [ 2:0]    fifo_8_8_mem_o_rdptr,
   output wire [ 7:0]    fifo_8_8_mem_o_valid,
+  output wire [ 3:0]    fifo_8_8_mem_o_nEntries,
   output wire [63:0]    fifo_8_8_mem_o_entries,
   // }}} Default parameters.
 
@@ -40,6 +41,7 @@ module fifo_tb (
   output wire [ 0:0]    fifo_1_2_mem_o_wrptr,
   output wire [ 0:0]    fifo_1_2_mem_o_rdptr,
   output wire [ 1:0]    fifo_1_2_mem_o_valid,
+  output wire [ 1:0]    fifo_1_2_mem_o_nEntries,
   output wire [ 1:0]    fifo_1_2_mem_o_entries,
   // }}} Minimal width and depth.
 
@@ -59,6 +61,7 @@ module fifo_tb (
   output wire [ 2:0]    fifo_5_5_mem_o_wrptr,
   output wire [ 2:0]    fifo_5_5_mem_o_rdptr,
   output wire [ 4:0]    fifo_5_5_mem_o_valid,
+  output wire [ 2:0]    fifo_5_5_mem_o_nEntries,
   output wire [24:0]    fifo_5_5_mem_o_entries,
   // }}} Non-pow2 width and depth.
 
@@ -78,6 +81,7 @@ module fifo_tb (
   output wire [ 0:0]    fifo_8_2_flops_o_wrptr,
   output wire [ 0:0]    fifo_8_2_flops_o_rdptr,
   output wire [ 1:0]    fifo_8_2_flops_o_valid,
+  output wire [ 1:0]    fifo_8_2_flops_o_nEntries,
   output wire [15:0]    fifo_8_2_flops_o_entries,
   // }}} Flops, not memory block.
 
@@ -93,9 +97,9 @@ module fifo_tb (
 
 // {{{ Default parameters.
 fifo #(
-  .WIDTH        (8),
-  .DEPTH        (8),
-  .FLOPSNOTMEM  (0)
+  .WIDTH          (8),
+  .DEPTH          (8),
+  .FLOPS_NOT_MEM  (0)
 ) u_fifo_8_8_mem (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -118,15 +122,17 @@ fifo #(
   .o_rdptr    (fifo_8_8_mem_o_rdptr),
 
   .o_valid    (fifo_8_8_mem_o_valid),
+  .o_nEntries (fifo_8_8_mem_o_nEntries),
+
   .o_entries  (fifo_8_8_mem_o_entries)
 );
 // }}} Default parameters.
 
 // {{{ Minimal width and depth.
 fifo #(
-  .WIDTH        (1),
-  .DEPTH        (2),
-  .FLOPSNOTMEM  (0)
+  .WIDTH          (1),
+  .DEPTH          (2),
+  .FLOPS_NOT_MEM  (0)
 ) u_fifo_1_2_mem (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -149,15 +155,17 @@ fifo #(
   .o_rdptr    (fifo_1_2_mem_o_rdptr),
 
   .o_valid    (fifo_1_2_mem_o_valid),
+  .o_nEntries (fifo_1_2_mem_o_nEntries),
+
   .o_entries  (fifo_1_2_mem_o_entries)
 );
 // }}} Minimal width and depth.
 
 // {{{ Non-pow2 width and depth.
 fifo #(
-  .WIDTH        (5),
-  .DEPTH        (5),
-  .FLOPSNOTMEM  (0)
+  .WIDTH          (5),
+  .DEPTH          (5),
+  .FLOPS_NOT_MEM  (0)
 ) u_fifo_5_5_mem (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -180,15 +188,17 @@ fifo #(
   .o_rdptr    (fifo_5_5_mem_o_rdptr),
 
   .o_valid    (fifo_5_5_mem_o_valid),
+  .o_nEntries (fifo_5_5_mem_o_nEntries),
+
   .o_entries  (fifo_5_5_mem_o_entries)
 );
 // }}} Non-pow2 width and depth.
 
 // {{{ Flops, not memory block.
 fifo #(
-  .WIDTH        (8),
-  .DEPTH        (2),
-  .FLOPSNOTMEM  (1)
+  .WIDTH          (8),
+  .DEPTH          (2),
+  .FLOPS_NOT_MEM  (1)
 ) u_fifo_8_2_flops (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -211,6 +221,8 @@ fifo #(
   .o_rdptr    (fifo_8_2_flops_o_rdptr),
 
   .o_valid    (fifo_8_2_flops_o_valid),
+  .o_nEntries (fifo_8_2_flops_o_nEntries),
+
   .o_entries  (fifo_8_2_flops_o_entries)
 );
 // }}} Flops, not memory block.

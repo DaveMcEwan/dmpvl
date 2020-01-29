@@ -66,6 +66,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_core->fifo_8_8_mem_o_rdptr,
 
       tb->m_core->fifo_8_8_mem_o_valid,
+      tb->m_core->fifo_8_8_mem_o_nEntries,
+
       tb->m_core->fifo_8_8_mem_o_entries
     ); // }}}
 
@@ -93,6 +95,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_core->fifo_1_2_mem_o_rdptr,
 
       tb->m_core->fifo_1_2_mem_o_valid,
+      tb->m_core->fifo_1_2_mem_o_nEntries,
+
       tb->m_core->fifo_1_2_mem_o_entries
     ); // }}}
 
@@ -120,6 +124,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_core->fifo_5_5_mem_o_rdptr,
 
       tb->m_core->fifo_5_5_mem_o_valid,
+      tb->m_core->fifo_5_5_mem_o_nEntries,
+
       tb->m_core->fifo_5_5_mem_o_entries
     ); // }}}
 
@@ -147,6 +153,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_core->fifo_8_2_flops_o_rdptr,
 
       tb->m_core->fifo_8_2_flops_o_valid,
+      tb->m_core->fifo_8_2_flops_o_nEntries,
+
       tb->m_core->fifo_8_2_flops_o_entries
     ); // }}}
 

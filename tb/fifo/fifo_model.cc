@@ -149,6 +149,8 @@ void FifoModel::check(
     int unsigned o_rdptr,
 
     int unsigned o_valid,
+    int unsigned o_nEntries,
+
     int unsigned o_entries
 ) {
   if (i_rst) {
@@ -193,10 +195,16 @@ void FifoModel::check(
       isFull(), o_full);
   }
 
-  if (nEntries != popcnt(o_valid)) {
+  if (4 > depth && nEntries != popcnt(o_valid)) {
     modelPrint(ERROR, t, info(),
       "model: nEntries=%d; design: popcnt(o_valid)=%d o_valid=0x%x",
       nEntries, popcnt(o_valid), o_valid);
+  }
+
+  if (depth >= 4 && nEntries != o_nEntries) {
+    modelPrint(ERROR, t, info(),
+      "model: nEntries=%d; design: o_nEntries=%d",
+      nEntries, o_nEntries);
   }
 
   if ((o_data != getEntry(rd_ptr)) && !isEmpty()) {

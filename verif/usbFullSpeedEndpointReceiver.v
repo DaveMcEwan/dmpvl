@@ -39,9 +39,9 @@ always @*
 wire push = (nBytes_pushed_q != nBytes_topush_q);
 wire empty;
 fifo #(
-  .WIDTH        (8),
-  .DEPTH        (2),
-  .FLOPSNOTMEM  (0)
+  .WIDTH          (8),
+  .DEPTH          (2),
+  .FLOPS_NOT_MEM  (0)
 ) u_fifo (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -63,8 +63,10 @@ fifo #(
   .o_wrptr    (),
   .o_rdptr    (),
 
-  .o_valid    (),
-  .o_entries  ()
+  .o_valid    (), // unused
+  .o_nEntries (), // unused
+
+  .o_entries  ()  // unused
 );
 // }}} fifo
 

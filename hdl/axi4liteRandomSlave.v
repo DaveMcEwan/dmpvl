@@ -228,6 +228,8 @@ fifo #(
   .o_rdptr    (), // unused
 
   .o_valid    (), // unused
+  .o_nEntries (), // unused
+
   .o_entries  ()  // unused
 );
 // }}} wfifo
@@ -258,6 +260,8 @@ fifo #(
   .o_rdptr    (), // unused
 
   .o_valid    (), // unused
+  .o_nEntries (), // unused
+
   .o_entries  ()  // unused
 );
 // }}} bfifo
@@ -288,6 +292,8 @@ fifo #(
   .o_rdptr    (), // unused
 
   .o_valid    (), // unused
+  .o_nEntries (), // unused
+
   .o_entries  ()  // unused
 );
 // }}} rfifo

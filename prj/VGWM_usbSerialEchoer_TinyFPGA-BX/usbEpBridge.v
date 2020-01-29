@@ -83,9 +83,9 @@ assign outEp_reqGranted = o_outEp_req && i_outEp_grant;
 wire fifoOut_full;
 wire fifoOut_empty;
 fifo #(
-  .WIDTH        (8),
-  .DEPTH        (8),
-  .FLOPSNOTMEM  (0)
+  .WIDTH          (8),
+  .DEPTH          (8),
+  .FLOPS_NOT_MEM  (0)
 ) u_fifoOut (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -108,6 +108,8 @@ fifo #(
   .o_rdptr    (),
 
   .o_valid    (),
+  .o_nEntries (),
+
   .o_entries  ()
 );
 // }}} Host-to-consumer buffer
