@@ -2,7 +2,6 @@
 `include "dff.vh"
 
 module usbfsPktRx #(
-  parameter AS_HOST_NOT_DEV = 0, // 1=Operate as host, 0=Operate as device/function.
   parameter MAX_PKT = 8  // in {8,16,32,64}. wMaxPacketSize
 ) (
   input  wire                       i_clk_48MHz,
@@ -44,6 +43,11 @@ module usbfsPktRx #(
 // assuming that the data sink is external.
 
 `include "usbSpec.vh"
+
+// Max number of bytes in a packet is (1<SOP> + 1<PID> + MAX_PKT + 2<CRC16>)
+// SOP is always sent when (nBytesSent_q == 0).
+// PID is always sent when (nBytesSent_q == 1).
+localparam NBYTES_W = $clog2(MAX_PKT) + 1;
 
 // {{{ Transition detection and clock recovery
 // approx 9 dff
@@ -164,7 +168,7 @@ wire byteRcvd = (bitCntr_q == '1) && sampleDin;
 // PID is always sent when (nBytesSent_q == 0).
 // Token fields byte0 is always sent when (nBytesSent_q == 1).
 // Token fields byte1 (with crc5) is always sent when (nBytesSent_q == 2).
-`dff_cg_srst(reg [$clog2(MAX_PKT):0], nBytesRcvd, i_clk_48MHz, byteRcvd, sop, '0)
+`dff_cg_srst(reg [NBYTES_W-1:0], nBytesRcvd, i_clk_48MHz, byteRcvd, sop, '0)
 always @* nBytesRcvd_d = nBytesRcvd_q + 1;
 
 // All packets and fields are an integer number of bytes in length.
@@ -186,128 +190,11 @@ assign o_pid = pid_q;
 always @* pidOkay_d = (~byteShift_d[7:4] == byteShift_d[3:0]);
 assign o_pidOkay = pidOkay_q;
 
-// }}} Decode and check PID.
-
-// {{{ PID sanity check
-
 wire [1:0] pidCodingGroup = pid_q[1:0];
-wire pidGrp_isToken     = (pidCodingGroup == PIDGROUP_TOKEN);
-wire pidGrp_isData      = (pidCodingGroup == PIDGROUP_DATA);
-wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
-wire pidGrp_isSpecial   = (pidCodingGroup == PIDGROUP_SPECIAL);
+wire pidGrp_isToken = (pidCodingGroup == PIDGROUP_TOKEN);
+wire pidGrp_isData  = (pidCodingGroup == PIDGROUP_DATA);
 
-// A token consists of a PID, specifying either IN, OUT, or SETUP packet type,
-// and ADDR and ENDP fields.
-// For OUT and SETUP transactions, the address and endpoint fields uniquely
-// identify the endpoint that will receive the subsequent data packet.
-// For IN transactions, these fields uniquely identify which endpoint should
-// transmit a data packet.
-// *Only the host can issue token packets.*
-// IN PIDs define a data transaction dev->host.
-// OUT and SETUP PIDs define data transactions host->dev.
-wire pid_isTokenIn    = (pid_q == PID_TOKEN_IN);
-wire pid_isTokenOut   = (pid_q == PID_TOKEN_OUT);
-wire pid_isTokenSetup = (pid_q == PID_TOKEN_SETUP);
-
-// Start of Frame (SOF) packets are issued by the host at a nominal rate of once
-// every 1ms ±0.05.
-// Frame timing sensitive devices, which do not need to keep track of frame
-// number, need only decode the SOF PID; they can ignore the frame number and
-// its CRC.
-// If a device needs to track frame number, it must comprehend both the PID
-// and the time stamp.
-wire pid_isTokenSof   = (pid_q == PID_TOKEN_SOF);
-
-// There are two types of data packets, identified by differing PIDs.
-// Two data packet PIDs are defined to support data toggle synchronization.
-// Data must always be sent in integral numbers of bytes.
-wire pid_isData0 = (pid_q == PID_DATA_DATA0);
-wire pid_isData1 = (pid_q == PID_DATA_DATA1);
-
-// ACK indicates that the data packet was received without bit stuff or CRC
-// errors over the data field and that the data PID was received correctly.
-// ACK may be issued either when sequence bits match and the receiver can accept
-// data or when sequence bits mismatch and the sender and receiver must
-// resynchronize to each other.
-// An ACK handshake is applicable only in transactions in which data has been
-// transmitted and where a handshake is expected.
-// ACK can be returned by the host for IN transactions and by a device for OUT
-// transactions.
-wire pid_isHandshakeAck   = (pid_q == PID_HANDSHAKE_ACK);
-
-// NAK indicates that a device was unable to accept data from the host (OUT)
-// or that a device has no data to transmit to the host (IN).
-// NAK can only be returned by devices in the data phase of IN transactions or
-// the handshake phase of OUT transactions.
-// *The host can never issue a NAK.*
-// NAK is used for flow control purposes to indicate that a device is
-// temporarily unable to transmit or receive data, but will eventually be able
-// to do so without need of host intervention.
-// NAK is also used by interrupt endpoints to indicate that no interrupt is
-// pending.
-wire pid_isHandshakeNak = (pid_q == PID_HANDSHAKE_NAK);
-
-// STALL is returned by a device in response to an IN token or after the data
-// phase of an OUT.
-// STALL indicates that a device is unable to transmit or receive data, and
-// that the condition requires host intervention to remove the stall.
-// Once a device’s endpoint is stalled, the device must continue returning STALL
-// until the condition causing the stall has been cleared through host
-// intervention.
-// *The host is not permitted to return a STALL under any condition.*
-wire pid_isHandshakeStall = (pid_q == PID_HANDSHAKE_STALL);
-
-// USB supports signaling at two speeds: full speed signaling at 12.0 Mbs and
-// low speed signaling at 1.5 Mbps.
-// Hubs disable downstream bus traffic to all ports to which low speed devices
-// are attached during full speed downstream signaling.
-// This is required both for EMI reasons and to prevent any possibility that a
-// low speed device might misinterpret downstream a full speed packet as being
-// addressed to it.
-// All downstream packets transmitted to low speed devices require a preamble.
-// The preamble consists of a SOP followed by a PID, both sent at full speed.
-// Hubs must comprehend the PRE PID; all other USB devices must ignore it and
-// treat it as undefined.
-// After the end of the preamble PID, the host must wait at least four full
-// speed bit times during which hubs must complete the process of configuring
-// their repeater sections to accept low speed signaling.
-// During this hub setup interval, hubs must drive their full speed and low
-// speed ports to their respective idle states.
-// Hubs must be ready to accept low speed signaling from the host before the
-// end of the hub setup interval.
-// NOTE: This PID is not supported by this driver as I have no current need for
-// hub logic.
-wire pid_isSpecialPre = (pid_q == PID_SPECIAL_PRE);
-
-`ifndef SYNTHESIS
-wire [6:0] hostToDevPids = {
-  pid_isTokenIn,
-  pid_isTokenOut,
-  pid_isTokenSetup,
-  pid_isTokenSof,
-  pid_isData0,
-  pid_isData1,
-  pid_isHandshakeAck};
-
-wire [4:0] devToHostPids = {
-  pid_isData0,
-  pid_isData1,
-  pid_isHandshakeAck,
-  pid_isHandshakeNak,
-  pid_isHandshakeStall};
-
-wire pid_type_onehot;
-generate if (AS_HOST_NOT_DEV != 0) begin
-  assign pid_type_onehot = $onehot(devToHostPids);
-end else begin
-  assign pid_type_onehot = $onehot(hostToDevPids);
-end endgenerate
-
-// Assume requests have sane values for i_pid.
-`asrt(pid_type_onehot, i_clk_48MHz, !i_rst && eop, pid_type_onehot)
-`endif
-
-// }}} PID sanity check
+// }}} Decode and check PID.
 
 // {{{ Calculate CRCs.
 // approx 21 dff
@@ -376,7 +263,7 @@ assign o_lastEndp = {tokenField1_q, tokenField0_q[7]};
 
 wire clearDataCntr = samplePid && (byteShift_d[1:0] == PIDGROUP_DATA);
 wire incrDataCntr = byteRcvd && pidGrp_isData;
-`dff_cg_srst(reg [$clog2(MAX_PKT):0], data_nBytes, i_clk_48MHz, byteRcvd, clearDataCntr, '0)
+`dff_cg_srst(reg [NBYTES_W-1:0], data_nBytes, i_clk_48MHz, byteRcvd, clearDataCntr, '0)
 always @* data_nBytes_d = incrDataCntr ? data_nBytes_q + 1 : data_nBytes_q;
 
 assign o_lastData_nBytes = (data_nBytes_q - 'd2);
@@ -400,7 +287,30 @@ end endgenerate
 // {{{ Display received packet
 `ifndef SYNTHESIS
 
+wire pid_isTokenIn    = (pid_q == PID_TOKEN_IN);
+wire pid_isTokenOut   = (pid_q == PID_TOKEN_OUT);
+wire pid_isTokenSetup = (pid_q == PID_TOKEN_SETUP);
+wire pid_isTokenSof   = (pid_q == PID_TOKEN_SOF);
+wire pid_isData0 = (pid_q == PID_DATA_DATA0);
+wire pid_isData1 = (pid_q == PID_DATA_DATA1);
+wire pid_isHandshakeAck   = (pid_q == PID_HANDSHAKE_ACK);
+
+wire [6:0] hostToDevPids = {
+  pid_isTokenIn,
+  pid_isTokenOut,
+  pid_isTokenSetup,
+  pid_isTokenSof,
+  pid_isData0,
+  pid_isData1,
+  pid_isHandshakeAck};
+
+wire pid_type_onehot = $onehot(hostToDevPids);
+
+// Assume requests have sane values for i_pid.
+`asrt(pid_type_onehot, i_clk_48MHz, !i_rst && eop, pid_type_onehot)
+
 wire [10:0] tokenFrameNumber = {o_lastEndp, o_lastAddr};
+wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
 
 always @(posedge i_clk_48MHz) if (o_eop) begin : info
   string s_pidName;
@@ -421,10 +331,6 @@ always @(posedge i_clk_48MHz) if (o_eop) begin : info
     $sformat(s_pidName, "Data[DATA1]");
   else if (pid_isHandshakeAck)
     $sformat(s_pidName, "Handshake[ACK]");
-  else if (pid_isHandshakeNak)
-    $sformat(s_pidName, "Handshake[NAK]");
-  else if (pid_isHandshakeStall)
-    $sformat(s_pidName, "Handshake[STALL]");
   else
     $sformat(s_pidName, "UNKNOWN");
 

@@ -126,7 +126,6 @@ always @* tx_acceptance_d = tx_ready && tx_valid;
 wire tx_accepted = !tx_acceptance_d && tx_acceptance_q;
 
 usbfsPktRx #(
-  .AS_HOST_NOT_DEV  (AS_HOST_NOT_DEV),
   .MAX_PKT          (MAX_PKT)
 ) u_rx (
   .i_clk_48MHz          (i_clk_48MHz),
@@ -153,7 +152,6 @@ usbfsPktRx #(
 );
 
 usbfsPktTx #(
-  .AS_HOST_NOT_DEV  (AS_HOST_NOT_DEV),
   .MAX_PKT          (MAX_PKT)
 ) u_tx (
   .i_clk_12MHz              (strobe_12MHz),
