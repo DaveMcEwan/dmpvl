@@ -48,6 +48,7 @@ iverilog_tbs: iverilog_usbFullSpeedPackets_tb
 iverilog_tbs: iverilog_usbFullSpeedTransactions_tb
 #iverilog_tbs: iverilog_usbFullSpeedSerial_tb
 #iverilog_tbs: iverilog_VGWM_usbSerialEchoer_tb
+#iverilog_tbs: iverilog_usbfsSerialEchoer_tb
 
 iverilog_onehotIdx_tb:
 	make -C tb/onehotIdx build/onehotIdx_tb.iverilog.vcd
@@ -70,6 +71,9 @@ iverilog_usbFullSpeedSerial_tb:
 iverilog_VGWM_usbSerialEchoer_tb:
 	make -C tb/usbFullSpeedSerial build/VGWM_usbSerialEchoer_tb.iverilog.vcd
 
+iverilog_usbfsSerialEchoer_tb:
+	make -C tb/usbFullSpeedSerial build/usbfsSerialEchoer_tb.iverilog.vcd
+
 # }}} iverilog
 
 clean_tbs:
@@ -81,12 +85,14 @@ clean_tbs:
 	make -C tb/usbFullSpeedTransactions clean
 	make -C tb/usbFullSpeedSerial clean
 	make -C tb/VGWM_usbSerialEchoer clean
+	make -C tb/usbfsSerialEchoer clean
 
 # {{{ projects
 
 projects: probsys0
 projects: usbFullSpeedSerial_TinyFPGA-BX
 projects: VGWM_usbSerialEchoer_TinyFPGA-BX
+projects: usbfsSerialEchoer_TinyFPGA-BX
 
 probsys0:
 	make -C prj/probsys0
@@ -97,10 +103,14 @@ usbFullSpeedSerial_TinyFPGA-BX:
 VGWM_usbSerialEchoer_TinyFPGA-BX:
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX
 
+usbfsSerialEchoer_TinyFPGA-BX:
+	make -C prj/usbfsSerialEchoer_TinyFPGA-BX
+
 clean_projects:
 	make -C prj/probsys0 clean
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX clean
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX clean
+	make -C prj/usbfsSerialEchoer_TinyFPGA-BX clean
 
 # }}} projects
 
