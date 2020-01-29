@@ -23,13 +23,24 @@ module usbfsPktRx #(
 
   // PID from the last packet received.
   // ADDR,ENDP fields from the last OUT/SETUP token received.
-  // Data fields from the last data payload received.
   // Setup before the o_eop pulse.
   output wire [3:0]                 o_pid,
-  output wire [8*MAX_PKT-1:0]       o_lastData,
-  output wire [$clog2(MAX_PKT):0]   o_lastData_nBytes,
   output wire [6:0]                 o_addr,
   output wire [3:0]                 o_endp,
+
+  // TODO: rm
+  // Data fields from the last data payload received.
+  output wire [8*MAX_PKT-1:0]       o_lastData,
+  output wire [$clog2(MAX_PKT):0]   o_lastData_nBytes,
+
+  // Buffer read interface.
+  // Byte from buffer index i_rdIdx is driven on o_rdByte on cycle after i_rdEn.
+  // o_rdNBytes indicates how many bytes, filled from LSB, are valid - setup
+  // before the o_eop pulse.
+  input  wire                       i_rdEn,
+  input  wire [$clog2(MAX_PKT)-1:0] i_rdIdx,
+  output wire [7:0]                 o_rdByte,
+  output wire [$clog2(MAX_PKT):0]   o_rdNBytes,
 
   // Results of the integrity checks from the last packet received.
   // Must be used in conjunction with o_pid to determine corruption.
@@ -270,6 +281,22 @@ generate for (b=0; b < MAX_PKT; b=b+1) begin
 
   assign o_lastData[8*b +: 8] = data_m[b]; // NOTE: Prevents synth to mem.
 end endgenerate
+
+
+// NOTE: WIP Allow use of memory instead of flops.
+// Using a RAM block on iCE40 allows packet size to be increased without using
+// more LUTs and improves timing.
+// Yosys attribute "mem2reg" can be used to force flops instead of RAM if
+// required.  E.g.  (* mem2reg *) reg [7:0] dataTODO_m [MAX_PKT];
+reg [7:0] dataTODO_m [MAX_PKT];
+wire [$clog2(MAX_PKT)-1:0] wrIdx = data_nBytes_q[$clog2(MAX_PKT)-1:0];
+always @(posedge i_clk_48MHz)
+  if (incrDataCntr) dataTODO_m[wrIdx] <= byteShift_d;
+
+`dff_cg_norst(reg [7:0], rdByte, i_clk_48MHz, i_rdEn)
+always @* rdByte_d = dataTODO_m[i_rdIdx];
+assign o_rdByte = rdByte_q;
+assign o_rdNBytes = (data_nBytes_q - 'd2);
 
 // }}} Decode data and data_nBytes.
 

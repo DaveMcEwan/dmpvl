@@ -44,13 +44,21 @@ localparam HOST2DEV_N_ENDP = 2;
 localparam DEV2HOST_N_ENDP = 2;
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT)+1;
+localparam RDIDX_W = $clog2(MAX_PKT);
 
-wire [HOST2DEV_N_ENDP-1:0]  dev_o_erValid,  dev_i_erReady;
+wire [HOST2DEV_N_ENDP-1:0]  dev_o_erValid, dev_i_erReady;
 
-wire [DEV2HOST_N_ENDP-1:0]  dev_i_etValid,  dev_o_etReady;
+wire [DEV2HOST_N_ENDP-1:0]  dev_i_etValid, dev_o_etReady;
 
+// TODO: rm
 wire [DATA_W-1:0]           dev_o_erData;
 wire [NBYTES_W-1:0]         dev_o_erData_nBytes;
+
+// TODO: WIP
+wire [HOST2DEV_N_ENDP-1:0]          dev_i_erRdEn;
+wire [HOST2DEV_N_ENDP*RDIDX_W-1:0]  dev_i_erRdIdx;
+wire [7:0]                          dev_o_erRdByte;
+wire [NBYTES_W-1:0]                 dev_o_erRdNBytes;
 
 wire [DEV2HOST_N_ENDP*DATA_W-1:0]   dev_i_etData;
 wire [DEV2HOST_N_ENDP*NBYTES_W-1:0] dev_i_etData_nBytes;
@@ -84,8 +92,16 @@ usbfsTxn #( // {{{ u_txn
   // Endpoints receiving data (HOST2DEV_N_ENDP)
   .i_erReady                (dev_i_erReady),
   .o_erValid                (dev_o_erValid),
+
+  // TODO: rm
   .o_erData                 (dev_o_erData),
   .o_erData_nBytes          (dev_o_erData_nBytes),
+
+  // TODO: WIP
+  .i_erRdEn                 (dev_i_erRdEn),
+  .i_erRdIdx                (dev_i_erRdIdx),
+  .o_erRdByte               (dev_o_erRdByte),
+  .o_erRdNBytes             (dev_o_erRdNBytes),
 
   // Endpoints transmitting data (DEV2HOST_N_ENDP)
   .o_etReady                (dev_o_etReady),
@@ -127,8 +143,16 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
 
   .o_er0Ready               (dev_i_erReady[0]),
   .i_er0Valid               (dev_o_erValid[0]),
+
+  // TODO: rm
   .i_er0Data                (dev_o_erData),
   .i_er0Data_nBytes         (dev_o_erData_nBytes),
+
+  // TODO: WIP
+  .o_er0RdEn                (dev_i_erRdEn[0]),
+  .o_er0RdIdx               (dev_i_erRdIdx[0*RDIDX_W +: RDIDX_W]),
+  .i_er0RdByte              (dev_o_erRdByte),
+  .i_er0RdNBytes            (dev_o_erRdNBytes),
 
   .i_et0Ready               (dev_o_etReady[0]),
   .o_et0Valid               (dev_i_etValid[0]),
@@ -152,8 +176,16 @@ usbfsEndpRx #( // {{{ u_endpRx
 
   .o_erReady                (dev_i_erReady[1]),
   .i_erValid                (dev_o_erValid[1]),
+
+  // TODO: rm
   .i_erData                 (dev_o_erData),
-  .i_erData_nBytes          (dev_o_erData_nBytes)
+  .i_erData_nBytes          (dev_o_erData_nBytes),
+
+  // TODO: WIP
+  .o_erRdEn                 (dev_i_erRdEn[1]),
+  .o_erRdIdx                (dev_i_erRdIdx[1*RDIDX_W +: RDIDX_W]),
+  .i_erRdByte               (dev_o_erRdByte),
+  .i_erRdNBytes             (dev_o_erRdNBytes)
 ); // }}} u_endpRx
 
 usbfsEndpTx #( // {{{ u_endpTx

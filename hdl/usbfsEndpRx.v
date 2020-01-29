@@ -15,8 +15,16 @@ module usbfsEndpRx #(
 
   output wire                       o_erReady,
   input  wire                       i_erValid,
+
+  // TODO: rm
   input  wire [8*MAX_PKT-1:0]       i_erData,
-  input  wire [$clog2(MAX_PKT):0]   i_erData_nBytes
+  input  wire [$clog2(MAX_PKT):0]   i_erData_nBytes,
+
+  // TODO: WIP
+  output wire                       o_erRdEn,
+  output wire [$clog2(MAX_PKT)-1:0] o_erRdIdx,
+  input  wire [7:0]                 i_erRdByte,
+  input  wire [$clog2(MAX_PKT):0]   i_erRdNBytes
 );
 
 wire accepted = i_ready && o_valid;
@@ -39,8 +47,8 @@ always @*
 wire push = (nBytes_pushed_q != nBytes_topush_q);
 wire empty;
 fifo #(
-  .WIDTH        (8),
-  .DEPTH        (2),
+  .WIDTH          (8),
+  .DEPTH          (MAX_PKT),
   .FLOPS_NOT_MEM  (0)
 ) u_fifo (
   .i_clk      (i_clk),

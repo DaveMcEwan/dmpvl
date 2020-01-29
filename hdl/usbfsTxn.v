@@ -29,8 +29,16 @@ module usbfsTxn #(
   // Endpoints receiving data
   input  wire [RX_N_ENDP-1:0]       i_erReady,
   output wire [RX_N_ENDP-1:0]       o_erValid,
+
+  // TODO: rm
   output wire [8*MAX_PKT-1:0]       o_erData,
   output wire [$clog2(MAX_PKT):0]   o_erData_nBytes,
+
+  // TODO: WIP
+  input  wire [RX_N_ENDP-1:0]                 i_erRdEn,
+  input  wire [RX_N_ENDP*$clog2(MAX_PKT)-1:0] i_erRdIdx,
+  output wire [7:0]                           o_erRdByte,
+  output wire [$clog2(MAX_PKT):0]             o_erRdNBytes,
 
   // Endpoints transmitting data
   output wire [TX_N_ENDP-1:0]               o_etReady,
@@ -60,6 +68,10 @@ module usbfsTxn #(
 
 `include "usbSpec.vh"
 
+localparam DATA_W = 8*MAX_PKT;
+localparam NBYTES_W = $clog2(MAX_PKT)+1;
+localparam RDIDX_W = $clog2(MAX_PKT);
+
 genvar e;
 
 wire er_accepted = |(i_erReady & o_erValid);
@@ -72,10 +84,12 @@ wire strobe_12MHz;
 wire                      rx_eop;
 wire                      rx_inflight;
 wire [3:0]                rx_pid;
-wire [8*MAX_PKT-1:0]      rx_lastData;
-wire [$clog2(MAX_PKT):0]  rx_lastData_nBytes;
 wire [6:0]                rx_addr;
 wire [3:0]                rx_endp;
+wire [DATA_W-1:0]         rx_lastData; // TODO: rm
+wire [NBYTES_W-1:0]       rx_lastData_nBytes;
+wire [7:0]                rx_rdByte; // TODO: WIP
+wire [NBYTES_W-1:0]       rx_rdNBytes;
 wire                      rx_pidOkay;
 wire                      rx_tokenOkay;
 wire                      rx_dataOkay;
@@ -85,8 +99,8 @@ wire                      tx_ready;
 wire                      tx_valid;
 wire                      tx_eopDone;
 wire [3:0]                tx_pid;
-reg  [8*MAX_PKT-1:0]      tx_data;
-reg  [$clog2(MAX_PKT):0]  tx_data_nBytes;
+reg  [DATA_W-1:0]         tx_data;
+reg  [NBYTES_W-1:0]       tx_data_nBytes;
 
 // u_tx.o_ready changes at slower rate than transactor clock so detect falling
 // edge of accepted.
@@ -108,11 +122,18 @@ usbfsPktRx #(
   .o_inflight           (rx_inflight),
 
   .o_pid                (rx_pid),
+  .o_addr               (rx_addr),
+  .o_endp               (rx_endp),
+
+  // TODO: rm
   .o_lastData           (rx_lastData),
   .o_lastData_nBytes    (rx_lastData_nBytes),
 
-  .o_addr               (rx_addr),
-  .o_endp               (rx_endp),
+  // WIP
+  .i_rdEn               (erRdEn),
+  .i_rdIdx              (erRdIdx),
+  .o_rdByte             (o_erRdByte),
+  .o_rdNBytes           (o_erRdNBytes),
 
   .o_pidOkay            (rx_pidOkay),
   .o_tokenOkay          (rx_tokenOkay),
@@ -141,6 +162,9 @@ usbfsPktTx #(
 
 assign o_erData = rx_lastData;
 assign o_erData_nBytes = rx_lastData_nBytes;
+
+assign o_erRdByte = rx_rdByte;
+assign o_erRdNBytes = rx_rdNBytes;
 
 assign o_oe = tx_inflight || tosend_q;
 
@@ -281,6 +305,9 @@ wire endpSupported = (rx_endp < (inTxn_q ? RX_N_ENDP : TX_N_ENDP));
 // has been checked.
 wire txnSupported = addressedToSelf && endpSupported;
 
+wire rxEndpSelect = rx_endp[$clog2(RX_N_ENDP)-1:0];
+wire txEndpSelect = rx_endp[$clog2(TX_N_ENDP)-1:0];
+
 // }}} addr,endp,frameNumber decode
 
 // {{{ Mask/reduce IO per endpoint
@@ -318,6 +345,8 @@ wire erStalled = |erVec_stalled;
 wire erIsochronous = |erVec_isochronous;
 wire erReady = |(i_erReady & erVecMask); // Rx endpoint has space.
 wire erValid = |(o_erValid & erVecMask);
+wire erRdEn = |(i_erRdEn & erVecMask);
+wire [RDIDX_W-1:0] erRdIdx = i_erRdIdx[rxEndpSelect*RDIDX_W +: RDIDX_W];
 
 assign o_erValid = erVecMask & {RX_N_ENDP{rx_acceptData}};
 
@@ -534,7 +563,8 @@ assign tosendRaise_ack =
   (setupTxn_q || outTxn_q) && //   which was expected,
   !erIsochronous &&           //   this endpoint does handshake,
   !erStalled &&               //   this endpoint is not irrecoverably halted,
-  (erReady || !rx_acceptData);//   and endpoint does have space to receive.
+  (erReady || !rx_acceptData);//   and endpoint does have space to receive,
+                              //     or data is discarded by ARQ mismatch.
 
 // }}} Waiting to send packet to other end
 
@@ -557,13 +587,9 @@ always @*
 assign tx_valid = tosend_q || tosendSof_q;
 assign tx_pid = tosendSof_q ? PID_TOKEN_SOF : tosendPid_q;
 
-localparam DATA_W = 8*MAX_PKT;
-localparam NBYTES_W = $clog2(MAX_PKT)+1;
-wire txSrc = rx_endp[$clog2(TX_N_ENDP)-1:0];
-
-always @* tx_data = i_etData[txSrc*DATA_W +: DATA_W];
-
-always @* tx_data_nBytes = i_etData_nBytes[txSrc*NBYTES_W +: NBYTES_W];
+// TODO: rm
+always @* tx_data = i_etData[txEndpSelect*DATA_W +: DATA_W];
+always @* tx_data_nBytes = i_etData_nBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
 
 
 

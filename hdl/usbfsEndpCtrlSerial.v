@@ -45,8 +45,16 @@ module usbfsEndpCtrlSerial #(
 
   output wire                       o_er0Ready,
   input  wire                       i_er0Valid,
+
+  // TODO: rm
   input  wire [8*MAX_PKT-1:0]       i_er0Data,
   input  wire [$clog2(MAX_PKT):0]   i_er0Data_nBytes,
+
+  // TODO: WIP
+  output wire                       o_er0RdEn,
+  output wire [$clog2(MAX_PKT)-1:0] o_er0RdIdx,
+  input  wire [7:0]                 i_er0RdByte,
+  input  wire [$clog2(MAX_PKT):0]   i_er0RdNBytes,
 
   input  wire                       i_et0Ready, // High on receiving ACK/STALL
   output wire                       o_et0Valid,
