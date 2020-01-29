@@ -2,8 +2,6 @@
 `include "dff.vh"
 
 module usbfsTxn #(
-  parameter AS_HOST_NOT_DEV = 0, // 1=Operate as host, 0=Operate as device/function.
-
   // Number of endpoints >=1. Endpoint0 is always the Default Endpoint (control).
   parameter RX_N_ENDP = 2,
   parameter TX_N_ENDP = 2,
@@ -55,20 +53,9 @@ module usbfsTxn #(
   // Device-mode --> Frame number from token[SOF].
   output wire [10:0]                o_frameNumber,
 
-  // Device address, endpoint, and type of next transaction
-  // to perform.
-  // Host-mode only. Interface unused in dev-mode.
-  output wire                       o_txnReady,
-  input  wire                       i_txnValid,
-  input  wire [2:0]                 i_txnType, // $onehot({SETUP, OUT, IN})
-  input  wire [6:0]                 i_txnAddr,
-  input  wire [3:0]                 i_txnEndp,
-
   // Dev-mode input comes from endpoint0.
   // Device address, initially the Default Address (0), but configured with a
   // Setup transfer to the Default Endpoint (0).
-  // In host-mode this sets the device address for the next transaction and will
-  // not be sampled whilst any transaction is outstanding.
   input  wire [6:0]                 i_devAddr
 );
 
@@ -78,35 +65,18 @@ genvar e;
 
 wire er_accepted = |(i_erReady & o_erValid);
 wire et_accepted = |(o_etReady & i_etValid);
-wire txn_accepted;
-
-`dff_cg_srst_d(reg [2:0], txnType, i_clk_48MHz, txn_accepted, i_rst, '0, i_txnType)
-generate if (AS_HOST_NOT_DEV) begin
-  assign txn_accepted = o_txnReady && i_txnValid;
-  assign o_txnReady =
-    (o_txnType == '0) &&  // Not in a transaction
-    !await &&             // Not awaiting packets from other end.
-    !tosend_q &&          // Not waiting to send a packet.
-    !tosendSof_q &&       // Not waiting to send a SOF.
-    !nearFrameBoundary && // Not likely to run over frame boundary.
-    !tx_inflight;         // Not currently sending anything.
-end else begin
-  assign txn_accepted = 1'b0;
-  assign o_txnReady = 1'b0;
-end endgenerate
 
 // {{{ u_rd, u_tx
 
 wire strobe_12MHz;
 
-wire                      rx_sop;
 wire                      rx_eop;
 wire                      rx_inflight;
 wire [3:0]                rx_pid;
 wire [8*MAX_PKT-1:0]      rx_lastData;
 wire [$clog2(MAX_PKT):0]  rx_lastData_nBytes;
-wire [6:0]                rx_lastAddr;
-wire [3:0]                rx_lastEndp;
+wire [6:0]                rx_addr;
+wire [3:0]                rx_endp;
 wire                      rx_pidOkay;
 wire                      rx_tokenOkay;
 wire                      rx_dataOkay;
@@ -135,7 +105,6 @@ usbfsPktRx #(
   .i_dn                 (i_dn),
 
   .o_strobe_12MHz       (strobe_12MHz),
-  .o_sop                (rx_sop),
   .o_eop                (rx_eop),
   .o_inflight           (rx_inflight),
 
@@ -143,8 +112,8 @@ usbfsPktRx #(
   .o_lastData           (rx_lastData),
   .o_lastData_nBytes    (rx_lastData_nBytes),
 
-  .o_lastAddr           (rx_lastAddr),
-  .o_lastEndp           (rx_lastEndp),
+  .o_addr               (rx_addr),
+  .o_endp               (rx_endp),
 
   .o_pidOkay            (rx_pidOkay),
   .o_tokenOkay          (rx_tokenOkay),
@@ -174,11 +143,7 @@ usbfsPktTx #(
 assign o_erData = rx_lastData;
 assign o_erData_nBytes = rx_lastData_nBytes;
 
-generate if (AS_HOST_NOT_DEV) begin
-  assign o_oe = tx_inflight || !await;
-end else begin
-  assign o_oe = tx_inflight || tosend_q;
-end endgenerate
+assign o_oe = tx_inflight || tosend_q;
 
 // }}} u_rd, u_tx
 
@@ -210,8 +175,6 @@ wire rcvdToken_sof    = rcvd_isToken && (rx_pid[3:2] == PID_TOKEN_SOF[3:2]);
 wire rcvdData_data0 = rcvd_isData && (rx_pid[3:2] == PID_DATA_DATA0[3:2]); // NOTE: bit2 not strictly required
 wire rcvdData_data1 = rcvd_isData && (rx_pid[3:2] == PID_DATA_DATA1[3:2]); // NOTE: bit2 not strictly required
 wire rcvdHandshake_ack = rcvd_isHandshake && (rx_pid[3:2] == PID_HANDSHAKE_ACK[3:2]);
-wire rcvdHandshake_nak = rcvd_isHandshake && (rx_pid[3:2] == PID_HANDSHAKE_NAK[3:2]);
-wire rcvdHandshake_stall = rcvd_isHandshake && (rx_pid[3:2] == PID_HANDSHAKE_STALL[3:2]);
 
 wire [6:0] rcvd_hostToDevPids = {
   rcvdToken_in,
@@ -221,20 +184,9 @@ wire [6:0] rcvd_hostToDevPids = {
   rcvdData_data0,
   rcvdData_data1,
   rcvdHandshake_ack};
-wire [4:0] rcvd_devToHostPids = {
-  rcvdData_data0,
-  rcvdData_data1,
-  rcvdHandshake_ack,
-  rcvdHandshake_nak,
-  rcvdHandshake_stall};
 
 // Assertions on dev/host-supported PIDs performed in u_rx.
-wire rcvd_supportedPid;
-generate if (AS_HOST_NOT_DEV) begin
-  assign rcvd_supportedPid = |rcvd_devToHostPids;
-end else begin
-  assign rcvd_supportedPid = |rcvd_hostToDevPids;
-end endgenerate
+wire rcvd_supportedPid = |rcvd_hostToDevPids;
 
 
 wire [1:0] tx_pidCodingGroup = tx_pid[1:0];
@@ -285,19 +237,11 @@ SETUP flag is used by control endpoints to put data into configuration buffer.
 wire setupTxn_raise,  setupTxn_lower;
 wire outTxn_raise,    outTxn_lower;
 wire inTxn_raise,     inTxn_lower;
-generate if (AS_HOST_NOT_DEV) begin
-  assign {setupTxn_raise, setupTxn_lower} = {sentToken_setup, rcvdHandshake_ack};
-  assign {outTxn_raise,   outTxn_lower}   = {sentToken_out,   rcvd_isHandshake};
-  assign {inTxn_raise,    inTxn_lower}    =
-    {sentToken_in && !erIsochronous,
-     sentHandshake_ack || rcvdHandshake_nak || rcvdHandshake_stall};
-end else begin
-  assign {setupTxn_raise, setupTxn_lower} = {rcvdToken_setup, sentHandshake_ack};
-  assign {outTxn_raise,   outTxn_lower}   = {rcvdToken_out,   sent_isHandshake};
-  assign {inTxn_raise,    inTxn_lower}    =
-    {rcvdToken_in && !etIsochronous,
-     rcvdHandshake_ack || sentHandshake_nak || sentHandshake_stall};
-end endgenerate
+assign {setupTxn_raise, setupTxn_lower} = {rcvdToken_setup, sentHandshake_ack};
+assign {outTxn_raise,   outTxn_lower}   = {rcvdToken_out,   sent_isHandshake};
+assign {inTxn_raise,    inTxn_lower}    =
+  {rcvdToken_in && !etIsochronous,
+   rcvdHandshake_ack || sentHandshake_nak || sentHandshake_stall};
 
 `dff_flag(setupTxn, i_clk_48MHz, i_rst, setupTxn_raise, setupTxn_lower)
 `dff_flag(outTxn,   i_clk_48MHz, i_rst, outTxn_raise,   outTxn_lower)
@@ -327,61 +271,14 @@ assign o_txnType = txnFlags_q;
 
 // {{{ addr,endp,frameNumber decode
 
-wire updateFrameNumber;
-wire nearFrameBoundary;
+// Store frameNumber field on each SOF token.
+wire updateFrameNumber = rcvdToken_sof;
 `dff_cg_srst(reg [10:0], frameNumber, i_clk_48MHz, updateFrameNumber, i_rst, '0)
-generate if (AS_HOST_NOT_DEV) begin
-  // Frames are as close to 1ms as possible.
-  // NOTE: If changing from 48MHz clock to something faster, then both the width
-  // and top value of msCntr must be changed.
-  `dff_nocg_srst(reg [15:0], msCntr, i_clk_48MHz, i_rst, '0)
-  always @* msCntr_d = (msCntr_q < ('d48000 - 'd1)) ? (msCntr_q + 1) : '0;
-
-  assign updateFrameNumber = (msCntr_q == 'd1);
-
-  always @* frameNumber_d = frameNumber_q + 1;
-
-  assign nearFrameBoundary = (msCntr_q > 16'd47000);
-end else begin
-  // Store frameNumber field on each SOF token.
-  assign updateFrameNumber = rcvdToken_sof;
-
-  always @* frameNumber_d = {rx_lastEndp, rx_lastAddr};
-
-  assign nearFrameBoundary = 1'b0; // Device must not care about frame boundary.
-end endgenerate
+always @* frameNumber_d = {rx_endp, rx_addr};
 assign o_frameNumber = frameNumber_q;
 
-wire [6:0] addr;
-generate if (AS_HOST_NOT_DEV) begin
-  `dff_cg_srst(reg [6:0], addr, i_clk_48MHz, txn_accepted, i_rst, '0)
-  always @* addr_d = i_txnAddr;
-  assign addr = addr_q;
-end else begin
-  assign addr = rx_lastAddr;
-end endgenerate
-
-wire [3:0] endp;
-generate if (AS_HOST_NOT_DEV) begin
-  `dff_cg_srst(reg [3:0], endp, i_clk_48MHz, txn_accepted, i_rst, '0)
-  always @* endp_d = i_txnEndp;
-  assign endp = endp_q;
-end else begin
-  assign endp = rx_lastEndp;
-end endgenerate
-
-wire addressedToSelf;
-wire endpSupported;
-generate if (AS_HOST_NOT_DEV) begin
-  assign addressedToSelf = 1'b1;
-
-  assign endpSupported = (endp < (txnType_q[0] ? RX_N_ENDP : TX_N_ENDP));
-  `asrt(endpSupported, i_clk_48MHz, !i_rst && (txnType_q != '0), endpSupported)
-end else begin
-  assign addressedToSelf = (addr == i_devAddr);
-
-  assign endpSupported = (endp < (inTxn_q ? RX_N_ENDP : TX_N_ENDP));
-end endgenerate
+wire addressedToSelf = (rx_addr == i_devAddr);
+wire endpSupported = (rx_endp < (inTxn_q ? RX_N_ENDP : TX_N_ENDP));
 
 // Check that transaction is supported and addressed to this device.
 // In dev-mode this may be sampled in cycle *after* token is received.
@@ -414,7 +311,7 @@ wire [RX_N_ENDP-1:0] erVec_isochronous;
 generate for (e=0; e < RX_N_ENDP; e=e+1) begin
   localparam STALLABLE = RX_STALLABLE & (1 << e);
 
-  assign erVecMask[e] = addressedToSelf && (e == endp);
+  assign erVecMask[e] = addressedToSelf && (e == rx_endp);
 
   // Mask and reduce i_erStall to detect whether to send IN-STALL handshake.
   assign erVec_stalled[e] = erVecMask[e] && (STALLABLE != 0) && i_erStall[e];
@@ -437,7 +334,7 @@ wire [TX_N_ENDP-1:0] etVec_isochronous;
 generate for (e=0; e < TX_N_ENDP; e=e+1) begin
   localparam STALLABLE = TX_STALLABLE & (1 << e);
 
-  assign etVecMask[e] = addressedToSelf && (e == endp);
+  assign etVecMask[e] = addressedToSelf && (e == rx_endp);
 
   // Mask and reduce i_etStall to detect whether to signal irrecoverable halting.
   assign etVec_stalled[e] = etVecMask[e] && (STALLABLE != 0) && i_etStall[e];
@@ -491,15 +388,7 @@ Each endpoint maintains its own ARQ state.
 
 // DATAx PID to send, per endpoint.
 `dff_nocg_srst(reg [TX_N_ENDP-1:0], etArq, i_clk_48MHz, i_rst, '0)
-generate for (e=0; e < TX_N_ENDP; e=e+1) if (AS_HOST_NOT_DEV) begin
-  always @*
-    if (txn_accepted && i_txnType[2])
-      etArq_d[e] = 1'b0;
-    else if (rcvdHandshake_ack && etVecMask[e])
-      etArq_d[e] = !etArq_q[e];
-    else
-      etArq_d[e] = etArq_q[e];
-end else begin
+generate for (e=0; e < TX_N_ENDP; e=e+1) begin
   always @*
     if (rcvdToken_setup && etVecMask[e])
       etArq_d[e] = 1'b1;
@@ -514,15 +403,7 @@ wire [3:0] tx_nextDataPid = etArq ? PID_DATA_DATA1 : PID_DATA_DATA0;
 
 // Expected DATAx PID to receive, per endpoint.
 `dff_nocg_srst(reg [RX_N_ENDP-1:0], erArq, i_clk_48MHz, i_rst, '0)
-generate for (e=0; e < RX_N_ENDP; e=e+1) if (AS_HOST_NOT_DEV) begin
-  always @*
-    if (sentToken_setup && erVecMask[e])
-      erArq_d[e] = 1'b1;
-    else if (sentHandshake_ack && erVecMask[e])
-      erArq_d[e] = !erArq_q[e];
-    else
-      erArq_d[e] = erArq_q[e];
-end else begin
+generate for (e=0; e < RX_N_ENDP; e=e+1) begin
   always @*
     if (rcvdToken_setup && erVecMask[e])
       erArq_d[e] = 1'b0;
@@ -548,45 +429,28 @@ wire awaitToken; // Dev-mode awaitToken flag resets high.
 `dff_flag(awaitData,      i_clk_48MHz, i_rst, awaitData_raise,      awaitData_lower)
 `dff_flag(awaitHandshake, i_clk_48MHz, i_rst, awaitHandshake_raise, awaitHandshake_lower)
 
-generate if (AS_HOST_NOT_DEV) begin
+assign {awaitToken_raise, awaitToken_lower} =
+  {rcvd_isHandshake ||
+   (sent_isData && etIsochronous) ||
+   updateFrameNumber,
 
-  // Host never waits for a token from dev.
-  assign {awaitToken_raise, awaitToken_lower} = '0;
-  assign awaitToken = 1'b0;
+   rcvd_isToken && !rcvdToken_sof};
 
-  assign {awaitData_raise, awaitData_lower} =
-    {sentToken_in,
-    rcvd_isData || rcvdHandshake_nak || rcvdHandshake_stall || updateFrameNumber};
+`dff_nocg_norst(reg, awaitToken, i_clk_48MHz)
+always @*
+  if (awaitToken_lower)
+    awaitToken_d = 1'b0;
+  else if (i_rst || awaitToken_raise)
+    awaitToken_d = 1'b1;
+  else
+    awaitToken_d = awaitToken_q;
+assign awaitToken = awaitToken_q;
 
-  assign {awaitHandshake_raise, awaitHandshake_lower} =
-    {sent_isData && !etIsochronous, rcvd_isHandshake || updateFrameNumber};
+assign {awaitData_raise, awaitData_lower} =
+  {rcvdToken_out || rcvdToken_setup, rcvd_isData || updateFrameNumber};
 
-end else begin
-
-  assign {awaitToken_raise, awaitToken_lower} =
-    {rcvd_isHandshake ||
-     (sent_isData && etIsochronous) ||
-     updateFrameNumber,
-
-     rcvd_isToken && !rcvdToken_sof};
-
-  `dff_nocg_norst(reg, awaitToken, i_clk_48MHz)
-  always @*
-    if (awaitToken_lower)
-      awaitToken_d = 1'b0;
-    else if (i_rst || awaitToken_raise)
-      awaitToken_d = 1'b1;
-    else
-      awaitToken_d = awaitToken_q;
-  assign awaitToken = awaitToken_q;
-
-  assign {awaitData_raise, awaitData_lower} =
-    {rcvdToken_out || rcvdToken_setup, rcvd_isData || updateFrameNumber};
-
-  assign {awaitHandshake_raise, awaitHandshake_lower} =
-    {sent_isData && !etIsochronous, rcvd_isHandshake || updateFrameNumber};
-
-end endgenerate
+assign {awaitHandshake_raise, awaitHandshake_lower} =
+  {sent_isData && !etIsochronous, rcvd_isHandshake || updateFrameNumber};
 
 wire [2:0] awaitFlags_q = {
   awaitToken,
@@ -643,60 +507,40 @@ wire tosendRaise = |tosendRaiseVec;
 wire tosendLower = (tx_accepted && !sentToken_sof && !tosendRaise) || updateFrameNumber;
 `dff_flag(tosend, i_clk_48MHz, i_rst, tosendRaise, tosendLower)
 
-generate if (AS_HOST_NOT_DEV) begin
+assign {tosendSofRaise, tosendSofLower} = {1'b0, 1'b1};
+assign {tosendRaise_setup, tosendRaise_out, tosendRaise_in} = '0;
 
-  assign {tosendSofRaise, tosendSofLower} = {updateFrameNumber, sentToken_sof};
+assign tosendRaise_data = rcvdToken_in && !etStalled && etValid;
 
-  assign {tosendRaise_nak, tosendRaise_stall} = '0;
+assign tosendRaise_stall = (
+    rcvd_isData &&              // Got a data packet,
+    (setupTxn_q || outTxn_q) && //   which was expected,
+    !erIsochronous &&           //   this endpoint does handshake,
+    erStalled                   //   but is irrecoverably halted.
+  ) || (
+    rcvdToken_in &&         // Got token[IN],
+    !etIsochronous &&       //   this endpoint does handshake,
+    etStalled               //   but is irrecoverably halted.
+  );
 
-  assign {tosendRaise_setup, tosendRaise_out, tosendRaise_in} =
-    {3{txn_accepted}} & i_txnType;
-
-  assign tosendRaise_data = sentToken_setup || sentToken_out;
-
-  assign tosendRaise_ack =
-    rcvd_isData &&            // Got a data packet,
-    inTxn_q &&                //   which was expected,
-    !erIsochronous;           //   and this endpoint does handshake.
-
-end else begin
-
-  assign {tosendSofRaise, tosendSofLower} = {1'b0, 1'b1};
-  assign {tosendRaise_setup, tosendRaise_out, tosendRaise_in} = '0;
-
-  assign tosendRaise_data = rcvdToken_in && !etStalled && etValid;
-
-  assign tosendRaise_stall = (
-      rcvd_isData &&              // Got a data packet,
-      (setupTxn_q || outTxn_q) && //   which was expected,
-      !erIsochronous &&           //   this endpoint does handshake,
-      erStalled                   //   but is irrecoverably halted.
-    ) || (
-      rcvdToken_in &&         // Got token[IN],
-      !etIsochronous &&       //   this endpoint does handshake,
-      etStalled               //   but is irrecoverably halted.
-    );
-
-  assign tosendRaise_nak = (
-      rcvd_isData &&              // Got a data packet,
-      (setupTxn_q || outTxn_q) && //   which was expected,
-      !erIsochronous &&           //   this endpoint does handshake,
-      !erStalled &&               //   this endpoint is not irrecoverably halted,
-      !erReady                    //   but endpoint has no space to receive.
-    ) || (
-      rcvdToken_in &&   // Got token[IN],
-      !etStalled &&     //   and endpoint could send data eventually,
-      !etValid          //   but doesn't have data yet.
-    );
-
-  assign tosendRaise_ack =
+assign tosendRaise_nak = (
     rcvd_isData &&              // Got a data packet,
     (setupTxn_q || outTxn_q) && //   which was expected,
     !erIsochronous &&           //   this endpoint does handshake,
     !erStalled &&               //   this endpoint is not irrecoverably halted,
-    (erReady || !rx_acceptData);//   and endpoint does have space to receive.
+    !erReady                    //   but endpoint has no space to receive.
+  ) || (
+    rcvdToken_in &&   // Got token[IN],
+    !etStalled &&     //   and endpoint could send data eventually,
+    !etValid          //   but doesn't have data yet.
+  );
 
-end endgenerate
+assign tosendRaise_ack =
+  rcvd_isData &&              // Got a data packet,
+  (setupTxn_q || outTxn_q) && //   which was expected,
+  !erIsochronous &&           //   this endpoint does handshake,
+  !erStalled &&               //   this endpoint is not irrecoverably halted,
+  (erReady || !rx_acceptData);//   and endpoint does have space to receive.
 
 // }}} Waiting to send packet to other end
 
@@ -721,56 +565,19 @@ assign tx_pid = tosendSof_q ? PID_TOKEN_SOF : tosendPid_q;
 
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT)+1;
-wire txSrc = endp[$clog2(TX_N_ENDP)-1:0];
-generate if (AS_HOST_NOT_DEV) begin
+wire txSrc = rx_endp[$clog2(TX_N_ENDP)-1:0];
 
-  // NOTE: Complicated looking range just muxes by endp all the upper bits not
-  // involved in token fields.
-  always @*
-    tx_data[8*MAX_PKT-1:11] = i_etData[txSrc*DATA_W+11 +: DATA_W-11];
+always @* tx_data = i_etData[txSrc*DATA_W +: DATA_W];
 
-  always @*
-    if (tx_pid == PID_TOKEN_SOF)
-      tx_data[10:0] = frameNumber_q;
-    else if (tx_pidGrp_isToken)
-      tx_data[10:0] = {endp, addr};
-    else
-      tx_data[10:0] = i_etData[txSrc*DATA_W +: 11];
-
-  always @*
-    if (tx_pidGrp_isToken)
-      tx_data_nBytes = 'd2;
-    else
-      tx_data_nBytes = i_etData_nBytes[txSrc*NBYTES_W +: NBYTES_W];
-
-end else begin
-
-  always @* tx_data = i_etData[txSrc*DATA_W +: DATA_W];
-
-  always @* tx_data_nBytes = i_etData_nBytes[txSrc*NBYTES_W +: NBYTES_W];
-
-end endgenerate
+always @* tx_data_nBytes = i_etData_nBytes[txSrc*NBYTES_W +: NBYTES_W];
 
 
 
 // Endpoint should be holding data and valid steady, waiting for o_etReady to go
 // high to accept it.
 // Data will be sent before being accepted from endpoint.
-// Endpoint will only know data has been sent when an ACK has been received, or
-// a STALL is received by the host to indicate device will not take data.
-assign o_etReady = etVecMask & {TX_N_ENDP{(rcvdHandshake_ack || rcvdHandshake_stall)}};
-
-/* TODO: Text should be in control endpoint code.
-A transaction consists of token then data packets.
-Control transfer consists of 2, or 3, transaction phase/stages:
-  1. Setup, a SETUP transaction.
-  2, Data (optional), 1 or more OUT/IN transactions.
-  3. Status, 1 IN/OUT transaction in opposite direction.
-The Data stage, if present, of a control transfer consists of 1 or more IN or
-OUT transactions and follows the same protocol rules as bulk transfers.
-All the transactions in the Data stage must be in the same direction, i.e. all
-INs or all OUTs.
-*/
+// Endpoint will only know data has been sent when an ACK has been received.
+assign o_etReady = etVecMask & {TX_N_ENDP{(rcvdHandshake_ack)}};
 
 `ifndef SYNTHESIS
 always @(posedge i_clk_48MHz) if (txn_accepted) begin : info
@@ -785,7 +592,7 @@ always @(posedge i_clk_48MHz) if (txn_accepted) begin : info
   else
     $sformat(s_txnType, "Txn[UNKNOWN]");
 
-  $display("\nINFO:t%0t:%m: %s with addr=%0d,endp=%0d.", $time, s_txnType, addr, endp);
+  $display("\nINFO:t%0t:%m: %s with addr=%0d,endp=%0d.", $time, s_txnType, rx_addr, rx_endp);
 end : info
 `endif
 

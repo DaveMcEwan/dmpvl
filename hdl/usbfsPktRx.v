@@ -16,7 +16,6 @@ module usbfsPktRx #(
   input  wire                       i_dn,
 
   // Pulse for a single 48MHz cycle when SOP/EOP is detected.
-  output wire                       o_sop,
   output wire                       o_eop,
 
   // Remain high from SOP until EOP.
@@ -29,8 +28,8 @@ module usbfsPktRx #(
   output wire [3:0]                 o_pid,
   output wire [8*MAX_PKT-1:0]       o_lastData,
   output wire [$clog2(MAX_PKT):0]   o_lastData_nBytes,
-  output wire [6:0]                 o_lastAddr,
-  output wire [3:0]                 o_lastEndp,
+  output wire [6:0]                 o_addr,
+  output wire [3:0]                 o_endp,
 
   // Results of the integrity checks from the last packet received.
   // Must be used in conjunction with o_pid to determine corruption.
@@ -107,14 +106,13 @@ wire sop = !inflight_q && (pnSequence_q == TRANS_SOP);
 wire eop = inflight_q && (pnSequence_q[3:0] == TRANS_EOP);
 `dff_cg_srst(reg, inflight, i_clk_48MHz, sampleStrobe_12MHz, i_rst, 1'b0)
 always @*
-  if (o_sop)
+  if (sop)
     inflight_d = 1'b1;
   else if (eop_d)
     inflight_d = 1'b0;
   else
     inflight_d = inflight_q;
 
-assign o_sop = sop && sampleStrobe_12MHz;
 assign o_inflight = inflight_q;
 
 // NOTE: o_eop may drive a lot of logic in transactor so consider flopping.
@@ -134,23 +132,14 @@ wire rxSE0 = (pn_q == LINE_SE0);
 
 wire din = !(pnSequence_q[2] ^ pnSequence_q[0]);
 wire jkTrans = (^pnSequence_q[3:2]) && (^pnSequence_q[1:0]);
+wire possibleSampleDin = jkTrans && inflight_q && sampleStrobe_12MHz;
 
-`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_48MHz, sampleStrobe_12MHz, i_rst, '0)
-always @*
-  if (sop)
-    nrziHistory_d = 'd0;
-  else if (jkTrans && inflight_q)
-    nrziHistory_d = {nrziHistory_q[NRZI_MAXRL_ONES-2:0], din};
-  else
-    nrziHistory_d = nrziHistory_q;
+`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_48MHz, possibleSampleDin, sop || i_rst, '0)
+always @* nrziHistory_d = {nrziHistory_q[NRZI_MAXRL_ONES-2:0], din};
 
 wire discardStuffedBit = &nrziHistory_q;
 
-wire sampleDin =
-  jkTrans &&
-  inflight_q &&
-  !discardStuffedBit &&
-  sampleStrobe_12MHz;
+wire sampleDin = possibleSampleDin && !discardStuffedBit;
 
 // }}} NRZI bit unstuffing.
 
@@ -253,8 +242,8 @@ wire sampleTokenField1 = byteRcvd && (nBytesRcvd_q == 'd2) && pidGrp_isToken;
 `dff_cg_norst_d(reg [7:0], tokenField0, i_clk_48MHz, sampleTokenField0, byteShift_d)
 `dff_cg_norst_d(reg [2:0], tokenField1, i_clk_48MHz, sampleTokenField1, byteShift_d[2:0])
 
-assign o_lastAddr = tokenField0_q[6:0];
-assign o_lastEndp = {tokenField1_q, tokenField0_q[7]};
+assign o_addr = tokenField0_q[6:0];
+assign o_endp = {tokenField1_q, tokenField0_q[7]};
 
 // }}} Decode ADDR,ENDP.
 
@@ -309,7 +298,7 @@ wire pid_type_onehot = $onehot(hostToDevPids);
 // Assume requests have sane values for i_pid.
 `asrt(pid_type_onehot, i_clk_48MHz, !i_rst && eop, pid_type_onehot)
 
-wire [10:0] tokenFrameNumber = {o_lastEndp, o_lastAddr};
+wire [10:0] tokenFrameNumber = {o_endp, o_addr};
 wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
 
 always @(posedge i_clk_48MHz) if (o_eop) begin : info
@@ -341,7 +330,7 @@ always @(posedge i_clk_48MHz) if (o_eop) begin : info
   else if (pid_isTokenSof)
     $sformat(s_data, " frameNumber=%0d", tokenFrameNumber);
   else if (pidGrp_isToken)
-    $sformat(s_data, " addr=%0d, endp=%0d", o_lastAddr, o_lastEndp);
+    $sformat(s_data, " addr=%0d, endp=%0d", o_addr, o_endp);
   else if (pidGrp_isHandshake)
     $sformat(s_data, "");
   else

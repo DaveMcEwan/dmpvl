@@ -63,7 +63,6 @@ wire [2:0]  dev_o_txnType;
 
 wire [6:0] devAddr;
 usbfsTxn #( // {{{ u_txn
-  .AS_HOST_NOT_DEV  (0),
   .RX_N_ENDP        (HOST2DEV_N_ENDP),
   .TX_N_ENDP        (DEV2HOST_N_ENDP),
   .RX_ISOCHRONOUS   (0),
@@ -109,16 +108,6 @@ usbfsTxn #( // {{{ u_txn
   // Device-mode --> Frame number from token[SOF].
   .o_frameNumber            (dev_o_frameNumber),
 
-  // Device address, endpoint, and type of next transaction
-  // to perform.
-  // Host-mode only. Interface unused in dev-mode.
-  .o_txnReady               (),
-  .i_txnValid               (1'b0),
-  .i_txnType                (3'b000), // {SETUP, OUT, IN}
-  .i_txnAddr                (7'd0),
-  .i_txnEndp                (4'd0),
-
-  // Dev-mode only. Unused in host-mode. Input comes from endpoint0.
   // Device address, initially the Default Address (0), but configured with a
   // Setup transfer to the Default Endpoint (0).
   .i_devAddr                (devAddr)
