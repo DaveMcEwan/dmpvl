@@ -18,6 +18,13 @@ lint:
 	verilator $(VERILATOR_FLAGS) axi4liteMonitor.v
 	verilator $(VERILATOR_FLAGS) axi4liteRandomSlave.v
 	verilator $(VERILATOR_FLAGS) axi4liteRandomMaster.v
+	verilator $(VERILATOR_FLAGS) usbfsPktRx.v
+	verilator $(VERILATOR_FLAGS) usbfsPktTx.v
+	verilator $(VERILATOR_FLAGS) usbfsTxn.v
+	verilator $(VERILATOR_FLAGS) usbfsEndpRx.v
+	verilator $(VERILATOR_FLAGS) usbfsEndpTx.v
+	verilator $(VERILATOR_FLAGS) usbfsEndpCtrlSerial.v
+	verilator $(VERILATOR_FLAGS) usbfsSerial.v
 
 # None of these modules actually simulate anything useful on their own but try
 # running them through iverilog (Icarus) to ensure files are compatible.
@@ -35,6 +42,13 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) axi4liteMonitor.v
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomSlave.v
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomMaster.v
+	iverilog $(IVERILOG_FLAGS) usbfsPktRx.v
+	iverilog $(IVERILOG_FLAGS) usbfsPktTx.v
+	iverilog $(IVERILOG_FLAGS) -i usbfsTxn.v
+	iverilog $(IVERILOG_FLAGS) -i usbfsEndpRx.v
+	iverilog $(IVERILOG_FLAGS) -i usbfsEndpTx.v
+	iverilog $(IVERILOG_FLAGS) usbfsEndpCtrlSerial.v
+	iverilog $(IVERILOG_FLAGS) -i usbfsSerial.v
 
 # None of these modules actually synthesize to anything useful on their own but
 # try reading them with yosys, to ensure files are compatible.
@@ -50,6 +64,13 @@ yosys:
 	yosys -q -p 'read_verilog -sv axi4liteMonitor.v'
 	yosys -q -p 'read_verilog -sv axi4liteRandomSlave.v'
 	yosys -q -p 'read_verilog -sv axi4liteRandomMaster.v'
+	yosys -q -p 'read_verilog -sv usbfsPktRx.v'
+	yosys -q -p 'read_verilog -sv usbfsPktTx.v'
+	yosys -q -p 'read_verilog -sv usbfsTxn.v'
+	yosys -q -p 'read_verilog -sv usbfsEndpRx.v'
+	yosys -q -p 'read_verilog -sv usbfsEndpTx.v'
+	yosys -q -p 'read_verilog -sv usbfsEndpCtrlSerial.v'
+	yosys -q -p 'read_verilog -sv usbfsSerial.v'
 
 .SECONDARY:
 .PHONY: lint iverilog yosys

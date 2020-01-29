@@ -1,21 +1,18 @@
 
-usbFullSpeedSerial
-==================
+usbfsSerialEchoer
+=================
 
-The verification components under `verif/usbFullSpeed*` are synthesizable so
-this project uses them to build a working USB serial device.
+USB serial device using the design components `hdl/usbfs*`.
 The device is simple in that it just echos characters sent to it and flips the
 case bit - e.g. `a --> A` or `b --> B`.
 
-The verification components are written with verification in mind so are not
-tuned for performance, power, or resource usage.
-Therefore the resulting design is not particularly good, but it mainly
-demonstrates that the components are correct enough to talk USB on real
-hardware.
+The design components are based on the verification components but modified to
+support only USB device functionallity and optimized for lower LUT usage and
+shorter critical paths.
 
-Expected resource usage is approximately 820 LUTs, synthing to around 60MHz.
+Expected resource usage is approximately TODO LUTs, synthing to around 60MHz.
 
-A matching testbench is under `tb/usbFullSpeedSerial` with the host behaviour
+A matching testbench is under `tb/usbfsSerialEchoer` with the host behaviour
 defined by `tb/usbFullSpeedSerial/driveHost.v` which can be used to simulate and
 see waveforms for what *might* be happening on the hardware.
 
