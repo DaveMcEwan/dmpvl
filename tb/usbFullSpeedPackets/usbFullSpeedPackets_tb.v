@@ -2,6 +2,7 @@
  *
  * 1. usbFullSpeedPacketSender[host] (verif) --> usbFullSpeedPacketReceiver[device] (verif)
  * 2. usbFullSpeedPacketSender[host] (verif) --> usbPktRx (VGWM design)
+ * 3. usbFullSpeedPacketSender[host] (verif) --> usbfsPktRx (design)
  */
 module usbFullSpeedPackets_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
@@ -22,17 +23,6 @@ wire                  host_o_dp;
 wire                  host_o_dn;
 wire                  host_o_inflight;
 
-wire                  dev_o_bitStrobe;
-wire                  dev_o_pktBegin;
-wire                  dev_o_pktEnd;
-wire [3:0]            dev_o_pid;
-wire [6:0]            dev_o_addr;
-wire [3:0]            dev_o_endp;
-wire [10:0]           dev_o_frameNum;
-wire                  dev_o_dataPut;
-wire [7:0]            dev_o_data;
-wire                  dev_o_pktValid;
-
 wire                  vdev_o_strobe_12MHz;
 wire                  vdev_o_sop;
 wire                  vdev_o_eop;
@@ -45,6 +35,29 @@ wire [3:0]            vdev_o_lastEndp;
 wire                  vdev_o_pidOkay;
 wire                  vdev_o_tokenOkay;
 wire                  vdev_o_dataOkay;
+
+wire                  VGWM_dev_o_bitStrobe;
+wire                  VGWM_dev_o_pktBegin;
+wire                  VGWM_dev_o_pktEnd;
+wire [3:0]            VGWM_dev_o_pid;
+wire [6:0]            VGWM_dev_o_addr;
+wire [3:0]            VGWM_dev_o_endp;
+wire [10:0]           VGWM_dev_o_frameNum;
+wire                  VGWM_dev_o_dataPut;
+wire [7:0]            VGWM_dev_o_data;
+wire                  VGWM_dev_o_pktValid;
+
+wire                  dev_o_strobe_12MHz;
+wire                  dev_o_eop;
+wire                  dev_o_inflight;
+wire [3:0]            dev_o_pid;
+wire [8*8-1:0]        dev_o_lastData;
+wire [$clog2(8):0]    dev_o_lastData_nBytes;
+wire [6:0]            dev_o_addr;
+wire [3:0]            dev_o_endp;
+wire                  dev_o_pidOkay;
+wire                  dev_o_tokenOkay;
+wire                  dev_o_dataOkay;
 
 
 wire clk_12MHz;
@@ -141,34 +154,6 @@ usbFullSpeedPacketSender #( // {{{ v_usbFullSpeedPacketSender_host
   .o_inflight               (host_o_inflight)
 ); // }}} v_usbFullSpeedPacketSender_host
 
-usbPktRx usbPktRx_dev ( // {{{
-  .i_clk_48MHz          (clk_48MHz),
-  .i_rst                (rst),
-
-  // USB data+ and data- lines.
-  .i_dp                 (host_o_dp),
-  .i_dn                 (host_o_dn),
-
-  // Pulse on every bit transition to synchronise with usbPktTx.
-  .o_bitStrobe          (dev_o_bitStrobe),
-
-  // Pulse on beginning and end of each packet.
-  .o_pktBegin           (dev_o_pktBegin),
-  .o_pktEnd             (dev_o_pktEnd),
-
-  // Most recent packet decoded.
-  .o_pid                (dev_o_pid),
-  .o_addr               (dev_o_addr),
-  .o_endp               (dev_o_endp),
-  .o_frameNum           (dev_o_frameNum),
-
-  .o_dataPut            (dev_o_dataPut), // Pulse on valid data on o_data.
-  .o_data               (dev_o_data),
-
-  // Most recent packet passes PID and CRC checks
-  .o_pktValid              (dev_o_pktValid)
-); // }}} usbPktRx_dev
-
 // TODO: Assertions that outputs should match expected.
 // TODO: Assertions that design/implementation should match.
 usbFullSpeedPacketReceiver #( // {{{ v_usbFullSpeedPacketReceiver_dev
@@ -198,6 +183,61 @@ usbFullSpeedPacketReceiver #( // {{{ v_usbFullSpeedPacketReceiver_dev
   .o_tokenOkay          (vdev_o_tokenOkay),
   .o_dataOkay           (vdev_o_dataOkay)
 ); // }}} v_usbFullSpeedPacketReceiver_dev
+
+usbPktRx usbPktRx_dev ( // {{{
+  .i_clk_48MHz          (clk_48MHz),
+  .i_rst                (rst),
+
+  // USB data+ and data- lines.
+  .i_dp                 (host_o_dp),
+  .i_dn                 (host_o_dn),
+
+  // Pulse on every bit transition to synchronise with usbPktTx.
+  .o_bitStrobe          (VGWM_dev_o_bitStrobe),
+
+  // Pulse on beginning and end of each packet.
+  .o_pktBegin           (VGWM_dev_o_pktBegin),
+  .o_pktEnd             (VGWM_dev_o_pktEnd),
+
+  // Most recent packet decoded.
+  .o_pid                (VGWM_dev_o_pid),
+  .o_addr               (VGWM_dev_o_addr),
+  .o_endp               (VGWM_dev_o_endp),
+  .o_frameNum           (VGWM_dev_o_frameNum),
+
+  .o_dataPut            (VGWM_dev_o_dataPut), // Pulse on valid data on o_data.
+  .o_data               (VGWM_dev_o_data),
+
+  // Most recent packet passes PID and CRC checks
+  .o_pktValid           (VGWM_dev_o_pktValid)
+); // }}} usbPktRx_dev
+
+usbfsPktRx #( // {{{ v_usbfsPktRx_dev
+  .AS_HOST_NOT_DEV  (0),
+  .MAX_PKT          (8)  // TODO: Other sizes {8, 16, 32, 64}
+) v_usbfsPktRx_dev (
+  .i_clk_48MHz          (clk_48MHz),
+  .i_rst                (rst),
+
+  .i_dp                 (host_o_dp),
+  .i_dn                 (host_o_dn),
+
+  .o_strobe_12MHz       (dev_o_strobe_12MHz),
+
+  .o_eop                (dev_o_eop),
+  .o_inflight           (dev_o_inflight),
+
+  .o_pid                (dev_o_pid),
+  .o_lastData           (dev_o_lastData),
+  .o_lastData_nBytes    (dev_o_lastData_nBytes),
+
+  .o_addr               (dev_o_addr),
+  .o_endp               (dev_o_endp),
+
+  .o_pidOkay            (dev_o_pidOkay),
+  .o_tokenOkay          (dev_o_tokenOkay),
+  .o_dataOkay           (dev_o_dataOkay)
+); // }}} v_usbfsPktRx_dev
 
 endmodule
 

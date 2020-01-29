@@ -3,6 +3,7 @@ TB := usbFullSpeedPackets_tb
 
 SRC := \
 	../../hdl/resetDetect.v \
+	../../hdl/usbfsPktRx.v \
 	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.v \
 	../../verif/generateClock.v \
 	../../verif/usbFullSpeedPacketSender.v \
