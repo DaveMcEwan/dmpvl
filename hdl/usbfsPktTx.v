@@ -35,18 +35,18 @@ module usbfsPktTx #(
 // PID is always sent when (nBytesSent_q == 1).
 localparam NBYTES_W = $clog2(MAX_PKT) + 1;
 
-// NOTE: Packet will begin sending with SYNC_SOP in cycle following this.
-wire drv_accepted = o_ready && i_valid;
+// NOTE: Packet will begin driving SYNC_SOP in cycle following this.
+wire tx_accepted = o_ready && i_valid;
 
 // Delayed version just for driver assumptions.
-`dff_nocg_srst(reg, drv_accepted, i_clk_12MHz, i_rst, 1'b0)
-always @* drv_accepted_d = drv_accepted;
+`dff_nocg_srst(reg, tx_accepted, i_clk_12MHz, i_rst, 1'b0)
+always @* tx_accepted_d = tx_accepted;
 
 // Accept and store inputs.
 // NOTE: Data packets with zero bytes are allowed, for example to finish
 // a Control Transfer.
-`dff_cg_norst_d(reg [NBYTES_W-1:0], data_nBytes, i_clk_12MHz, drv_accepted, i_data_nBytes)
-`dff_cg_norst_d(reg [8*MAX_PKT-1:0], data, i_clk_12MHz, drv_accepted, i_data)
+`dff_cg_norst_d(reg [NBYTES_W-1:0], data_nBytes, i_clk_12MHz, tx_accepted, i_data_nBytes)
+`dff_cg_norst_d(reg [8*MAX_PKT-1:0], data, i_clk_12MHz, tx_accepted, i_data)
 
 // {{{ PID store and decode
 
@@ -54,7 +54,7 @@ always @* drv_accepted_d = drv_accepted;
 // the duration of the packet, only the coding group.
 // NOTE: Yosys correctly notices that top 2 bits are unused and removes them,
 // but it's handy to .
-`dff_cg_norst_d(reg [3:0], pid, i_clk_12MHz, drv_accepted, i_pid)
+`dff_cg_norst_d(reg [3:0], pid, i_clk_12MHz, tx_accepted, i_pid)
 
 wire [1:0] pidCodingGroup = pid_q[1:0];
 wire pidGrp_isData      = (pidCodingGroup == PIDGROUP_DATA);
@@ -74,7 +74,7 @@ always @*
 
 wire byteSent = (bitCntr_q == '1) && inflight_q && !doStuff;
 
-`dff_nocg_srst(reg [NBYTES_W-1:0], nBytesSent, i_clk_12MHz, i_rst || drv_accepted, '0)
+`dff_nocg_srst(reg [NBYTES_W-1:0], nBytesSent, i_clk_12MHz, i_rst || tx_accepted, '0)
 always @* nBytesSent_d = byteSent ? nBytesSent_q + 1 : nBytesSent_q;
 
 `ifndef SYNTHESIS
@@ -106,7 +106,7 @@ wire [7:0] dataByte = data_q[8*(nBytesSent_q) +: 8]; // Like the head of a fifo.
 // i_pid, i_data (includes ADDR, ENDP fields).
 `dff_nocg_norst(reg [7:0], nextByte, i_clk_12MHz)
 always @*
-  if (drv_accepted)
+  if (tx_accepted)
     nextByte_d = {~i_pid, i_pid}; // 8.3.1 Packet Identifier Field
   else if (byteSent)
     nextByte_d = dataByte;
@@ -120,7 +120,7 @@ always @*
 wire isLastDataByte = ((data_nBytes_q + 'd1) == nBytesSent_q);
 `dff_nocg_srst(reg [2:0], lastDataBytes, i_clk_12MHz, i_rst, '0)
 always @*
-  if (drv_accepted)
+  if (tx_accepted)
     lastDataBytes_d = '0;
   else if (byteSent)
     lastDataBytes_d = {lastDataBytes_q[1:0], isLastDataByte};
@@ -144,7 +144,7 @@ wire doDataCrc =
 `dff_nocg_norst(reg [15:0], crc16, i_clk_12MHz)
 wire crc16Loop = currentBit ^ crc16_q[0];
 always @*
-  if (drv_accepted)
+  if (tx_accepted)
     crc16_d = '1;
   else if (lastDataBytes_q[0] && !doStuff)
     crc16_d = crc16_q >> 1; // Shift after first CRC byte sent.
@@ -179,7 +179,7 @@ wire takeCrc16 =
   byteSent;
 
 // Bit to send is always the LSB of this.
-`dff_cg_srst(reg [7:0], byteShift, i_clk_12MHz, !doStuff, drv_accepted, SYNC_SOP)
+`dff_cg_srst(reg [7:0], byteShift, i_clk_12MHz, !doStuff, tx_accepted, SYNC_SOP)
 always @*
   if (takeCrc16)
     byteShift_d = ~crc16_d[7:0];
@@ -204,7 +204,7 @@ wire currentBit = byteShift_q[0];
 // The data “one” that ends the Sync Pattern is counted as the first one in a
 // sequence.
 // Bit stuffing is always enforced, without exception.
-`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_12MHz, inflight_q, (drv_accepted || i_rst), '0)
+`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_12MHz, inflight_q, (tx_accepted || i_rst), '0)
 always @* nrziHistory_d = {nrziHistory_q[NRZI_MAXRL_ONES-2:0], sendBit};
 
 wire doStuff = &nrziHistory_q;
@@ -259,7 +259,7 @@ assign {o_dp, o_dn} = pn_q;
 // approx 1 dff
 `dff_nocg_srst(reg, inflight, i_clk_12MHz, i_rst, 1'b0)
 always @*
-  if (drv_accepted)
+  if (tx_accepted)
     inflight_d = 1'b1;
   else if (o_eopDone)
     inflight_d = 1'b0;
@@ -289,9 +289,9 @@ wire [4:0] devToHostPids = {
 wire pid_type_onehot = $onehot(devToHostPids);
 
 // Assume requests have sane values for i_pid.
-`asrt(pid_type_onehot, i_clk_12MHz, !i_rst && drv_accepted_q, pid_type_onehot)
+`asrt(pid_type_onehot, i_clk_12MHz, !i_rst && tx_accepted_q, pid_type_onehot)
 
-always @(posedge i_clk_12MHz) if (drv_accepted_q) begin : info
+always @(posedge i_clk_12MHz) if (tx_accepted_q) begin : info
   string s_pidName;
   string s_pid;
   string s_data;
