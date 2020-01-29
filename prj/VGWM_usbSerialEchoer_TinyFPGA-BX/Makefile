@@ -146,13 +146,19 @@ prog_arachne: $(BUILD)/$(PROJ).arachne.icepack.bin
 BUILD_ICECUBE2 := ./build.icecube2
 
 # NOTE: iCEcube2/SynplifyPro requires significant setup.
+# https://forums.linuxmint.com/viewtopic.php?t=290906
 # TODO: Document required setup of these environment variables:
-#		- FOUNDRY
-#		- SBT_DIR
-#		- SYNPLIFY_PATH
-#		- TCL_LIBRARY
-#		- LM_LICENSE_FILE
-#		- LD_LIBRARY_PATH
+#   - FOUNDRY
+#   - SBT_DIR
+#   - SYNPLIFY_PATH
+#   - TCL_LIBRARY
+#   - LM_LICENSE_FILE
+#   - LD_LIBRARY_PATH
+# Create a dummy NIC called eth0 with MAC address to match the license file.
+# NOTE: You may need to request a more recent one, valid for 1 year.
+#   sudo ip link add eth0 type dummy
+#   sudo ip link set eth0 address 00:11:22:33:44:55
+#   export LM_LICENSE_FILE=$PWD/icecube2_001122334455_license.dat
 ICECUBE2DIR ?= /space/lattice/lscc/iCEcube2.2017.08
 FOUNDRY := $(ICECUBE2DIR)/LSE
 SBT_DIR := $(ICECUBE2DIR)/sbt_backend
