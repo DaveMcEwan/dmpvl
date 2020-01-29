@@ -573,22 +573,4 @@ always @* tx_data_nBytes = i_etData_nBytes[txSrc*NBYTES_W +: NBYTES_W];
 // Endpoint will only know data has been sent when an ACK has been received.
 assign o_etReady = etVecMask & {TX_N_ENDP{(rcvdHandshake_ack)}};
 
-`ifndef SYNTHESIS
-always @(posedge i_clk_48MHz) if (txn_accepted) begin : info
-  string s_txnType;
-
-  if (i_txnType[2])
-    $sformat(s_txnType, "Txn[SETUP]");
-  else if (i_txnType[1])
-    $sformat(s_txnType, "Txn[OUT]");
-  else if (i_txnType[0])
-    $sformat(s_txnType, "Txn[IN]");
-  else
-    $sformat(s_txnType, "Txn[UNKNOWN]");
-
-  $display("\nINFO:t%0t:%m: %s with addr=%0d,endp=%0d.", $time, s_txnType, rx_addr, rx_endp);
-end : info
-`endif
-
-
 endmodule
