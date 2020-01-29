@@ -7,12 +7,12 @@ module usbfsTxn #(
   parameter TX_N_ENDP = 2,
 
   // Isochronous endpoints don't handshake.
-  parameter RX_ISOCHRONOUS = 0, // Bit per rx (host=IN, dev=OUT) endpoint.
-  parameter TX_ISOCHRONOUS = 0, // Bit per tx (host=OUT, dev=IN) endpoint.
+  parameter RX_ISOCHRONOUS = 0, // Bit per rx (OUT) endpoint.
+  parameter TX_ISOCHRONOUS = 0, // Bit per tx (IN) endpoint.
 
   // 0=Ignore i_*xStall. 1=Implement logic for stalling endpoints.
-  parameter RX_STALLABLE = 2'b00, // Bit per rx (host=IN, dev=OUT) endpoint.
-  parameter TX_STALLABLE = 2'b01, // Bit per tx (host=OUT, dev=IN) endpoint.
+  parameter RX_STALLABLE = 2'b00, // Bit per rx (OUT) endpoint.
+  parameter TX_STALLABLE = 2'b01, // Bit per tx (IN) endpoint.
 
   parameter MAX_PKT = 8  // in {8,16,32,64}. wMaxPacketSize
 ) (
@@ -44,7 +44,6 @@ module usbfsTxn #(
   input  wire [TX_N_ENDP-1:0]       i_etStall,
 
   // Current state of transaction flags $onehot({SETUP, OUT, IN}).
-  // Mostly useful in dev-mode.
   output wire [2:0]                 o_txnType,
 
   // Current frame number.
@@ -185,7 +184,7 @@ wire [6:0] rcvd_hostToDevPids = {
   rcvdData_data1,
   rcvdHandshake_ack};
 
-// Assertions on dev/host-supported PIDs performed in u_rx.
+// Assertions on dev-supported PIDs performed in u_rx.
 wire rcvd_supportedPid = |rcvd_hostToDevPids;
 
 
@@ -263,10 +262,6 @@ wire [2:0] txnFlags_q = {
 
 assign o_txnType = txnFlags_q;
 
-// dev-mode
-// {1,0,0} or {0,1,0} is the data phase.
-// Got a SETUP/OUT, returning DATA*, then await ACK.
-
 // }}} Transaction type flags
 
 // {{{ addr,endp,frameNumber decode
@@ -281,8 +276,7 @@ wire addressedToSelf = (rx_addr == i_devAddr);
 wire endpSupported = (rx_endp < (inTxn_q ? RX_N_ENDP : TX_N_ENDP));
 
 // Check that transaction is supported and addressed to this device.
-// In dev-mode this may be sampled in cycle *after* token is received.
-// In host-mode this may be sampled in cycle *after* transaction is accepted.
+// This may be sampled in cycle *after* token is received.
 // FSMs for copying buffers should not advance until this, or equivalent logic,
 // has been checked.
 wire txnSupported = addressedToSelf && endpSupported;
@@ -546,7 +540,7 @@ assign tosendRaise_ack =
 
 // NOTE: The txn*_q, await*_q, tosend_q flags act as a FSM where assertions
 // place restrictions on valid states, but the overall state is easily reasoned
-// about in both host-mode and dev-mode.
+// about.
 
 `dff_cg_norst(reg [3:0], tosendPid, i_clk_48MHz, tosendRaise)
 always @*
