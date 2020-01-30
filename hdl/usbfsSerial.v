@@ -43,18 +43,13 @@ localparam PRODUCT_ID = VIDPID_SQUAT ? USBSERIAL_PID : 16'hF055;
 localparam HOST2DEV_N_ENDP = 2;
 localparam DEV2HOST_N_ENDP = 2;
 localparam DATA_W = 8*MAX_PKT;
-localparam NBYTES_W = $clog2(MAX_PKT)+1;
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
 localparam RDIDX_W = $clog2(MAX_PKT);
 
 wire [HOST2DEV_N_ENDP-1:0]  dev_o_erValid, dev_i_erReady;
 
 wire [DEV2HOST_N_ENDP-1:0]  dev_i_etValid, dev_o_etReady;
 
-// TODO: rm
-wire [DATA_W-1:0]           dev_o_erData;
-wire [NBYTES_W-1:0]         dev_o_erData_nBytes;
-
-// TODO: WIP
 wire [HOST2DEV_N_ENDP-1:0]          dev_i_erRdEn;
 wire [HOST2DEV_N_ENDP*RDIDX_W-1:0]  dev_i_erRdIdx;
 wire [7:0]                          dev_o_erRdByte;
@@ -93,11 +88,7 @@ usbfsTxn #( // {{{ u_txn
   .i_erReady                (dev_i_erReady),
   .o_erValid                (dev_o_erValid),
 
-  // TODO: rm
-  .o_erData                 (dev_o_erData),
-  .o_erData_nBytes          (dev_o_erData_nBytes),
-
-  // TODO: WIP
+  // Read buffer interface to u_rx
   .i_erRdEn                 (dev_i_erRdEn),
   .i_erRdIdx                (dev_i_erRdIdx),
   .o_erRdByte               (dev_o_erRdByte),
@@ -106,7 +97,9 @@ usbfsTxn #( // {{{ u_txn
   // Endpoints transmitting data (DEV2HOST_N_ENDP)
   .o_etReady                (dev_o_etReady),
   .i_etValid                (dev_i_etValid),
-  .i_etData                 (dev_i_etData), // {epPktN, ..., epPkt0}
+
+  // TODO: rm
+  .i_etData                 (dev_i_etData), // {epN_pkt, ..., ep0_pkt}
   .i_etData_nBytes          (dev_i_etData_nBytes),
 
   // Endpoints are stalled or not.
@@ -138,17 +131,13 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
   .i_rst                    (i_rst),
 
   .o_devAddr                (devAddr),
-  .o_er0Stall               (dev_i_erStall[0]),
-  .o_et0Stall               (dev_i_etStall[0]),
 
+  // Host-to-device
   .o_er0Ready               (dev_i_erReady[0]),
   .i_er0Valid               (dev_o_erValid[0]),
+  .o_er0Stall               (dev_i_erStall[0]),
 
-  // TODO: rm
-  .i_er0Data                (dev_o_erData),
-  .i_er0Data_nBytes         (dev_o_erData_nBytes),
-
-  // TODO: WIP
+  // Read buffer interface to u_rx
   .o_er0RdEn                (dev_i_erRdEn[0]),
   .o_er0RdIdx               (dev_i_erRdIdx[0*RDIDX_W +: RDIDX_W]),
   .i_er0RdByte              (dev_o_erRdByte),
@@ -156,6 +145,9 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
 
   .i_et0Ready               (dev_o_etReady[0]),
   .o_et0Valid               (dev_i_etValid[0]),
+  .o_et0Stall               (dev_i_etStall[0]),
+
+  // TODO: rm
   .o_et0Data                (dev_i_etData[0*DATA_W +: DATA_W]),
   .o_et0Data_nBytes         (dev_i_etData_nBytes[0*NBYTES_W +: NBYTES_W]),
 
@@ -172,16 +164,10 @@ usbfsEndpRx #( // {{{ u_endpRx
   .o_valid                  (o_hostToDev_valid),
   .o_data                   (o_hostToDev_data),
 
-  .o_erStall                (dev_i_erStall[1]),
-
   .o_erReady                (dev_i_erReady[1]),
   .i_erValid                (dev_o_erValid[1]),
+  .o_erStall                (dev_i_erStall[1]),
 
-  // TODO: rm
-  .i_erData                 (dev_o_erData),
-  .i_erData_nBytes          (dev_o_erData_nBytes),
-
-  // TODO: WIP
   .o_erRdEn                 (dev_i_erRdEn[1]),
   .o_erRdIdx                (dev_i_erRdIdx[1*RDIDX_W +: RDIDX_W]),
   .i_erRdByte               (dev_o_erRdByte),

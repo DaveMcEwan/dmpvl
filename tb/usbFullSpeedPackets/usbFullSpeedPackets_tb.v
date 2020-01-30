@@ -213,7 +213,6 @@ usbPktRx usbPktRx_dev ( // {{{
 ); // }}} usbPktRx_dev
 
 usbfsPktRx #( // {{{ v_usbfsPktRx_dev
-  .AS_HOST_NOT_DEV  (0),
   .MAX_PKT          (8)  // TODO: Other sizes {8, 16, 32, 64}
 ) v_usbfsPktRx_dev (
   .i_clk_48MHz          (clk_48MHz),
@@ -228,11 +227,14 @@ usbfsPktRx #( // {{{ v_usbfsPktRx_dev
   .o_inflight           (dev_o_inflight),
 
   .o_pid                (dev_o_pid),
-  .o_lastData           (dev_o_lastData),
-  .o_lastData_nBytes    (dev_o_lastData_nBytes),
-
   .o_addr               (dev_o_addr),
   .o_endp               (dev_o_endp),
+
+  // TODO: Read buffer interface
+  .i_rdEn               (1'b0),
+  .i_rdIdx              (3'b0),
+  .o_rdByte             (),
+  .o_rdNBytes           (),
 
   .o_pidOkay            (dev_o_pidOkay),
   .o_tokenOkay          (dev_o_tokenOkay),

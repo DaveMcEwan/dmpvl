@@ -28,11 +28,6 @@ module usbfsPktRx #(
   output wire [6:0]                 o_addr,
   output wire [3:0]                 o_endp,
 
-  // TODO: rm
-  // Data fields from the last data payload received.
-  output wire [8*MAX_PKT-1:0]       o_lastData,
-  output wire [$clog2(MAX_PKT):0]   o_lastData_nBytes,
-
   // Buffer read interface.
   // Byte from buffer index i_rdIdx is driven on o_rdByte on cycle after i_rdEn.
   // o_rdNBytes indicates how many bytes, filled from LSB, are valid - setup
@@ -49,15 +44,14 @@ module usbfsPktRx #(
   output wire                       o_tokenOkay,  // CRC5 passed
   output wire                       o_dataOkay    // CRC16 passed
 );
-// NOTE: A design/implementation based on this logic uses approximately TODO?? DFFs,
-// assuming that the data sink is external.
+// approx 80 DFFs,
 
 `include "usbSpec.vh"
 
 // Max number of bytes in a packet is (1<SOP> + 1<PID> + MAX_PKT + 2<CRC16>)
 // SOP is always sent when (nBytesSent_q == 0).
 // PID is always sent when (nBytesSent_q == 1).
-localparam NBYTES_W = $clog2(MAX_PKT) + 1;
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
 
 // {{{ Transition detection and clock recovery
 // approx 9 dff
@@ -258,47 +252,44 @@ assign o_endp = {tokenField1_q, tokenField0_q[7]};
 
 // }}} Decode ADDR,ENDP.
 
-// {{{ Decode data and data_nBytes.
-// Design/implementation should use different logic here.
+// {{{ Buffer data and read interface
+// approx 20 dff
 
-wire clearDataCntr = samplePid && (byteShift_d[1:0] == PIDGROUP_DATA);
-wire incrDataCntr = byteRcvd && pidGrp_isData;
-`dff_cg_srst(reg [NBYTES_W-1:0], data_nBytes, i_clk_48MHz, byteRcvd, clearDataCntr, '0)
-always @* data_nBytes_d = incrDataCntr ? data_nBytes_q + 1 : data_nBytes_q;
-
-assign o_lastData_nBytes = (data_nBytes_q - 'd2);
-
-// NOTE: Due to the way the verif components pass data around and take the
-// entire value at once, this must be converted to registers.
-(* mem2reg *) reg [7:0] data_m [MAX_PKT];
-wire [MAX_PKT-1:0] writeByte;
-genvar b;
-generate for (b=0; b < MAX_PKT; b=b+1) begin
-  assign writeByte[b] = byteRcvd && (data_nBytes_q == b) && pidGrp_isData;
-
-  always @(posedge i_clk_48MHz)
-    if (writeByte[b]) data_m[b] <= byteShift_d;
-
-  assign o_lastData[8*b +: 8] = data_m[b]; // NOTE: Prevents synth to mem.
-end endgenerate
-
-
-// NOTE: WIP Allow use of memory instead of flops.
+// Allow use of memory instead of flops as passing around the entire data
+// contents like the verif component is not a practically scalable design.
 // Using a RAM block on iCE40 allows packet size to be increased without using
 // more LUTs and improves timing.
-// Yosys attribute "mem2reg" can be used to force flops instead of RAM if
-// required.  E.g.  (* mem2reg *) reg [7:0] dataTODO_m [MAX_PKT];
-reg [7:0] dataTODO_m [MAX_PKT];
-wire [$clog2(MAX_PKT)-1:0] wrIdx = data_nBytes_q[$clog2(MAX_PKT)-1:0];
+reg [7:0] dataBytes_m [MAX_PKT];
+
+wire clearNBytes = samplePid && (byteShift_d[1:0] == PIDGROUP_DATA);
+wire incrNBytes = byteRcvd && pidGrp_isData;
+`dff_cg_srst(reg [NBYTES_W-1:0], nBytes, i_clk_48MHz, byteRcvd, clearNBytes, '0)
+always @* nBytes_d = incrNBytes ? nBytes_q + 1 : nBytes_q;
+
+// NOTE: Relies on MAX_PKT being a power of 2.
+// Top bit of nBytes_q prevents CRC bytes from overwriting bottom 2 data bytes.
+wire [NBYTES_W-2:0] wrIdx = nBytes_q[NBYTES_W-2:0];
+wire wrEn = byteRcvd && pidGrp_isData && !nBytes_q[NBYTES_W-1];
+
 always @(posedge i_clk_48MHz)
-  if (incrDataCntr) dataTODO_m[wrIdx] <= byteShift_d;
+  if (wrEn) dataBytes_m[wrIdx] <= byteShift_d;
 
 `dff_cg_norst(reg [7:0], rdByte, i_clk_48MHz, i_rdEn)
-always @* rdByte_d = dataTODO_m[i_rdIdx];
+always @* rdByte_d = dataBytes_m[i_rdIdx];
 assign o_rdByte = rdByte_q;
-assign o_rdNBytes = (data_nBytes_q - 'd2);
+assign o_rdNBytes = (nBytes_q - 'd2);
 
-// }}} Decode data and data_nBytes.
+`ifndef SYNTHESIS
+// GtkWave doesn't view memories, so simple array is fine for wiewing data
+// contents on waves but not fine for design use.
+wire [8*MAX_PKT-1:0] dataBytes_inspect;
+genvar b;
+generate for (b=0; b < MAX_PKT; b=b+1) begin
+  assign dataBytes_inspect[8*b +: 8] = dataBytes_m[b];
+end endgenerate
+`endif
+
+// }}} Buffer data and read interface
 
 // {{{ Display received packet
 `ifndef SYNTHESIS
@@ -353,7 +344,7 @@ always @(posedge i_clk_48MHz) if (o_eop) begin : info
   $sformat(s_pid, "pid=%h=%s", pid_q, s_pidName);
 
   if (pidGrp_isData)
-    $sformat(s_data, " data=0x%0h, nBytes=%0d", o_lastData, o_lastData_nBytes);
+    $sformat(s_data, " data=0x%0h, nBytes=%0d", dataBytes_inspect, o_rdNBytes);
   else if (pid_isTokenSof)
     $sformat(s_data, " frameNumber=%0d", tokenFrameNumber);
   else if (pidGrp_isToken)

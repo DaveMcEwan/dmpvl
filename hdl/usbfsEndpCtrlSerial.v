@@ -40,24 +40,23 @@ module usbfsEndpCtrlSerial #(
 
   output wire [6:0]                 o_devAddr,
 
-  output wire                       o_er0Stall,
-  output wire                       o_et0Stall,
 
+  // Host-to-device
   output wire                       o_er0Ready,
   input  wire                       i_er0Valid,
+  output wire                       o_er0Stall,
 
-  // TODO: rm
-  input  wire [8*MAX_PKT-1:0]       i_er0Data,
-  input  wire [$clog2(MAX_PKT):0]   i_er0Data_nBytes,
-
-  // TODO: WIP
+  // Read buffer interface to u_rx
   output wire                       o_er0RdEn,
   output wire [$clog2(MAX_PKT)-1:0] o_er0RdIdx,
   input  wire [7:0]                 i_er0RdByte,
   input  wire [$clog2(MAX_PKT):0]   i_er0RdNBytes,
 
+  // Device-to-host
   input  wire                       i_et0Ready, // High on receiving ACK/STALL
   output wire                       o_et0Valid,
+  output wire                       o_et0Stall,
+
   output wire [8*MAX_PKT-1:0]       o_et0Data,
   output wire [$clog2(MAX_PKT):0]   o_et0Data_nBytes,
 
@@ -68,20 +67,50 @@ module usbfsEndpCtrlSerial #(
 `include "usbSpec.vh"
 
 localparam DATA_W = 8*MAX_PKT;
-localparam NBYTES_W = $clog2(MAX_PKT)+1;
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
+localparam IDX_W = $clog2(MAX_PKT);
 
 wire er_accepted = o_er0Ready && i_er0Valid;
 wire et_accepted = i_et0Ready && o_et0Valid;
 
+// {{{ Push setup payload into storage.
 
+// NOTE: Relies on USB wire speed being much slower than clock.
+// Transactor will reject packet, forcing host to retransmit, if this fifo is
+// not able to accept a full packet.
+// Minimum time from one data packet to the next is at least another token
+// (32b * 4cycles/b = 128 cycles) so there's plenty of time to take the payload
+// even with MAX_PKT=64.
+`dff_cg_srst_d(reg [NBYTES_W-1:0], rdNBytes, i_clk, er_accepted, i_rst, '0, i_er0RdNBytes)
+`dff_nocg_srst(reg [NBYTES_W-1:0], rdIdx, i_clk, i_rst || er_accepted, '0)
+always @* rdIdx_d = o_er0RdEn ? (rdIdx_q + 'd1) : rdIdx_q;
+
+assign o_er0RdIdx = rdIdx_q`LSb(IDX_W);
+assign o_er0RdEn = (rdNBytes_q != rdIdx_q);
+
+`dff_nocg_srst_d(reg, push, i_clk, i_rst, 1'b0, o_er0RdEn)
+
+wire rdFinalPush = push_q && !o_er0RdEn;
+
+// NOTE: Although 64 flops are defined here, this serial control module does
+// not use all of them so the synth tool should notice and remove them.
 // https://en.wikipedia.org/wiki/USB_(Communications)#Setup_packet
-wire [ 4:0] bmRequestTypeRecipient  = i_er0Data[4:0];
-wire [ 1:0] bmRequestTypeType       = i_er0Data[6:5];
-wire        bmRequestTypeDirection  = i_er0Data[7];
-wire [ 7:0] bRequest                = i_er0Data[15:8];
-wire [15:0] wValue                  = i_er0Data[31:16];
-wire [15:0] wIndex                  = i_er0Data[47:32];
-wire [15:0] wLength                 = i_er0Data[63:48];
+`dff_cg_srst_d(reg [7:0], bmRequestType,  i_clk, push_q && (rdIdx_q == 'd1), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], bRequest,       i_clk, push_q && (rdIdx_q == 'd2), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wValue0,        i_clk, push_q && (rdIdx_q == 'd3), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wValue1,        i_clk, push_q && (rdIdx_q == 'd4), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wIndex0,        i_clk, push_q && (rdIdx_q == 'd5), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wIndex1,        i_clk, push_q && (rdIdx_q == 'd6), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wLength0,       i_clk, push_q && (rdIdx_q == 'd7), i_rst, '0, i_er0RdByte)
+`dff_cg_srst_d(reg [7:0], wLength1,       i_clk, push_q && (rdIdx_q == 'd8), i_rst, '0, i_er0RdByte)
+wire [ 4:0] bmRequestTypeRecipient_q  = bmRequestType_q[4:0];
+wire [ 1:0] bmRequestTypeType_q       = bmRequestType_q[6:5];
+wire        bmRequestTypeDirection_q  = bmRequestType_q[7];
+wire [15:0] wValue_q                  = {wValue1_q, wValue0_q};
+wire [15:0] wIndex_q                  = {wIndex1_q, wIndex0_q};
+wire [15:0] wLength_q                 = {wLength1_q, wLength0_q};
+
+// }}} Push setup payload into storage.
 
 // {{{ Control Transfer flags
 
@@ -136,16 +165,18 @@ Even though the device may only support a couple of types of requests, it still
 must abide by the Control Transfer protocol.
 */
 
+`dff_flag(setupInflight, i_clk, i_rst, i_txnType[2] && er_accepted, rdFinalPush)
+
 // NOTE: Design/implementation can probably get away with less strict checks
 // on zero-length signals.
-wire beginCtrlTfr = i_txnType[2] && er_accepted;
-wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0Data_nBytes == '0); NOTE: Host may misbehave
+wire beginCtrlTfr = setupInflight_q && rdFinalPush;
+wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0RdNBytes == '0); NOTE: Host may misbehave
 wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (o_et0Data_nBytes == '0);
 
 // NOTE: Host may send many requests in any order so just lower everything and
 // use the most recent.
 
-wire tfrNoData_raise = beginCtrlTfr && (wLength == '0);
+wire tfrNoData_raise = beginCtrlTfr && (wLength0_q == '0);
 wire tfrNoData_lower = sentZeroLengthIn || et0Stall_q || beginCtrlTfr;
 `dff_nocg_srst(reg, tfrNoData, i_clk, i_rst, 1'b0)
 always @*
@@ -156,7 +187,7 @@ always @*
   else
     tfrNoData_d = tfrNoData_q;
 
-wire tfrRead_raise = beginCtrlTfr && (wLength != '0) && bmRequestTypeDirection;
+wire tfrRead_raise = beginCtrlTfr && (wLength0_q != '0) && bmRequestTypeDirection_q;
 wire tfrRead_lower = rcvdZeroLengthOut || et0Stall_q || beginCtrlTfr;
 `dff_nocg_srst(reg, tfrRead, i_clk, i_rst, 1'b0)
 always @*
@@ -167,7 +198,7 @@ always @*
   else
     tfrRead_d = tfrRead_q;
 
-wire tfrWrite_raise = beginCtrlTfr && (wLength != '0) && !bmRequestTypeDirection;
+wire tfrWrite_raise = beginCtrlTfr && (wLength0_q != '0) && !bmRequestTypeDirection_q;
 wire tfrWrite_lower = sentZeroLengthIn || er0Stall_q || beginCtrlTfr;
 `dff_nocg_srst(reg, tfrWrite, i_clk, i_rst, 1'b0)
 always @*
@@ -451,19 +482,19 @@ A short packet is defined as a packet shorter than the maximum payload size or
 a zero length data packet.
 */
 wire supportedDescriptor =
-  (wValue[15:8] == BDESCRIPTORTYPE_DEVICE) ||
-  (wValue[15:8] == BDESCRIPTORTYPE_CONFIGURATION);
+  (wValue1_q == BDESCRIPTORTYPE_DEVICE) ||
+  (wValue1_q == BDESCRIPTORTYPE_CONFIGURATION);
 
 // Simple descriptor-select because only 2 are supported.
-wire descriptor_deviceNotConfig = (wValue[15:8] == BDESCRIPTORTYPE_DEVICE);
+wire descriptor_deviceNotConfig = (wValue1_q == BDESCRIPTORTYPE_DEVICE);
 
 // Only 2 control transfers are supported.
 // The host will issue GET_DESCRIPTOR transfers while the device address is
 // still 0, then issue SET_ADDRESS to set it up to something else.
 // SET_ADDRESS is always terminated by in[DATA1].
 // GET_DESCRIPTOR is always terminated by out[DATA1].
-wire setAddress = (bRequest == BREQUEST_SET_ADDRESS);
-wire getDescriptor = (bRequest == BREQUEST_GET_DESCRIPTOR);
+wire setAddress = (bRequest_q == BREQUEST_SET_ADDRESS);
+wire getDescriptor = (bRequest_q == BREQUEST_GET_DESCRIPTOR);
 
 wire supported =
   setAddress ||
@@ -481,7 +512,7 @@ wire setAddress_raise = sentZeroLengthIn && setAddress;
 `dff_flag(setAddress, i_clk, i_rst, setAddress_raise, 1'b0)
 
 `dff_cg_srst(reg [6:0], devAddr, i_clk, tfrNoData_raise && setAddress, i_rst, '0)
-always @* devAddr_d = wValue[6:0];
+always @* devAddr_d = wValue_q`LSb(7);
 assign o_devAddr = setAddress_q ? devAddr_q : '0;
 
 // }}} SET_ADDRESS, o_devAddr
@@ -520,12 +551,12 @@ wire [6:0] nBytesDescriptor = descriptor_deviceNotConfig ?
   CONFIG_WTOTALLENGTH`LSb(7);
 // NOTE: Possible bug in Linux USB driver allows bits to be set in upper byte of
 // wLength, same behaviour required in different form in VGWM design.
-wire partialDescriptor = ({1'b0, nBytesDescriptor} < wLength`LSb(8));
-`asrt(wLength, i_clk, !i_rst && beginCtrlTfr && !partialDescriptor, (wLength[15:7] == '0))
+wire partialDescriptor = ({1'b0, nBytesDescriptor} < wLength0_q);
+`asrt(wLength, i_clk, !i_rst && beginCtrlTfr && !partialDescriptor, (wLength_q[15:7] == '0))
 
 // NOTE: Only to meet timing when synthed.
 `dff_cg_srst(reg [6:0], nBytesToSend, i_clk, beginCtrlTfr, i_rst, '0)
-always @* nBytesToSend_d = partialDescriptor ? nBytesDescriptor : wLength[6:0];
+always @* nBytesToSend_d = partialDescriptor ? nBytesDescriptor : wLength_q`LSb(7);
 
 
 // tfrNoData: Send zero length for Status stage.

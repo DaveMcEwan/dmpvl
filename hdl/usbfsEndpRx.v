@@ -1,5 +1,6 @@
 `include "dff.vh"
 `include "asrt.vh"
+`include "misc.vh"
 
 module usbfsEndpRx #(
   parameter MAX_PKT = 8
@@ -11,40 +12,40 @@ module usbfsEndpRx #(
   output wire                       o_valid,
   output wire [7:0]                 o_data,
 
-  output wire                       o_erStall,
-
+  // Host-to-device
   output wire                       o_erReady,
   input  wire                       i_erValid,
+  output wire                       o_erStall,
 
-  // TODO: rm
-  input  wire [8*MAX_PKT-1:0]       i_erData,
-  input  wire [$clog2(MAX_PKT):0]   i_erData_nBytes,
-
-  // TODO: WIP
-  output wire                       o_erRdEn,
-  output wire [$clog2(MAX_PKT)-1:0] o_erRdIdx,
-  input  wire [7:0]                 i_erRdByte,
-  input  wire [$clog2(MAX_PKT):0]   i_erRdNBytes
+  // Read buffer interface to u_rx
+  output wire                         o_erRdEn,
+  output wire [$clog2(MAX_PKT)-1:0]   o_erRdIdx,
+  input  wire [7:0]                   i_erRdByte,
+  input  wire [$clog2(MAX_PKT+1)-1:0] i_erRdNBytes
 );
+
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
+localparam IDX_W = $clog2(MAX_PKT);
 
 wire accepted = i_ready && o_valid;
 wire er_accepted = o_erReady && i_erValid;
 
-`dff_cg_srst(reg [$clog2(MAX_PKT):0], nBytes_topush, i_clk, er_accepted, i_rst, '0)
-always @* nBytes_topush_d = i_erData_nBytes;
+// NOTE: Relies on USB wire speed being much slower than clock.
+// Transactor will reject packet, forcing host to retransmit, if this fifo is
+// not able to accept a full packet.
+// Minimum time from one data packet to the next is at least another token
+// (32b * 4cycles/b = 128 cycles) so there's plenty of time to take the payload
+// even with MAX_PKT=64.
+`dff_cg_srst_d(reg [NBYTES_W-1:0], rdNBytes, i_clk, er_accepted, i_rst, '0, i_erRdNBytes)
+`dff_nocg_srst(reg [NBYTES_W-1:0], rdIdx, i_clk, i_rst || er_accepted, '0)
+always @* rdIdx_d = o_erRdEn ? (rdIdx_q + 'd1) : rdIdx_q;
 
-// Number of bytes pushed into fifo.
-`dff_nocg_srst(reg [$clog2(MAX_PKT):0], nBytes_pushed, i_clk, i_rst, '0)
-always @*
-  if (push)
-    nBytes_pushed_d = nBytes_pushed_q + 'd1;
-  else if (er_accepted)
-    nBytes_pushed_d = 'd0;
-  else
-    nBytes_pushed_d = nBytes_pushed_q;
+assign o_erRdIdx = rdIdx_q`LSb(IDX_W);
+assign o_erRdEn = (rdNBytes_q != rdIdx_q);
+
+`dff_nocg_srst_d(reg, push, i_clk, i_rst, 1'b0, o_erRdEn)
 
 // {{{ fifo
-wire push = (nBytes_pushed_q != nBytes_topush_q);
 wire empty;
 fifo #(
   .WIDTH          (8),
@@ -56,10 +57,10 @@ fifo #(
   .i_cg       (1'b1),
 
   .i_flush    (1'b0), // unused
-  .i_push     (push),
+  .i_push     (push_q),
   .i_pop      (accepted),
 
-  .i_data     (i_erData[8*nBytes_pushed_q +: 8]),
+  .i_data     (i_erRdByte),
   .o_data     (o_data),
 
   .o_empty    (empty),

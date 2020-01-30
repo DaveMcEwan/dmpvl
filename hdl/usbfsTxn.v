@@ -30,11 +30,7 @@ module usbfsTxn #(
   input  wire [RX_N_ENDP-1:0]       i_erReady,
   output wire [RX_N_ENDP-1:0]       o_erValid,
 
-  // TODO: rm
-  output wire [8*MAX_PKT-1:0]       o_erData,
-  output wire [$clog2(MAX_PKT):0]   o_erData_nBytes,
-
-  // TODO: WIP
+  // Read buffer interface
   input  wire [RX_N_ENDP-1:0]                 i_erRdEn,
   input  wire [RX_N_ENDP*$clog2(MAX_PKT)-1:0] i_erRdIdx,
   output wire [7:0]                           o_erRdByte,
@@ -69,7 +65,7 @@ module usbfsTxn #(
 `include "usbSpec.vh"
 
 localparam DATA_W = 8*MAX_PKT;
-localparam NBYTES_W = $clog2(MAX_PKT)+1;
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
 localparam RDIDX_W = $clog2(MAX_PKT);
 
 genvar e;
@@ -86,9 +82,7 @@ wire                      rx_inflight;
 wire [3:0]                rx_pid;
 wire [6:0]                rx_addr;
 wire [3:0]                rx_endp;
-wire [DATA_W-1:0]         rx_lastData; // TODO: rm
-wire [NBYTES_W-1:0]       rx_lastData_nBytes;
-wire [7:0]                rx_rdByte; // TODO: WIP
+wire [7:0]                rx_rdByte;
 wire [NBYTES_W-1:0]       rx_rdNBytes;
 wire                      rx_pidOkay;
 wire                      rx_tokenOkay;
@@ -125,11 +119,6 @@ usbfsPktRx #(
   .o_addr               (rx_addr),
   .o_endp               (rx_endp),
 
-  // TODO: rm
-  .o_lastData           (rx_lastData),
-  .o_lastData_nBytes    (rx_lastData_nBytes),
-
-  // WIP
   .i_rdEn               (erRdEn),
   .i_rdIdx              (erRdIdx),
   .o_rdByte             (o_erRdByte),
@@ -159,9 +148,6 @@ usbfsPktTx #(
   .o_dn                     (o_dn),
   .o_inflight               (tx_inflight)
 );
-
-assign o_erData = rx_lastData;
-assign o_erData_nBytes = rx_lastData_nBytes;
 
 assign o_erRdByte = rx_rdByte;
 assign o_erRdNBytes = rx_rdNBytes;
