@@ -47,18 +47,26 @@ module usbfsEndpCtrlSerial #(
   output wire                       o_er0Stall,
 
   // Read buffer interface to u_rx
-  output wire                       o_er0RdEn,
-  output wire [$clog2(MAX_PKT)-1:0] o_er0RdIdx,
-  input  wire [7:0]                 i_er0RdByte,
-  input  wire [$clog2(MAX_PKT):0]   i_er0RdNBytes,
+  output wire                         o_er0RdEn,
+  output wire [$clog2(MAX_PKT)-1:0]   o_er0RdIdx,
+  input  wire [7:0]                   i_er0RdByte,
+  input  wire [$clog2(MAX_PKT+1)-1:0] i_er0RdNBytes,
 
   // Device-to-host
   input  wire                       i_et0Ready, // High on receiving ACK/STALL
   output wire                       o_et0Valid,
   output wire                       o_et0Stall,
 
+  // TODO: rm
   output wire [8*MAX_PKT-1:0]       o_et0Data,
   output wire [$clog2(MAX_PKT):0]   o_et0Data_nBytes,
+
+  // TODO: WIP
+  // Write buffer interface to u_tx
+  output wire                         o_et0WrEn,
+  output wire [$clog2(MAX_PKT)-1:0]   o_et0WrIdx,
+  output wire [7:0]                   o_et0WrByte,
+  output wire [$clog2(MAX_PKT+1)-1:0] o_et0WrNBytes,
 
   // flags {SETUP, OUT, IN}
   input  wire [2:0]                 i_txnType

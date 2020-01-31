@@ -45,21 +45,25 @@ localparam DEV2HOST_N_ENDP = 2;
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT + 1);
 localparam RDIDX_W = $clog2(MAX_PKT);
+localparam WRIDX_W = $clog2(MAX_PKT);
 
-wire [HOST2DEV_N_ENDP-1:0]  dev_o_erValid, dev_i_erReady;
-
-wire [DEV2HOST_N_ENDP-1:0]  dev_i_etValid, dev_o_etReady;
+wire [HOST2DEV_N_ENDP-1:0]  dev_o_erValid, dev_i_erReady, dev_i_erStall;
+wire [DEV2HOST_N_ENDP-1:0]  dev_i_etValid, dev_o_etReady, dev_i_etStall;
 
 wire [HOST2DEV_N_ENDP-1:0]          dev_i_erRdEn;
 wire [HOST2DEV_N_ENDP*RDIDX_W-1:0]  dev_i_erRdIdx;
 wire [7:0]                          dev_o_erRdByte;
 wire [NBYTES_W-1:0]                 dev_o_erRdNBytes;
 
+// TODO: rm
 wire [DEV2HOST_N_ENDP*DATA_W-1:0]   dev_i_etData;
 wire [DEV2HOST_N_ENDP*NBYTES_W-1:0] dev_i_etData_nBytes;
 
-wire [HOST2DEV_N_ENDP-1:0]  dev_i_erStall;
-wire [DEV2HOST_N_ENDP-1:0]  dev_i_etStall;
+// TODO: WIP
+wire [DEV2HOST_N_ENDP-1:0]          dev_i_etWrEn;
+wire [DEV2HOST_N_ENDP*WRIDX_W-1:0]  dev_i_etWrIdx;
+wire [DEV2HOST_N_ENDP*8-1:0]        dev_i_etWrByte;
+wire [DEV2HOST_N_ENDP*NBYTES_W-1:0] dev_i_etWrNBytes;
 
 wire [10:0] dev_o_frameNumber;
 wire [2:0]  dev_o_txnType;
@@ -72,7 +76,7 @@ usbfsTxn #( // {{{ u_txn
   .TX_ISOCHRONOUS   (0),
   .RX_STALLABLE     (0),
   .TX_STALLABLE     (1), // Endpoint0 can stall for unsupported descriptors.
-  .MAX_PKT          (MAX_PKT)
+  .MAX_PKT          (MAX_PKT) // TODO: Split RX/TX_MAX_PKT
 ) u_txn (
   .i_clk_48MHz              (i_clk_48MHz),
   .i_rst                    (i_rst),
@@ -87,6 +91,7 @@ usbfsTxn #( // {{{ u_txn
   // Endpoints receiving data (HOST2DEV_N_ENDP)
   .i_erReady                (dev_i_erReady),
   .o_erValid                (dev_o_erValid),
+  .i_erStall                (dev_i_erStall),
 
   // Read buffer interface to u_rx
   .i_erRdEn                 (dev_i_erRdEn),
@@ -97,15 +102,18 @@ usbfsTxn #( // {{{ u_txn
   // Endpoints transmitting data (DEV2HOST_N_ENDP)
   .o_etReady                (dev_o_etReady),
   .i_etValid                (dev_i_etValid),
+  .i_etStall                (dev_i_etStall),
 
   // TODO: rm
   .i_etData                 (dev_i_etData), // {epN_pkt, ..., ep0_pkt}
   .i_etData_nBytes          (dev_i_etData_nBytes),
 
-  // Endpoints are stalled or not.
-  // Only used if corresponding bit in *X_STALLABLE is set.
-  .i_erStall                (dev_i_erStall),
-  .i_etStall                (dev_i_etStall),
+  // TODO: WIP
+  // Write buffer interface to u_tx
+  .i_etWrEn                 (dev_i_etWrEn),
+  .i_etWrIdx                (dev_i_etWrIdx),
+  .i_etWrByte               (dev_i_etWrByte),
+  .i_etWrNBytes             (dev_i_etWrNBytes),
 
   // Current state of transaction flags $onehot({SETUP, OUT, IN}).
   // Mostly useful in dev-mode.
@@ -151,6 +159,13 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
   .o_et0Data                (dev_i_etData[0*DATA_W +: DATA_W]),
   .o_et0Data_nBytes         (dev_i_etData_nBytes[0*NBYTES_W +: NBYTES_W]),
 
+  // TODO: WIP
+  // Write buffer interface to u_tx
+  .o_et0WrEn                (dev_i_etWrEn[0]),
+  .o_et0WrIdx               (dev_i_etWrIdx[0*WRIDX_W +: WRIDX_W]),
+  .o_et0WrByte              (dev_i_etWrByte[0*8 +: 8]),
+  .o_et0WrNBytes            (dev_i_etWrNBytes[0*NBYTES_W +: NBYTES_W]),
+
   .i_txnType                (dev_o_txnType)
 ); // }}} u_ctrlSerial
 
@@ -184,12 +199,20 @@ usbfsEndpTx #( // {{{ u_endpTx
   .i_valid                  (i_devToHost_valid),
   .i_data                   (i_devToHost_data),
 
-  .o_etStall                (dev_i_etStall[1]),
-
   .i_etReady                (dev_o_etReady[1]),
   .o_etValid                (dev_i_etValid[1]),
+  .o_etStall                (dev_i_etStall[1]),
+
+  // TODO: rm
   .o_etData                 (dev_i_etData[1*DATA_W +: DATA_W]),
-  .o_etData_nBytes          (dev_i_etData_nBytes[1*NBYTES_W +: NBYTES_W])
+  .o_etData_nBytes          (dev_i_etData_nBytes[1*NBYTES_W +: NBYTES_W]),
+
+  // TODO: WIP
+  // Write buffer interface to u_tx
+  .o_etWrEn                 (dev_i_etWrEn[1]),
+  .o_etWrIdx                (dev_i_etWrIdx[1*WRIDX_W +: WRIDX_W]),
+  .o_etWrByte               (dev_i_etWrByte[1*8 +: 8]),
+  .o_etWrNBytes             (dev_i_etWrNBytes[1*NBYTES_W +: NBYTES_W])
 ); // }}} u_endpTx
 
 endmodule

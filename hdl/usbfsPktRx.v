@@ -32,6 +32,7 @@ module usbfsPktRx #(
   // Byte from buffer index i_rdIdx is driven on o_rdByte on cycle after i_rdEn.
   // o_rdNBytes indicates how many bytes, filled from LSB, are valid - setup
   // before the o_eop pulse.
+  input  wire                       i_clk_rd,
   input  wire                       i_rdEn,
   input  wire [$clog2(MAX_PKT)-1:0] i_rdIdx,
   output wire [7:0]                 o_rdByte,
@@ -256,7 +257,7 @@ assign o_endp = {tokenField1_q, tokenField0_q[7]};
 // approx 20 dff
 
 // Allow use of memory instead of flops as passing around the entire data
-// contents like the verif component is not a practically scalable design.
+// contents like the verif component does is not a practically scalable design.
 // Using a RAM block on iCE40 allows packet size to be increased without using
 // more LUTs and improves timing.
 reg [7:0] dataBytes_m [MAX_PKT];
@@ -274,7 +275,7 @@ wire wrEn = byteRcvd && pidGrp_isData && !nBytes_q[NBYTES_W-1];
 always @(posedge i_clk_48MHz)
   if (wrEn) dataBytes_m[wrIdx] <= byteShift_d;
 
-`dff_cg_norst(reg [7:0], rdByte, i_clk_48MHz, i_rdEn)
+`dff_cg_norst(reg [7:0], rdByte, i_clk_rd, i_rdEn)
 always @* rdByte_d = dataBytes_m[i_rdIdx];
 assign o_rdByte = rdByte_q;
 assign o_rdNBytes = (nBytes_q - 'd2);

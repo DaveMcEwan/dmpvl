@@ -29,23 +29,31 @@ module usbfsTxn #(
   // Endpoints receiving data
   input  wire [RX_N_ENDP-1:0]       i_erReady,
   output wire [RX_N_ENDP-1:0]       o_erValid,
+  input  wire [RX_N_ENDP-1:0]       i_erStall, // Masked with RX_STALLABLE
 
   // Read buffer interface
+  // Read enable and index signals in format {endpN_*, ..., endp0_*}
   input  wire [RX_N_ENDP-1:0]                 i_erRdEn,
   input  wire [RX_N_ENDP*$clog2(MAX_PKT)-1:0] i_erRdIdx,
   output wire [7:0]                           o_erRdByte,
-  output wire [$clog2(MAX_PKT):0]             o_erRdNBytes,
+  output wire [$clog2(MAX_PKT+1)-1:0]         o_erRdNBytes,
 
   // Endpoints transmitting data
-  output wire [TX_N_ENDP-1:0]               o_etReady,
-  input  wire [TX_N_ENDP-1:0]               i_etValid,
-  input  wire [TX_N_ENDP*8*MAX_PKT-1:0]     i_etData, // {epPktN, ..., epPkt0}
-  input  wire [TX_N_ENDP*($clog2(MAX_PKT)+1)-1:0] i_etData_nBytes,
+  output wire [TX_N_ENDP-1:0]       o_etReady,
+  input  wire [TX_N_ENDP-1:0]       i_etValid,
+  input  wire [TX_N_ENDP-1:0]       i_etStall, // Masked with TX_STALLABLE
 
-  // Endpoints are stalled or not.
-  // Only used if corresponding bit in *X_STALLABLE is set.
-  input  wire [RX_N_ENDP-1:0]       i_erStall,
-  input  wire [TX_N_ENDP-1:0]       i_etStall,
+  // TODO: rm
+  input  wire [TX_N_ENDP*8*MAX_PKT-1:0]     i_etData, // {epPktN, ..., epPkt0}
+  input  wire [TX_N_ENDP*$clog2(MAX_PKT+1)-1:0] i_etData_nBytes,
+
+  // TODO: WIP
+  // Write buffer interface
+  // All signals in format {endpN_*, ..., endp0_*}
+  input  wire [TX_N_ENDP-1:0]                   i_etWrEn,
+  input  wire [TX_N_ENDP*$clog2(MAX_PKT)-1:0]   i_etWrIdx,
+  input  wire [TX_N_ENDP*8-1:0]                 i_etWrByte,
+  input  wire [TX_N_ENDP*$clog2(MAX_PKT+1)-1:0] i_etWrNBytes,
 
   // Current state of transaction flags $onehot({SETUP, OUT, IN}).
   output wire [2:0]                 o_txnType,
@@ -67,6 +75,7 @@ module usbfsTxn #(
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT + 1);
 localparam RDIDX_W = $clog2(MAX_PKT);
+localparam WRIDX_W = $clog2(MAX_PKT);
 
 genvar e;
 
@@ -93,8 +102,9 @@ wire                      tx_ready;
 wire                      tx_valid;
 wire                      tx_eopDone;
 wire [3:0]                tx_pid;
-reg  [DATA_W-1:0]         tx_data;
-reg  [NBYTES_W-1:0]       tx_data_nBytes;
+// TODO: rm
+wire [DATA_W-1:0]         tx_data;
+wire [NBYTES_W-1:0]       tx_data_nBytes;
 
 // u_tx.o_ready changes at slower rate than transactor clock so detect falling
 // edge of accepted.
@@ -119,6 +129,7 @@ usbfsPktRx #(
   .o_addr               (rx_addr),
   .o_endp               (rx_endp),
 
+  .i_clk_rd             (i_clk_48MHz),
   .i_rdEn               (erRdEn),
   .i_rdIdx              (erRdIdx),
   .o_rdByte             (o_erRdByte),
@@ -141,8 +152,17 @@ usbfsPktTx #(
   .o_eopDone                (tx_eopDone),
 
   .i_pid                    (tx_pid),
+
+  // TODO: rm
   .i_data                   (tx_data),
   .i_data_nBytes            (tx_data_nBytes),
+
+  // TODO: WIP
+  .i_clk_wr                 (i_clk_48MHz),
+  .i_wrEn                   (etWrEn),
+  .i_wrIdx                  (etWrIdx),
+  .i_wrByte                 (etWrByte),
+  .i_wrNBytes               (etWrNBytes),
 
   .o_dp                     (o_dp),
   .o_dn                     (o_dn),
@@ -357,6 +377,10 @@ wire etStalled = |etVec_stalled;
 wire etIsochronous = |etVec_isochronous;
 wire etReady = |(o_etReady & etVecMask);
 wire etValid = |(i_etValid & etVecMask); // Tx endpoint has data.
+wire etWrEn = |(i_etWrEn & etVecMask);
+wire [WRIDX_W-1:0] etWrIdx = i_etWrIdx[txEndpSelect*WRIDX_W +: WRIDX_W];
+wire [7:0] etWrByte = i_etWrByte[txEndpSelect*8 +: 8];
+wire [NBYTES_W-1:0] etWrNBytes = i_etWrNBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
 
 // }}} Mask/reduce IO per endpoint
 
@@ -570,12 +594,12 @@ always @*
     default:   tosendPid_d = tx_nextDataPid;
   endcase
 
-assign tx_valid = tosend_q || tosendSof_q;
+assign tx_valid = (tosend_q || tosendSof_q); // && !etWrEn; TODO: WIP supress while copying data.
 assign tx_pid = tosendSof_q ? PID_TOKEN_SOF : tosendPid_q;
 
 // TODO: rm
-always @* tx_data = i_etData[txEndpSelect*DATA_W +: DATA_W];
-always @* tx_data_nBytes = i_etData_nBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
+assign tx_data = i_etData[txEndpSelect*DATA_W +: DATA_W];
+assign tx_data_nBytes = i_etData_nBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
 
 
 

@@ -3,6 +3,7 @@
  * 1. usbFullSpeedPacketSender[host] (verif) --> usbFullSpeedPacketReceiver[device] (verif)
  * 2. usbFullSpeedPacketSender[host] (verif) --> usbPktRx (VGWM design)
  * 3. usbFullSpeedPacketSender[host] (verif) --> usbfsPktRx (design)
+ * TODO: usbfsPktTx[dev] (design) --> usbFullSpeedPacketReceiver[device] (verif)
  */
 module usbFullSpeedPackets_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.

@@ -8,16 +8,26 @@ module usbfsPktTx #(
   input  wire                       i_rst,
 
   // Valid/ready pipeline interface/handshake.
-  // NOTE: Where PID does not require a data payload, i_data and i_data_nBytes
-  // are ignored.
+  // NOTE: Data buffer and nBytes must be setup before i_valid.
+  // In device mode data buffer is only used for DATAx, not token or handshake.
   output wire                       o_ready,
   input  wire                       i_valid,
 
   output wire                       o_eopDone,
 
   input  wire [3:0]                 i_pid,
+
+  // TODO: rm
   input  wire [8*MAX_PKT-1:0]       i_data,
-  input  wire [$clog2(MAX_PKT):0]   i_data_nBytes,
+  input  wire [$clog2(MAX_PKT+1)-1:0] i_data_nBytes,
+
+  // TODO: WIP
+  // Write buffer interface
+  input  wire                         i_clk_wr,
+  input  wire                         i_wrEn,
+  input  wire [$clog2(MAX_PKT)-1:0]   i_wrIdx,
+  input  wire [7:0]                   i_wrByte,
+  input  wire [$clog2(MAX_PKT+1)-1:0] i_wrNBytes,
 
   // USB {d+, d-}
   output wire                       o_dp,
@@ -25,8 +35,7 @@ module usbfsPktTx #(
 
   output wire                       o_inflight
 );
-// NOTE: A design/implementation based on this logic uses approximately 60 DFFs,
-// assuming that the data source is external.
+// approx 60 DFFs,
 
 `include "usbSpec.vh"
 
@@ -42,11 +51,33 @@ wire tx_accepted = o_ready && i_valid;
 `dff_nocg_srst(reg, tx_accepted, i_clk_12MHz, i_rst, 1'b0)
 always @* tx_accepted_d = tx_accepted;
 
+// TODO: rm
 // Accept and store inputs.
 // NOTE: Data packets with zero bytes are allowed, for example to finish
 // a Control Transfer.
 `dff_cg_norst_d(reg [NBYTES_W-1:0], data_nBytes, i_clk_12MHz, tx_accepted, i_data_nBytes)
 `dff_cg_norst_d(reg [8*MAX_PKT-1:0], data, i_clk_12MHz, tx_accepted, i_data)
+
+// TODO: WIP
+// Allow use of memory instead of flops as passing around the entire data
+// contents like the verif component does is not a practically scalable design.
+// Using a RAM block on iCE40 allows packet size to be increased without using
+// more LUTs and improves timing.
+reg [7:0] dataBytes_m [MAX_PKT];
+always @(posedge i_clk_12MHz)
+  if (i_wrEn) dataBytes_m[i_wrIdx] <= i_wrByte;
+
+`ifndef SYNTHESIS
+// GtkWave doesn't view memories, so simple array is fine for wiewing data
+// contents on waves but not fine for design use.
+wire [8*MAX_PKT-1:0] dataBytes_inspect;
+genvar b;
+generate for (b=0; b < MAX_PKT; b=b+1) begin
+  assign dataBytes_inspect[8*b +: 8] = dataBytes_m[b];
+end endgenerate
+`endif
+
+`dff_cg_norst_d(reg [NBYTES_W-1:0], wrNBytes, i_clk_12MHz, tx_accepted, i_wrNBytes)
 
 // {{{ PID store and decode
 
@@ -96,11 +127,7 @@ wire [NBYTES_W-1:0] nBytesPkt_data = data_nBytes_q + 'd4; // SOP, PID, data1..N,
 // A data packet consists of the PID followed by 0..1024B of data payload (up to
 // 1024B for high-speed devices, 64B for full-speed devices, and at most 8B for
 // low-speed devices), and the 16b CRC.
-
-// NOTE: Design/implementation can use similar logic, but take data from a fifo
-// or something else with block RAMs.
-wire dataAvailable = (nBytesSent_d < (data_nBytes_q + 'd2)); // SOP, PID, data...
-wire [7:0] dataByte = data_q[8*(nBytesSent_q) +: 8]; // Like the head of a fifo.
+wire [7:0] dataByte = data_q[8*nBytesSent_q +: 8]; // TODO: rm
 
 // Packet size is always an integer number of bytes.
 // i_pid, i_data (includes ADDR, ENDP fields).
@@ -109,7 +136,8 @@ always @*
   if (tx_accepted)
     nextByte_d = {~i_pid, i_pid}; // 8.3.1 Packet Identifier Field
   else if (byteSent)
-    nextByte_d = dataByte;
+    nextByte_d = dataByte; // TODO: rm
+    //nextByte_d = dataBytes_m[8*nBytesSent_q +: 8]; // TODO: WIP
   else
     nextByte_d = nextByte_q;
 

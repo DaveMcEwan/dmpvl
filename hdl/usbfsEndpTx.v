@@ -11,12 +11,21 @@ module usbfsEndpTx #(
   input  wire                       i_valid,
   input  wire [7:0]                 i_data,
 
-  output wire                       o_etStall,
 
   input  wire                       i_etReady,
   output wire                       o_etValid,
+  output wire                       o_etStall,
+
+  // TODO: rm
   output wire [8*MAX_PKT-1:0]       o_etData,
-  output wire [$clog2(MAX_PKT):0]   o_etData_nBytes
+  output wire [$clog2(MAX_PKT):0]   o_etData_nBytes,
+
+  // TODO: WIP
+  // Write buffer interface to u_tx
+  output wire                         o_etWrEn,
+  output wire [$clog2(MAX_PKT)-1:0]   o_etWrIdx,
+  output wire [7:0]                   o_etWrByte,
+  output wire [$clog2(MAX_PKT+1)-1:0] o_etWrNBytes
 );
 
 wire accepted = o_ready && i_valid;
