@@ -248,6 +248,7 @@ always @* if (en) \
 
 // Only one macro is defined for flag register as anything else really needs
 // close attention, which a macro would distract from.
+// Lowering gets priority over raising.
 // Synchronous reset to zero.
 // {{{ `dff_flag (foo, i_clk, i_rst, fooRaise, fooLower)
 `define dff_flag(n, clk, rst, raise, lower) \
@@ -258,6 +259,17 @@ always @ (posedge clk) \
   if (rst || (n``_goDn))  n``_q <= 1'b0; \
   else if (n``_goUp)      n``_q <= 1'b1; \
   else                    n``_q <= n``_q;
+// }}}
+
+// Upcounter of the common variety.
+// Synchronous reset to zero.
+// {{{ `dff_upcounter (logic [9:0], foo, i_clk, i_cg, i_rst)
+`define dff_upcounter(t, n, clk, cg, rst) \
+t n``_q; \
+always @ (posedge clk) \
+  if (rst)      n``_q <= '0; \
+  else if (cg)  n``_q <= n``_q + 'd1; \
+  else          n``_q <= n``_q;
 // }}}
 
 `endif // DFF_VH_

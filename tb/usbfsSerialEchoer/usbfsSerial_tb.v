@@ -132,7 +132,7 @@ always @*
 // Finish sim after an upper limit on the number of clock cycles, or USB
 // transactions sent.
 always @*
-  if ((nCycles_q > 500000) || (nTxns_q > 1000))
+  if ((nCycles_q > 100000) || (nTxns_q > 1000))
     $finish;
 
 // Should not accept another packet while one is inflight.

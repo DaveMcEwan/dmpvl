@@ -64,7 +64,7 @@ always @* tx_accepted_d = tx_accepted;
 // Using a RAM block on iCE40 allows packet size to be increased without using
 // more LUTs and improves timing.
 reg [7:0] dataBytes_m [MAX_PKT];
-always @(posedge i_clk_12MHz)
+always @(posedge i_clk_wr)
   if (i_wrEn) dataBytes_m[i_wrIdx] <= i_wrByte;
 
 `ifndef SYNTHESIS
