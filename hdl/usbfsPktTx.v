@@ -1,5 +1,6 @@
 `include "asrt.vh"
 `include "dff.vh"
+`include "misc.vh"
 
 module usbfsPktTx #(
   parameter MAX_PKT = 8  // in {8,16,32,64}. wMaxPacketSize
@@ -17,11 +18,6 @@ module usbfsPktTx #(
 
   input  wire [3:0]                 i_pid,
 
-  // TODO: rm
-  input  wire [8*MAX_PKT-1:0]       i_data,
-  input  wire [$clog2(MAX_PKT+1)-1:0] i_data_nBytes,
-
-  // TODO: WIP
   // Write buffer interface
   input  wire                         i_clk_wr,
   input  wire                         i_wrEn,
@@ -42,23 +38,12 @@ module usbfsPktTx #(
 // Max number of bytes in a packet is (1<SOP> + 1<PID> + MAX_PKT + 2<CRC16>)
 // SOP is always sent when (nBytesSent_q == 0).
 // PID is always sent when (nBytesSent_q == 1).
-localparam NBYTES_W = $clog2(MAX_PKT) + 1;
+localparam NBYTES_W = $clog2(MAX_PKT + 1);
+localparam IDX_W = $clog2(MAX_PKT);
 
 // NOTE: Packet will begin driving SYNC_SOP in cycle following this.
 wire tx_accepted = o_ready && i_valid;
 
-// Delayed version just for driver assumptions.
-`dff_nocg_srst(reg, tx_accepted, i_clk_12MHz, i_rst, 1'b0)
-always @* tx_accepted_d = tx_accepted;
-
-// TODO: rm
-// Accept and store inputs.
-// NOTE: Data packets with zero bytes are allowed, for example to finish
-// a Control Transfer.
-`dff_cg_norst_d(reg [NBYTES_W-1:0], data_nBytes, i_clk_12MHz, tx_accepted, i_data_nBytes)
-`dff_cg_norst_d(reg [8*MAX_PKT-1:0], data, i_clk_12MHz, tx_accepted, i_data)
-
-// TODO: WIP
 // Allow use of memory instead of flops as passing around the entire data
 // contents like the verif component does is not a practically scalable design.
 // Using a RAM block on iCE40 allows packet size to be increased without using
@@ -96,21 +81,15 @@ wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
 // {{{ Count bits and bytes.
 // approx 7 dff with minimal MAX_PKT
 
-`dff_nocg_srst(reg [2:0], bitCntr, i_clk_12MHz, i_rst || o_eopDone, '0)
-always @*
-  if (!doStuff && inflight_q)
-    bitCntr_d = bitCntr_q + 1;
-  else
-    bitCntr_d = bitCntr_q;
+`dff_upcounter(reg [2:0], bitCntr, i_clk_12MHz, !doStuff && inflight_q, i_rst || o_eopDone)
 
 wire byteSent = (bitCntr_q == '1) && inflight_q && !doStuff;
 
-`dff_nocg_srst(reg [NBYTES_W-1:0], nBytesSent, i_clk_12MHz, i_rst || tx_accepted, '0)
-always @* nBytesSent_d = byteSent ? nBytesSent_q + 1 : nBytesSent_q;
+`dff_upcounter(reg [NBYTES_W-1:0], nBytesSent, i_clk_12MHz, byteSent, i_rst || tx_accepted)
 
 `ifndef SYNTHESIS
 wire [NBYTES_W-1:0] nBytesPkt_handshake = 'd2; // SOP, PID
-wire [NBYTES_W-1:0] nBytesPkt_data = data_nBytes_q + 'd4; // SOP, PID, data1..N, CRC, CRC
+wire [NBYTES_W-1:0] nBytesPkt_data = wrNBytes_q + 'd4; // SOP, PID, data1..N, CRC, CRC
 `asrt(nBytesSent_handshake, i_clk_12MHz, !i_rst && o_eopDone && pidGrp_isHandshake, (nBytesSent_q == nBytesPkt_handshake))
 `asrt(nBytesSent_data,      i_clk_12MHz, !i_rst && o_eopDone && pidGrp_isData,      (nBytesSent_q == nBytesPkt_data))
 `endif
@@ -127,17 +106,14 @@ wire [NBYTES_W-1:0] nBytesPkt_data = data_nBytes_q + 'd4; // SOP, PID, data1..N,
 // A data packet consists of the PID followed by 0..1024B of data payload (up to
 // 1024B for high-speed devices, 64B for full-speed devices, and at most 8B for
 // low-speed devices), and the 16b CRC.
-wire [7:0] dataByte = data_q[8*nBytesSent_q +: 8]; // TODO: rm
 
 // Packet size is always an integer number of bytes.
-// i_pid, i_data (includes ADDR, ENDP fields).
 `dff_nocg_norst(reg [7:0], nextByte, i_clk_12MHz)
 always @*
   if (tx_accepted)
     nextByte_d = {~i_pid, i_pid}; // 8.3.1 Packet Identifier Field
   else if (byteSent)
-    nextByte_d = dataByte; // TODO: rm
-    //nextByte_d = dataBytes_m[8*nBytesSent_q +: 8]; // TODO: WIP
+    nextByte_d = dataBytes_m[nBytesSent_q`LSb(IDX_W)];
   else
     nextByte_d = nextByte_q;
 
@@ -145,7 +121,7 @@ always @*
 
 // Mini state machine for sequencing CRC[0], CRC[1], EOP.
 // approx 3 dff
-wire isLastDataByte = ((data_nBytes_q + 'd1) == nBytesSent_q);
+wire isLastDataByte = ((wrNBytes_q + 'd1) == nBytesSent_q);
 `dff_nocg_srst(reg [2:0], lastDataBytes, i_clk_12MHz, i_rst, '0)
 always @*
   if (tx_accepted)
@@ -301,6 +277,10 @@ assign o_ready = !inflight_q;
 // {{{ Display accepted packet
 `ifndef SYNTHESIS
 
+// Delayed version just for driver assumptions.
+`dff_nocg_srst(reg, tx_accepted, i_clk_12MHz, i_rst, 1'b0)
+always @* tx_accepted_d = tx_accepted;
+
 wire pid_isData0 = (pid_q == PID_DATA_DATA0);
 wire pid_isData1 = (pid_q == PID_DATA_DATA1);
 wire pid_isHandshakeAck = (pid_q == PID_HANDSHAKE_ACK);
@@ -340,7 +320,7 @@ always @(posedge i_clk_12MHz) if (tx_accepted_q) begin : info
   $sformat(s_pid, "pid=%h=%s", pid_q, s_pidName);
 
   if (pidGrp_isData)
-    $sformat(s_data, " data=0x%0h, nBytes=%0d", data_q, data_nBytes_q);
+    $sformat(s_data, " data=0x%0h, nBytes=%0d", dataBytes_inspect, wrNBytes_q);
   else if (pidGrp_isHandshake)
     $sformat(s_data, "");
   else

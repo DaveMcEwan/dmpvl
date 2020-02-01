@@ -57,11 +57,6 @@ module usbfsEndpCtrlSerial #(
   output wire                       o_et0Valid,
   output wire                       o_et0Stall,
 
-  // TODO: rm
-  output wire [8*MAX_PKT-1:0]       o_et0Data,
-  output wire [$clog2(MAX_PKT):0]   o_et0Data_nBytes,
-
-  // TODO: WIP
   // Write buffer interface to u_tx
   output wire                         o_et0WrEn,
   output wire [$clog2(MAX_PKT)-1:0]   o_et0WrIdx,
@@ -176,7 +171,7 @@ must abide by the Control Transfer protocol.
 
 wire beginCtrlTfr = setupInflight_q && rdFinalPush;
 wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0RdNBytes == '0); NOTE: Host may misbehave
-wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (o_et0Data_nBytes == '0);
+wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (o_et0WrNBytes == '0);
 
 // NOTE: Host may send many requests in any order so just lower everything and
 // use the most recent.
@@ -540,10 +535,6 @@ descriptor.
 If a device does not support a requested descriptor, it responds with a
 Request Error.
 */
-// Mux ROM data onto o_et0Data.
-assign o_et0Data = descriptor_deviceNotConfig ?
-  deviceDescriptor_rom[nPktsSent_q*DATA_W +: DATA_W] :
-  configDescriptor_rom[nPktsSent_q*DATA_W +: DATA_W];
 
 // NOTE: Descriptors must be <128B.
 wire [6:0] nBytesDescriptor = descriptor_deviceNotConfig ?
@@ -554,29 +545,8 @@ wire [6:0] nBytesDescriptor = descriptor_deviceNotConfig ?
 wire partialDescriptor = ({1'b0, nBytesDescriptor} < wLength0_q);
 `asrt(wLength, i_clk, !i_rst && beginCtrlTfr && !partialDescriptor, (wLength_q[15:7] == '0))
 
-
-// TODO: rm
 `dff_cg_srst(reg [6:0], nBytesToSend, i_clk, beginCtrlTfr, i_rst, '0)
 always @* nBytesToSend_d = partialDescriptor ? nBytesDescriptor : wLength_q`LSb(7);
-
-
-
-// tfrNoData: Send zero length for Status stage.
-// tfrRead: Send either NAK/STALL (handled by stall/valid signals) or descriptor.
-//    nBytes should be either full packet, or remaining in descriptor.
-// tfrWrite: Send zero length for Status stage.
-reg [NBYTES_W-1:0] et0Data_nBytes;
-always @*
-  if (!tfrRead_q)
-    et0Data_nBytes = '0;
-  else if (nBytesToSend_q >= (nPktsSent_q * MAX_PKT + MAX_PKT))
-    et0Data_nBytes = MAX_PKT`LSb(NBYTES_W);
-  else
-    et0Data_nBytes = {1'b0, nBytesToSend_q`LSb(NBYTES_W-1)};
-assign o_et0Data_nBytes = et0Data_nBytes;
-
-
-
 
 /*
 Send data, not NAK/STALL for:
@@ -586,31 +556,25 @@ Send data, not NAK/STALL for:
 */
 assign o_et0Valid =
   (tfrRead_q && (nBytesToSend_q >= (nPktsSent_q*MAX_PKT))) ||
-  // TODO: WIP (tfrRead_q && !allBytesWritten) ||
   tfrNoData_q ||
   tfrWrite_q; // NOTE: STALL overrides NAK when unsupported.
 
-
-
-
-wire [6:0] nBytesToSend = partialDescriptor ? nBytesDescriptor : wLength0_q`LSb(7);
-
 `dff_upcounter(reg [6:0], nBytesWritten, i_clk, o_et0WrEn, i_rst || beginCtrlTfr)
-
-wire allBytesWritten = (nBytesToSend == nBytesWritten_q);
+wire writingLastByte = ((nBytesWritten_q + 'd1) == nBytesToSend_q) && o_et0WrEn;
+wire allBytesWritten = (nBytesToSend_q == nBytesWritten_q);
 
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 always @*
-  if (et_accepted || beginCtrlTfr)
+  if ((et_accepted && !allBytesWritten) || tfrRead_raise)
     writing_d = 1'b1;
-  else if (allBytesWritten || (o_et0WrIdx == '1)) // No more data, OR sent MAX_PKT.
+  else if (writingLastByte || (o_et0WrIdx == '1)) // No more data, OR sent MAX_PKT.
     writing_d = 1'b0; // NOTE: Relies on MAX_PKT being a power of 2.
   else
     writing_d = writing_q;
 
 `dff_upcounter(reg [NBYTES_W-1:0], wrNBytes, i_clk, o_et0WrEn, i_rst || et_accepted || beginCtrlTfr)
 
-assign o_et0WrEn = tfrRead_q && writing_q && !allBytesWritten;
+assign o_et0WrEn = tfrRead_q && writing_q;
 assign o_et0WrIdx = wrNBytes_q[IDX_W-1:0];
 
 // Mux ROM data onto o_et0WrByte.

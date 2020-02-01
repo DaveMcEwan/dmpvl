@@ -43,11 +43,6 @@ module usbfsTxn #(
   input  wire [TX_N_ENDP-1:0]       i_etValid,
   input  wire [TX_N_ENDP-1:0]       i_etStall, // Masked with TX_STALLABLE
 
-  // TODO: rm
-  input  wire [TX_N_ENDP*8*MAX_PKT-1:0]     i_etData, // {epPktN, ..., epPkt0}
-  input  wire [TX_N_ENDP*$clog2(MAX_PKT+1)-1:0] i_etData_nBytes,
-
-  // TODO: WIP
   // Write buffer interface
   // All signals in format {endpN_*, ..., endp0_*}
   input  wire [TX_N_ENDP-1:0]                   i_etWrEn,
@@ -102,9 +97,6 @@ wire                      tx_ready;
 wire                      tx_valid;
 wire                      tx_eopDone;
 wire [3:0]                tx_pid;
-// TODO: rm
-wire [DATA_W-1:0]         tx_data;
-wire [NBYTES_W-1:0]       tx_data_nBytes;
 
 // u_tx.o_ready changes at slower rate than transactor clock so detect falling
 // edge of accepted.
@@ -153,11 +145,6 @@ usbfsPktTx #(
 
   .i_pid                    (tx_pid),
 
-  // TODO: rm
-  .i_data                   (tx_data),
-  .i_data_nBytes            (tx_data_nBytes),
-
-  // TODO: WIP
   .i_clk_wr                 (i_clk_48MHz),
   .i_wrEn                   (etWrEn),
   .i_wrIdx                  (etWrIdx),
@@ -594,14 +581,8 @@ always @*
     default:   tosendPid_d = tx_nextDataPid;
   endcase
 
-assign tx_valid = (tosend_q || tosendSof_q); // && !etWrEn; TODO: WIP supress while copying data.
+assign tx_valid = (tosend_q || tosendSof_q) && !etWrEn;
 assign tx_pid = tosendSof_q ? PID_TOKEN_SOF : tosendPid_q;
-
-// TODO: rm
-assign tx_data = i_etData[txEndpSelect*DATA_W +: DATA_W];
-assign tx_data_nBytes = i_etData_nBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
-
-
 
 // Endpoint should be holding data and valid steady, waiting for o_etReady to go
 // high to accept it.
