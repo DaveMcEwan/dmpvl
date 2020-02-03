@@ -224,10 +224,6 @@ wire sent_isHandshake = tx_accepted && tx_pidGrp_isHandshake;
 
 // NOTE: Only the non-pidgroup bits are required since sent_* has already
 // taken pidgroup bits into consideration.
-wire sentToken_in     = sent_isToken && (tx_pid[3:2] == PID_TOKEN_IN[3:2]);
-wire sentToken_out    = sent_isToken && (tx_pid[3:2] == PID_TOKEN_OUT[3:2]);
-wire sentToken_setup  = sent_isToken && (tx_pid[3:2] == PID_TOKEN_SETUP[3:2]);
-wire sentToken_sof    = sent_isToken && (tx_pid[3:2] == PID_TOKEN_SOF[3:2]);
 wire sentData_data0 = sent_isData && (tx_pid[3:2] == PID_DATA_DATA0[3:2]); // NOTE: bit2 not strictly required
 wire sentData_data1 = sent_isData && (tx_pid[3:2] == PID_DATA_DATA1[3:2]); // NOTE: bit2 not strictly required
 wire sentHandshake_ack = sent_isHandshake && (tx_pid[3:2] == PID_HANDSHAKE_ACK[3:2]);
@@ -504,20 +500,11 @@ USB device can only receive these PIDs:
    6. handshake[ACK] - Response to data[DATA*]. Requires no response.
 */
 
-wire tosendSofRaise, tosendSofLower;
-`dff_flag(tosendSof, i_clk_48MHz, i_rst, tosendSofRaise, tosendSofLower)
-
-wire tosendRaise_setup;
-wire tosendRaise_out;
-wire tosendRaise_in;
 wire tosendRaise_ack;
 wire tosendRaise_nak;
 wire tosendRaise_stall;
 wire tosendRaise_data;
-wire [6:0] tosendRaiseVec = {
-  tosendRaise_setup,
-  tosendRaise_out,
-  tosendRaise_in,
+wire [3:0] tosendRaiseVec = {
   tosendRaise_ack,
   tosendRaise_nak,
   tosendRaise_stall,
@@ -527,11 +514,8 @@ wire tosendRaise = |tosendRaiseVec;
 
 // Wait for SOF to be sent with higher priority, or cancel transaction which
 // goes over frame boundary.
-wire tosendLower = (tx_accepted && !sentToken_sof && !tosendRaise) || updateFrameNumber;
+wire tosendLower = (tx_accepted && !tosendRaise) || updateFrameNumber;
 `dff_flag(tosend, i_clk_48MHz, i_rst, tosendRaise, tosendLower)
-
-assign {tosendSofRaise, tosendSofLower} = {1'b0, 1'b1};
-assign {tosendRaise_setup, tosendRaise_out, tosendRaise_in} = '0;
 
 assign tosendRaise_data = rcvdToken_in && !etStalled && etValid;
 
@@ -574,18 +558,15 @@ assign tosendRaise_ack =
 
 `dff_cg_norst(reg [3:0], tosendPid, i_clk_48MHz, tosendRaise)
 always @*
-   case (tosendRaiseVec[6:1])
-    6'b100000: tosendPid_d = PID_TOKEN_SETUP;
-    6'b010000: tosendPid_d = PID_TOKEN_OUT;
-    6'b001000: tosendPid_d = PID_TOKEN_IN;
-    6'b000100: tosendPid_d = PID_HANDSHAKE_ACK;
-    6'b000010: tosendPid_d = PID_HANDSHAKE_NAK;
-    6'b000001: tosendPid_d = PID_HANDSHAKE_STALL;
-    default:   tosendPid_d = tx_nextDataPid;
+   case (tosendRaiseVec[3:1])
+    3'b100:   tosendPid_d = PID_HANDSHAKE_ACK;
+    3'b010:   tosendPid_d = PID_HANDSHAKE_NAK;
+    3'b001:   tosendPid_d = PID_HANDSHAKE_STALL;
+    default:  tosendPid_d = tx_nextDataPid;
   endcase
 
-assign tx_valid = (tosend_q || tosendSof_q) && !etWrEn;
-assign tx_pid = tosendSof_q ? PID_TOKEN_SOF : tosendPid_q;
+assign tx_valid = tosend_q;
+assign tx_pid = tosendPid_q;
 
 // Endpoint should be holding data and valid steady, waiting for o_etReady to go
 // high to accept it.
