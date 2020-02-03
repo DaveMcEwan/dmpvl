@@ -58,6 +58,7 @@ module usbfsEndpCtrlSerial #(
   output wire                       o_et0Stall,
 
   // Write buffer interface to u_tx
+  input  wire                         i_et0TxAccepted,
   output wire                         o_et0WrEn,
   output wire [$clog2(MAX_PKT)-1:0]   o_et0WrIdx,
   output wire [7:0]                   o_et0WrByte,

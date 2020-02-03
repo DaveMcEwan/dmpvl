@@ -45,6 +45,7 @@ module usbfsTxn #(
 
   // Write buffer interface
   // All signals in format {endpN_*, ..., endp0_*}
+  output wire [TX_N_ENDP-1:0]                   o_etTxAccepted,
   input  wire [TX_N_ENDP-1:0]                   i_etWrEn,
   input  wire [TX_N_ENDP*$clog2(MAX_PKT)-1:0]   i_etWrIdx,
   input  wire [TX_N_ENDP*8-1:0]                 i_etWrByte,
@@ -356,6 +357,8 @@ generate for (e=0; e < TX_N_ENDP; e=e+1) begin
   assign etVec_stalled[e] = etVecMask[e] && (STALLABLE != 0) && i_etStall[e];
 
   assign etVec_isochronous[e] = etVecMask[e] && (TX_ISOCHRONOUS & (1 << e));
+
+  assign o_etTxAccepted[e] = etVecMask[e] && sent_isData;
 end endgenerate
 `asrt(etVec_stalled, i_clk_48MHz, !i_rst, $onehot0(etVec_stalled))
 `asrt(etVec_isochronous, i_clk_48MHz, !i_rst, $onehot0(etVec_isochronous))

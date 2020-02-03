@@ -17,6 +17,7 @@ module usbfsEndpTx #(
   output wire                       o_etStall,
 
   // Write buffer interface to u_tx
+  input  wire                         i_etTxAccepted,
   output wire                         o_etWrEn,
   output wire [$clog2(MAX_PKT)-1:0]   o_etWrIdx,
   output wire [7:0]                   o_etWrByte,
@@ -27,7 +28,7 @@ localparam NBYTES_W = $clog2(MAX_PKT + 1);
 localparam IDX_W = $clog2(MAX_PKT);
 
 wire accepted = o_ready && i_valid;
-wire et_accepted = i_etReady && o_etValid;
+wire et_accepted = i_etReady && o_etValid; // ACK received
 
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 always @*

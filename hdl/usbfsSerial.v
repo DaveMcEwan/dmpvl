@@ -55,6 +55,7 @@ wire [HOST2DEV_N_ENDP*RDIDX_W-1:0]  dev_i_erRdIdx;
 wire [7:0]                          dev_o_erRdByte;
 wire [NBYTES_W-1:0]                 dev_o_erRdNBytes;
 
+wire [DEV2HOST_N_ENDP-1:0]          dev_o_etTxAccepted;
 wire [DEV2HOST_N_ENDP-1:0]          dev_i_etWrEn;
 wire [DEV2HOST_N_ENDP*WRIDX_W-1:0]  dev_i_etWrIdx;
 wire [DEV2HOST_N_ENDP*8-1:0]        dev_i_etWrByte;
@@ -100,6 +101,7 @@ usbfsTxn #( // {{{ u_txn
   .i_etStall                (dev_i_etStall),
 
   // Write buffer interface to u_tx
+  .o_etTxAccepted           (dev_o_etTxAccepted),
   .i_etWrEn                 (dev_i_etWrEn),
   .i_etWrIdx                (dev_i_etWrIdx),
   .i_etWrByte               (dev_i_etWrByte),
@@ -146,6 +148,7 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
   .o_et0Stall               (dev_i_etStall[0]),
 
   // Write buffer interface to u_tx
+  .i_et0TxAccepted          (dev_o_etTxAccepted[0]),
   .o_et0WrEn                (dev_i_etWrEn[0]),
   .o_et0WrIdx               (dev_i_etWrIdx[0*WRIDX_W +: WRIDX_W]),
   .o_et0WrByte              (dev_i_etWrByte[0*8 +: 8]),
@@ -189,6 +192,7 @@ usbfsEndpTx #( // {{{ u_endpTx
   .o_etStall                (dev_i_etStall[1]),
 
   // Write buffer interface to u_tx
+  .i_etTxAccepted           (dev_o_etTxAccepted[1]),
   .o_etWrEn                 (dev_i_etWrEn[1]),
   .o_etWrIdx                (dev_i_etWrIdx[1*WRIDX_W +: WRIDX_W]),
   .o_etWrByte               (dev_i_etWrByte[1*8 +: 8]),
