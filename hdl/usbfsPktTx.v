@@ -299,7 +299,11 @@ wire pid_type_onehot = $onehot(devToHostPids);
 // Assume requests have sane values for i_pid.
 `asrt(pid_type_onehot, i_clk_12MHz, !i_rst && tx_accepted_q, pid_type_onehot)
 
-always @(posedge i_clk_12MHz) if (tx_accepted_q) begin : info
+wire allInfoPresent = (byteSent && !i_wrEn);
+`dff_cg_srst(reg, displayed, i_clk_12MHz, byteSent, i_rst || tx_accepted, 1'b0)
+always @* displayed_d = allInfoPresent ? 1'b1 : displayed_q;
+
+always @(posedge i_clk_12MHz) if (allInfoPresent && !displayed_q) begin : info
   string s_pidName;
   string s_pid;
   string s_data;
@@ -319,15 +323,12 @@ always @(posedge i_clk_12MHz) if (tx_accepted_q) begin : info
 
   $sformat(s_pid, "pid=%h=%s", pid_q, s_pidName);
 
-  /*
   if (pidGrp_isData)
-    // TODO: Wait until data copied over before displaying data and wrNBytes
     $sformat(s_data, " data=0x%0h, nBytes=%0d", dataBytes_inspect, wrNBytes_q);
   else if (pidGrp_isHandshake)
     $sformat(s_data, "");
   else
     $sformat(s_data, " UNKNOWN PIDGRP");
-  */
 
   $display("INFO:t%0t:%m: Sending %s%s ...", $time, s_pid, s_data);
 end : info
