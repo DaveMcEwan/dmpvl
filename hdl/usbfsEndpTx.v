@@ -30,9 +30,11 @@ localparam IDX_W = $clog2(MAX_PKT);
 wire accepted = o_ready && i_valid;
 wire et_accepted = i_etReady && o_etValid; // ACK received
 
+`asrt(etTxAccepted, i_clk, !i_rst && i_etTxAccepted, i_valid)
+
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 always @*
-  if (et_accepted)
+  if (i_etTxAccepted)
     writing_d = 1'b1;
   else if (!i_valid || (o_etWrIdx == '1)) // No more data, OR sent MAX_PKT.
     writing_d = 1'b0; // NOTE: Relies on MAX_PKT being a power of 2.
