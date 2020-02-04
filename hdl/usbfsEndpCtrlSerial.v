@@ -168,7 +168,16 @@ Even though the device may only support a couple of types of requests, it still
 must abide by the Control Transfer protocol.
 */
 
-`dff_flag(setupInflight, i_clk, i_rst, i_txnType[2] && er_accepted, rdFinalPush)
+// High immediately after receiving token[SETUP] while data is copied from the
+// u_rx buffer to the flops is this module.
+`dff_nocg_srst(reg, setupInflight, i_clk, i_rst, 1'b0)
+always @*
+  if (rdFinalPush)
+    setupInflight_d = 1'b0;
+  else if (i_txnType[2] && er_accepted)
+    setupInflight_d = 1'b1;
+  else
+    setupInflight_d = setupInflight_q;
 
 wire beginCtrlTfr = setupInflight_q && rdFinalPush;
 wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0RdNBytes == '0); NOTE: Host may misbehave
