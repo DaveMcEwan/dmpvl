@@ -23,7 +23,6 @@ module usbfsPktTx #(
   input  wire                         i_wrEn,
   input  wire [$clog2(MAX_PKT)-1:0]   i_wrIdx,
   input  wire [7:0]                   i_wrByte,
-  input  wire [$clog2(MAX_PKT+1)-1:0] i_wrNBytes, // TODO: rm
 
   // USB {d+, d-}
   output wire                       o_dp,

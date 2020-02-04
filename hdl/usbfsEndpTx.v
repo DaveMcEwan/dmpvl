@@ -20,8 +20,7 @@ module usbfsEndpTx #(
   input  wire                         i_etTxAccepted,
   output wire                         o_etWrEn,
   output wire [$clog2(MAX_PKT)-1:0]   o_etWrIdx,
-  output wire [7:0]                   o_etWrByte,
-  output wire [$clog2(MAX_PKT+1)-1:0] o_etWrNBytes
+  output wire [7:0]                   o_etWrByte
 );
 
 localparam NBYTES_W = $clog2(MAX_PKT + 1);
@@ -41,16 +40,15 @@ always @*
   else
     writing_d = writing_q;
 
-`dff_upcounter(reg [NBYTES_W-1:0], wrNBytes, i_clk, o_etWrEn, i_rst || et_accepted)
+`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_etWrEn, i_rst || et_accepted)
 
 assign o_etValid = i_valid;
 
 assign o_ready = writing_q;
 
 assign o_etWrEn = writing_q && i_valid;
-assign o_etWrIdx = wrNBytes_q[IDX_W-1:0];
+assign o_etWrIdx = wrIdx_q;
 assign o_etWrByte = i_data;
-assign o_etWrNBytes = wrNBytes_q;
 
 // There are no halting conditions.
 assign o_etStall = 1'b0;

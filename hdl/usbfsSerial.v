@@ -59,7 +59,6 @@ wire [DEV2HOST_N_ENDP-1:0]          dev_o_etTxAccepted;
 wire [DEV2HOST_N_ENDP-1:0]          dev_i_etWrEn;
 wire [DEV2HOST_N_ENDP*WRIDX_W-1:0]  dev_i_etWrIdx;
 wire [DEV2HOST_N_ENDP*8-1:0]        dev_i_etWrByte;
-wire [DEV2HOST_N_ENDP*NBYTES_W-1:0] dev_i_etWrNBytes;
 
 wire [10:0] dev_o_frameNumber;
 wire [2:0]  dev_o_txnType;
@@ -105,7 +104,6 @@ usbfsTxn #( // {{{ u_txn
   .i_etWrEn                 (dev_i_etWrEn),
   .i_etWrIdx                (dev_i_etWrIdx),
   .i_etWrByte               (dev_i_etWrByte),
-  .i_etWrNBytes             (dev_i_etWrNBytes),
 
   // Current state of transaction flags $onehot({SETUP, OUT, IN}).
   // Mostly useful in dev-mode.
@@ -152,7 +150,6 @@ usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
   .o_et0WrEn                (dev_i_etWrEn[0]),
   .o_et0WrIdx               (dev_i_etWrIdx[0*WRIDX_W +: WRIDX_W]),
   .o_et0WrByte              (dev_i_etWrByte[0*8 +: 8]),
-  .o_et0WrNBytes            (dev_i_etWrNBytes[0*NBYTES_W +: NBYTES_W]),
 
   .i_txnType                (dev_o_txnType)
 ); // }}} u_ctrlSerial
@@ -195,8 +192,7 @@ usbfsEndpTx #( // {{{ u_endpTx
   .i_etTxAccepted           (dev_o_etTxAccepted[1]),
   .o_etWrEn                 (dev_i_etWrEn[1]),
   .o_etWrIdx                (dev_i_etWrIdx[1*WRIDX_W +: WRIDX_W]),
-  .o_etWrByte               (dev_i_etWrByte[1*8 +: 8]),
-  .o_etWrNBytes             (dev_i_etWrNBytes[1*NBYTES_W +: NBYTES_W])
+  .o_etWrByte               (dev_i_etWrByte[1*8 +: 8])
 ); // }}} u_endpTx
 
 endmodule

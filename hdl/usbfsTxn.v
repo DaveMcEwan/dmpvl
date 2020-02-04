@@ -49,7 +49,6 @@ module usbfsTxn #(
   input  wire [TX_N_ENDP-1:0]                   i_etWrEn,
   input  wire [TX_N_ENDP*$clog2(MAX_PKT)-1:0]   i_etWrIdx,
   input  wire [TX_N_ENDP*8-1:0]                 i_etWrByte,
-  input  wire [TX_N_ENDP*$clog2(MAX_PKT+1)-1:0] i_etWrNBytes,
 
   // Current state of transaction flags $onehot({SETUP, OUT, IN}).
   output wire [2:0]                 o_txnType,
@@ -150,7 +149,6 @@ usbfsPktTx #(
   .i_wrEn                   (etWrEn),
   .i_wrIdx                  (etWrIdx),
   .i_wrByte                 (etWrByte),
-  .i_wrNBytes               (etWrNBytes),
 
   .o_dp                     (o_dp),
   .o_dn                     (o_dn),
@@ -366,7 +364,6 @@ wire etValid = |(i_etValid & etVecMask); // Tx endpoint has data.
 wire etWrEn = |(i_etWrEn & etVecMask);
 wire [WRIDX_W-1:0] etWrIdx = i_etWrIdx[txEndpSelect*WRIDX_W +: WRIDX_W];
 wire [7:0] etWrByte = i_etWrByte[txEndpSelect*8 +: 8];
-wire [NBYTES_W-1:0] etWrNBytes = i_etWrNBytes[txEndpSelect*NBYTES_W +: NBYTES_W];
 
 // }}} Mask/reduce IO per endpoint
 

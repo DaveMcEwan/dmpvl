@@ -62,7 +62,6 @@ module usbfsEndpCtrlSerial #(
   output wire                         o_et0WrEn,
   output wire [$clog2(MAX_PKT)-1:0]   o_et0WrIdx,
   output wire [7:0]                   o_et0WrByte,
-  output wire [$clog2(MAX_PKT+1)-1:0] o_et0WrNBytes,
 
   // flags {SETUP, OUT, IN}
   input  wire [2:0]                 i_txnType
@@ -181,7 +180,7 @@ always @*
 
 wire beginCtrlTfr = setupInflight_q && rdFinalPush;
 wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0RdNBytes == '0); NOTE: Host may misbehave
-wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (o_et0WrNBytes == '0);
+wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (wrIdx_q == '0);
 
 // NOTE: Host may send many requests in any order so just lower everything and
 // use the most recent.
@@ -553,7 +552,6 @@ wire [6:0] nBytesDescriptor = descriptor_deviceNotConfig ?
 // NOTE: Possible bug in Linux USB driver allows bits to be set in upper byte of
 // wLength, same behaviour required in different form in VGWM design.
 wire partialDescriptor = ({1'b0, nBytesDescriptor} < wLength0_q);
-`asrt(wLength, i_clk, !i_rst && beginCtrlTfr && !partialDescriptor, (wLength_q[15:7] == '0))
 
 `dff_cg_srst(reg [6:0], nBytesToSend, i_clk, beginCtrlTfr, i_rst, '0)
 always @* nBytesToSend_d = partialDescriptor ? nBytesDescriptor : wLength_q`LSb(7);
@@ -582,10 +580,10 @@ always @*
   else
     writing_d = writing_q;
 
-`dff_upcounter(reg [NBYTES_W-1:0], wrNBytes, i_clk, o_et0WrEn, i_rst || et_accepted || beginCtrlTfr)
+`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_et0WrEn, i_rst || et_accepted || beginCtrlTfr)
 
 assign o_et0WrEn = tfrRead_q && writing_q;
-assign o_et0WrIdx = wrNBytes_q[IDX_W-1:0];
+assign o_et0WrIdx = wrIdx_q;
 
 // Mux ROM data onto o_et0WrByte.
 localparam PKT_W = 8*MAX_PKT;
@@ -597,8 +595,5 @@ assign o_et0WrByte = descriptor_deviceNotConfig ?
 // tfrRead: Send either NAK/STALL (handled by stall/valid signals) or descriptor.
 //    nBytes should be either full packet, or remaining in descriptor.
 // tfrWrite: Send zero length for Status stage.
-assign o_et0WrNBytes = tfrRead_q ? wrNBytes_q : '0;
-
-
 
 endmodule
