@@ -565,7 +565,7 @@ Send data, not NAK/STALL for:
   - Zero-length in[DATA1] which ends Status stage of Write (NOTE: unsupported here).
 */
 assign o_et0Valid =
-  (tfrRead_q && (nBytesToSend_q >= (nPktsSent_q*MAX_PKT))) ||
+  (tfrRead_q && !allBytesWritten) ||
   tfrNoData_q ||
   tfrWrite_q; // NOTE: STALL overrides NAK when unsupported.
 
@@ -575,7 +575,7 @@ wire allBytesWritten = (nBytesToSend_q == nBytesWritten_q);
 
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 always @*
-  if ((et_accepted && !allBytesWritten) || tfrRead_raise)
+  if (i_et0TxAccepted && tfrRead_q)
     writing_d = 1'b1;
   else if (writingLastByte || (o_et0WrIdx == '1)) // No more data, OR sent MAX_PKT.
     writing_d = 1'b0; // NOTE: Relies on MAX_PKT being a power of 2.
