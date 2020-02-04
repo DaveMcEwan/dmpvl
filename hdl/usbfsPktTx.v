@@ -19,11 +19,11 @@ module usbfsPktTx #(
   input  wire [3:0]                 i_pid,
 
   // Write buffer interface
-  input  wire                         i_clk_wr,
+  input  wire                         i_clk_wr, // TODO: i_clk_bram
   input  wire                         i_wrEn,
   input  wire [$clog2(MAX_PKT)-1:0]   i_wrIdx,
   input  wire [7:0]                   i_wrByte,
-  input  wire [$clog2(MAX_PKT+1)-1:0] i_wrNBytes,
+  input  wire [$clog2(MAX_PKT+1)-1:0] i_wrNBytes, // TODO: rm
 
   // USB {d+, d-}
   output wire                       o_dp,
@@ -62,7 +62,7 @@ generate for (b=0; b < MAX_PKT; b=b+1) begin
 end endgenerate
 `endif
 
-`dff_cg_norst_d(reg [NBYTES_W-1:0], wrNBytes, i_clk_12MHz, tx_accepted, i_wrNBytes)
+`dff_cg_srst_d(reg [NBYTES_W-1:0], wrNBytes, i_clk_wr, i_wrEn, i_rst || (tx_accepted && !i_wrEn), '0, i_wrIdx + 'd1)
 
 // {{{ PID store and decode
 
@@ -319,12 +319,15 @@ always @(posedge i_clk_12MHz) if (tx_accepted_q) begin : info
 
   $sformat(s_pid, "pid=%h=%s", pid_q, s_pidName);
 
+  /*
   if (pidGrp_isData)
+    // TODO: Wait until data copied over before displaying data and wrNBytes
     $sformat(s_data, " data=0x%0h, nBytes=%0d", dataBytes_inspect, wrNBytes_q);
   else if (pidGrp_isHandshake)
     $sformat(s_data, "");
   else
     $sformat(s_data, " UNKNOWN PIDGRP");
+  */
 
   $display("INFO:t%0t:%m: Sending %s%s ...", $time, s_pid, s_data);
 end : info
