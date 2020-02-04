@@ -3,7 +3,7 @@
 
 `include "asrt.vh"
 
-module VGWM_usbSerialEchoer_tb (
+module serialEchoer_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!
   input wire i_rootClk,
@@ -55,7 +55,7 @@ reg rst;
 
 initial begin
   $dumpfile("build/VGWM_usbSerialEchoer_tb.iverilog.vcd");
-  $dumpvars(0, VGWM_usbSerialEchoer_tb);
+  $dumpvars(0, serialEchoer_tb);
 end
 
 driveHost v_driveHost ( // {{{
@@ -135,7 +135,7 @@ always @*
 // Finish sim after an upper limit on the number of clock cycles, or USB
 // transactions sent.
 always @*
-  if ((nCycles_q > 500000) || (nTxns_q > 1000))
+  if ((nCycles_q > 100000) || (nTxns_q > 1000))
     $finish;
 
 // Should not accept another packet while one is inflight.

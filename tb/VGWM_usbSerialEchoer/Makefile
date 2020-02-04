@@ -68,7 +68,7 @@ $(BUILD)/$(TB).vvp: $(SRC)
 		-I../../verif \
 		-M$(BUILD)/$(TB).iverilog.deps \
 		-o $@ \
-		-s $(TB) \
+		-s serialEchoer_tb \
 		$(SRC)
 
 # Execute iverilog VVP script to dump VCD.
