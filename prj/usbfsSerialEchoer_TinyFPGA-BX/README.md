@@ -10,7 +10,7 @@ The design components are based on the verification components but modified to
 support only USB device functionallity and optimized for lower LUT usage and
 shorter critical paths.
 
-Expected resource usage is approximately TODO LUTs, synthing to around 60MHz.
+Expected resource usage is approximately 720 LUTs, synthing to around 63MHz.
 
 A matching testbench is under `tb/usbfsSerialEchoer` with the host behaviour
 defined by `tb/usbFullSpeedSerial/driveHost.v` which can be used to simulate and
