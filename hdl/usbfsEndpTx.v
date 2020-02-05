@@ -40,7 +40,7 @@ always @*
   else
     writing_d = writing_q;
 
-`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_etWrEn, i_rst || et_accepted)
+`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_etWrEn, i_rst || i_etTxAccepted)
 
 assign o_etValid = i_valid;
 

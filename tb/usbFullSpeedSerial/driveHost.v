@@ -267,6 +267,30 @@ always @*
       o_txnAddr = DEVADDR;
       o_txnEndp = 4'd1; // Data endpoint
     end
+    'd24: begin
+      o_txnType = TXNTYPE_OUT;
+      o_txnAddr = DEVADDR;
+      o_txnEndp = 4'd1; // Data endpoint
+      o_et1Data = 64'h8899aabbccddeeff;
+      o_et1Data_nBytes = 'd1;
+    end
+    'd25: begin
+      o_txnType = TXNTYPE_IN;
+      o_txnAddr = DEVADDR;
+      o_txnEndp = 4'd1; // Data endpoint
+    end
+    'd26: begin
+      o_txnType = TXNTYPE_OUT;
+      o_txnAddr = DEVADDR;
+      o_txnEndp = 4'd1; // Data endpoint
+      o_et1Data = 64'h5555555555555555;
+      o_et1Data_nBytes = 'd1;
+    end
+    'd27: begin
+      o_txnType = TXNTYPE_IN;
+      o_txnAddr = DEVADDR;
+      o_txnEndp = 4'd1; // Data endpoint
+    end
     // }}} OUT/IN loopback
 
     // Random OUT/IN transfers, mostly to the correct device on endpoint 1.
