@@ -135,7 +135,8 @@ usbfsPktRx #(
 usbfsPktTx #(
   .MAX_PKT          (MAX_PKT)
 ) u_tx (
-  .i_clk_12MHz              (strobe_12MHz),
+  .i_clk_48MHz              (i_clk_48MHz),
+  .i_strobe_12MHz           (strobe_12MHz),
   .i_rst                    (i_rst),
 
   .o_ready                  (tx_ready),
@@ -145,7 +146,6 @@ usbfsPktTx #(
 
   .i_pid                    (tx_pid),
 
-  .i_clk_wr                 (i_clk_48MHz),
   .i_wrEn                   (etWrEn),
   .i_wrIdx                  (etWrIdx),
   .i_wrByte                 (etWrByte),
