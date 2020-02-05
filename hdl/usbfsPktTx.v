@@ -69,7 +69,7 @@ end endgenerate
 // the duration of the packet, only the coding group.
 // NOTE: Yosys correctly notices that top 2 bits are unused and removes them,
 // but it's handy to .
-`dff_cg_norst_d(reg [3:0], pid, i_strobe_12MHz, tx_accepted, i_pid)
+`dff_cg_norst_d(reg [3:0], pid, i_clk_48MHz, i_strobe_12MHz && tx_accepted, i_pid)
 
 wire [1:0] pidCodingGroup = pid_q[1:0];
 wire pidGrp_isData      = (pidCodingGroup == PIDGROUP_DATA);
@@ -80,11 +80,11 @@ wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
 // {{{ Count bits and bytes.
 // approx 7 dff with minimal MAX_PKT
 
-`dff_upcounter(reg [2:0], bitCntr, i_strobe_12MHz, !doStuff && inflight_q, i_rst || o_eopDone)
+`dff_upcounter(reg [2:0], bitCntr, i_clk_48MHz, i_strobe_12MHz && !doStuff && inflight_q, i_rst || (o_eopDone && i_strobe_12MHz))
 
 wire byteSent = (bitCntr_q == '1) && inflight_q && !doStuff;
 
-`dff_upcounter(reg [NBYTES_W-1:0], nBytesSent, i_strobe_12MHz, byteSent, i_rst || tx_accepted)
+`dff_upcounter(reg [NBYTES_W-1:0], nBytesSent, i_clk_48MHz, i_strobe_12MHz && byteSent, i_rst || (tx_accepted && i_strobe_12MHz))
 
 `ifndef SYNTHESIS
 wire [NBYTES_W-1:0] nBytesPkt_handshake = 'd2; // SOP, PID
@@ -107,7 +107,7 @@ wire [NBYTES_W-1:0] nBytesPkt_data = wrNBytes_q + 'd4; // SOP, PID, data1..N, CR
 // low-speed devices), and the 16b CRC.
 
 // Packet size is always an integer number of bytes.
-`dff_nocg_norst(reg [7:0], nextByte, i_strobe_12MHz)
+`dff_cg_norst(reg [7:0], nextByte, i_clk_48MHz, i_strobe_12MHz)
 always @*
   if (tx_accepted)
     nextByte_d = {~i_pid, i_pid}; // 8.3.1 Packet Identifier Field
@@ -121,7 +121,7 @@ always @*
 // Mini state machine for sequencing CRC[0], CRC[1], EOP.
 // approx 3 dff
 wire isLastDataByte = ((wrNBytes_q + 'd1) == nBytesSent_q);
-`dff_nocg_srst(reg [2:0], lastDataBytes, i_strobe_12MHz, i_rst, '0)
+`dff_cg_srst(reg [2:0], lastDataBytes, i_clk_48MHz, i_strobe_12MHz, i_rst, '0)
 always @*
   if (tx_accepted)
     lastDataBytes_d = '0;
@@ -144,7 +144,7 @@ wire doDataCrc =
 
 // 8.3.5.2 Data CRCs
 // G(x) = x^16 + x^15 + x^2 + 1
-`dff_nocg_norst(reg [15:0], crc16, i_strobe_12MHz)
+`dff_cg_norst(reg [15:0], crc16, i_clk_48MHz, i_strobe_12MHz)
 wire crc16Loop = currentBit ^ crc16_q[0];
 always @*
   if (tx_accepted)
@@ -182,7 +182,7 @@ wire takeCrc16 =
   byteSent;
 
 // Bit to send is always the LSB of this.
-`dff_cg_srst(reg [7:0], byteShift, i_strobe_12MHz, !doStuff, tx_accepted, SYNC_SOP)
+`dff_cg_srst(reg [7:0], byteShift, i_clk_48MHz, i_strobe_12MHz && !doStuff, tx_accepted, SYNC_SOP)
 always @*
   if (takeCrc16)
     byteShift_d = ~crc16_d[7:0];
@@ -207,7 +207,7 @@ wire currentBit = byteShift_q[0];
 // The data “one” that ends the Sync Pattern is counted as the first one in a
 // sequence.
 // Bit stuffing is always enforced, without exception.
-`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_strobe_12MHz, inflight_q, (tx_accepted || i_rst), '0)
+`dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_48MHz, i_strobe_12MHz && inflight_q, (tx_accepted || i_rst), '0)
 always @* nrziHistory_d = {nrziHistory_q[NRZI_MAXRL_ONES-2:0], sendBit};
 
 wire doStuff = &nrziHistory_q;
@@ -229,7 +229,7 @@ wire sendBit = currentBit && !doStuff;
 wire finalByte_data = pidGrp_isData && lastDataBytes_q[2];
 wire finalByte_handshake = pidGrp_isHandshake && (nBytesSent_q == 'd2);
 wire finalByteSent = finalByte_handshake || finalByte_data;
-`dff_nocg_srst(reg, eop, i_strobe_12MHz, i_rst, 1'b0)
+`dff_cg_srst(reg, eop, i_clk_48MHz, i_strobe_12MHz, i_rst, 1'b0)
 always @*
   if (bitCntr_q == 3'd3)
     eop_d = 1'b0;
@@ -242,7 +242,7 @@ assign o_eopDone = (bitCntr_q == 3'd3) && eop_q;
 
 wire txSE0 = (pn_q == LINE_SE0);
 
-`dff_cg_srst(reg [1:0], pn, i_strobe_12MHz, inflight_q, i_rst, LINE_J)
+`dff_cg_srst(reg [1:0], pn, i_clk_48MHz, i_strobe_12MHz && inflight_q, i_rst, LINE_J)
 always @*
   if ((bitCntr_q == 3'd2) && eop_q) // EOP must revert line back to J state.
     pn_d = LINE_J;
@@ -260,7 +260,7 @@ assign {o_dp, o_dn} = pn_q;
 // NOTE: inflight_q is equivalent in functionallity to an "output enable" in a
 // bidirectional GPIO design.
 // approx 1 dff
-`dff_nocg_srst(reg, inflight, i_strobe_12MHz, i_rst, 1'b0)
+`dff_cg_srst(reg, inflight, i_clk_48MHz, i_strobe_12MHz, i_rst, 1'b0)
 always @*
   if (tx_accepted)
     inflight_d = 1'b1;
@@ -277,7 +277,7 @@ assign o_ready = !inflight_q;
 `ifndef SYNTHESIS
 
 // Delayed version just for driver assumptions.
-`dff_nocg_srst(reg, tx_accepted, i_strobe_12MHz, i_rst, 1'b0)
+`dff_cg_srst(reg, tx_accepted, i_clk_48MHz, i_strobe_12MHz, i_rst, 1'b0)
 always @* tx_accepted_d = tx_accepted;
 
 wire pid_isData0 = (pid_q == PID_DATA_DATA0);
@@ -299,7 +299,7 @@ wire pid_type_onehot = $onehot(devToHostPids);
 `asrt(pid_type_onehot, i_strobe_12MHz, !i_rst && tx_accepted_q, pid_type_onehot)
 
 wire allInfoPresent = (byteSent && !i_wrEn);
-`dff_cg_srst(reg, displayed, i_strobe_12MHz, byteSent, i_rst || tx_accepted, 1'b0)
+`dff_cg_srst(reg, displayed, i_clk_48MHz, i_strobe_12MHz && byteSent, i_rst || tx_accepted, 1'b0)
 always @* displayed_d = allInfoPresent ? 1'b1 : displayed_q;
 
 always @(posedge i_strobe_12MHz) if (allInfoPresent && !displayed_q) begin : info

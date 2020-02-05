@@ -88,7 +88,7 @@ always @*
   `endif
 `endif
 
-assign o_strobe_12MHz = (bitPhase_q == 2'd2);
+assign o_strobe_12MHz = (bitPhase_q == 2'd1);
 
 // Sample line in fixed point of bit period.
 wire sampleStrobe_12MHz = (bitPhase_q == 2'd1);
