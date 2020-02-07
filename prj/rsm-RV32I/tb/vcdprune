@@ -1,0 +1,73 @@
+#!/usr/bin/env python2.7
+
+# VCD Pruning to reduce file size.
+# Dave McEwan 2018-02-12
+#
+# Run like:
+#   vcdprune <inputvcd> -o <outputvcd>
+#   OR
+#   cat <inputvcd> | vcdprune - > <ouputvcd>
+
+from __future__ import print_function
+import sys
+
+version_help = "Python 2.7 or 3.4+ required."
+if sys.version_info[0] == 2:
+    assert sys.version_info[1] == 7, version_help
+elif sys.version_info[0] == 3:
+    assert sys.version_info[1] >= 4, version_help
+else:
+    assert False, version_help
+
+import os
+import errno
+
+def get_args(): # {{{
+    '''Parse cmdline arguments.
+    '''
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument("infile",
+                        type=argparse.FileType('r'),
+                        default=sys.stdin,
+                        help="Input file.")
+
+    parser.add_argument("-o", "--outfile",
+                        type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help="Output file.")
+
+    args = parser.parse_args()
+
+    return args
+# }}}
+
+if __name__ == "__main__":
+
+    ret = 1
+    try:
+        args = get_args()
+
+        lasttime = None
+        for line in args.infile:
+
+            if line.startswith('#'):
+                lasttime = line
+            else:
+                if lasttime:
+                    args.outfile.write(lasttime)
+                    lasttime = None
+                args.outfile.write(line)
+
+
+    except IOError as e:
+        msg = 'IOError: %s: %s\n' % (e.strerror, e.filename)
+        sys.stderr.write(msg)
+    else:
+        ret = 0
+
+    sys.exit(ret)
