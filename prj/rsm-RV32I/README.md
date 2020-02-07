@@ -1,6 +1,6 @@
 
-RISC-V Simple Machine (RSM)
-===========================
+WIP/unfinished RISC-V Simple Machine (RSM)
+==========================================
 
 This project is intended to compare different coding styles and languages by
 implementing the same thing, designed with a diagram.
@@ -31,10 +31,11 @@ The following requirements are used to create the design:
    simple output timing constraints.
 8. All inputs must go straight from flops, not driving any logic, to give
    simple input timing constraints.
-9. At least one implementation, assumed to be faithful to the diagram, must
+9. At least one implementation, assumed to be faithful to the diagram, should
    be formally verified.
    Other implementation netlists can be checked with a logical equivalence
    check.
+   Intend to use yosys-sbt.
 
 The design intended to be educational and easy to visualize in a diagram.
 It is not optimized for small size, fast clockrate, low power usage, or high
@@ -99,10 +100,11 @@ the timing critical parts of a design.
 This selection of HDLs have been chosen based on a mixture of personal
 experience and what was "hot" at ORConf18.
 
-1. Verilog 2001
+1. System Verilog 2005
 2. System Verilog 2012 *TODO*
-3. MyHDL *TODO*
+3. Migen *TODO*
 4. Clash *TODO*
+3. MyHDL *TODO*
 5. Chisel3 *TODO*
 6. SpinalHDL *TODO*
 7. VHDL *TODO*
@@ -118,15 +120,15 @@ Synthesis Tool
 1. Yosys *TODO*
 2. Vivado *TODO*
 3. Quartus *TODO*
-4. Diamond *TODO*
+4. Diamond/SynplifyPro *TODO*
 
 Place and Route Tool
 
 1. nextpnr *TODO*
-2. arachnepnr *TODO*
+2. arachnepnr *TODO?*
 3. Vivado *TODO*
 4. Quartus *TODO*
-5. Diamond *TODO*
+5. Diamond/iCEcube2 *TODO*
 
 Target FPGA
 
