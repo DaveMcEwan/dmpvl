@@ -8,6 +8,7 @@ VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG)
 lint:
 	verilator $(VERILATOR_FLAGS) corrdet.v
+	verilator $(VERILATOR_FLAGS) dividerFsm.v
 	verilator $(VERILATOR_FLAGS) bpAxiMaster.v
 	verilator $(VERILATOR_FLAGS) edgeDetect.v
 	verilator $(VERILATOR_FLAGS) resetDetect.v
@@ -33,6 +34,7 @@ IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null
 iverilog:
 	iverilog $(IVERILOG_FLAGS) corrdet.v
+	iverilog $(IVERILOG_FLAGS) dividerFsm.v
 	iverilog $(IVERILOG_FLAGS) bpAxiMaster.v
 	iverilog $(IVERILOG_FLAGS) edgeDetect.v
 	iverilog $(IVERILOG_FLAGS) resetDetect.v
@@ -56,6 +58,7 @@ iverilog:
 # try reading them with yosys, to ensure files are compatible.
 yosys:
 	yosys -q -p 'read_verilog -sv corrdet.v'
+	yosys -q -p 'read_verilog -sv dividerFsm.v'
 	yosys -q -p 'read_verilog -sv bpAxiMaster.v'
 	yosys -q -p 'read_verilog -sv edgeDetect.v'
 	yosys -q -p 'read_verilog -sv resetDetect.v'
