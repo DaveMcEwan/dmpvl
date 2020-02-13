@@ -1,3 +1,8 @@
+#ifndef _VERILATORTB_H
+
+#include <stdio.h>
+
+typedef enum {ERROR, WARN, NOTE} TbPrintLevel;
 
 template <class VA> class VerilatorTb { // {{{
 public:
@@ -78,3 +83,4 @@ public:
   }
 }; // }}}
 
+#endif // _VERILATORTB_H
