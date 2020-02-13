@@ -65,7 +65,7 @@ end
 
 popcnt6 #(
   .ABSTRACT_MODEL (0)
-) u_popcnt6_u (
+) u_popcnt6 (
   .i_x     (popcnt6_i_x),
   .o_count (popcnt6_o_count)
 );
