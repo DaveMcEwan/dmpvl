@@ -47,10 +47,12 @@ end : abstractModel
 else begin : realModel
 
   `dff_cg_norst(reg [2*WIDTH-1:0], qr, i_clk, i_cg)
+
   wire [WIDTH:0] diff = qr_q[2*WIDTH-1:WIDTH-1] - {1'b0, i_divisor};
+
   always @*
     if (i_begin)
-      qr_d = {{WIDTH{1'b0}}, i_divisor};
+      qr_d = {{WIDTH{1'b0}}, i_dividend};
     else if (diff[WIDTH])
       qr_d = qr_q << 1;
     else
