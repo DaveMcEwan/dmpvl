@@ -25,6 +25,8 @@ module dividerFsm_tb (
 `endif
 );
 
+localparam WIDTH = 8;
+
 // {{{ clock,clockgate,reset,dump
 
 wire clk;
@@ -51,7 +53,7 @@ always @* cg = i_cg;
 always @* rst = i_rst;
 `else
 initial cg = 1'b1;
-always @(posedge clk) cg = ($urandom_range(9, 0) != 0);
+//always @(posedge clk) cg = ($urandom_range(9, 0) != 0); // TODO: Dynamic cg.
 
 initial rst = 1'b1;
 always @*
@@ -72,31 +74,31 @@ always @* if (nCycles_q > 100000) $finish;
 // }}} clock,clockgate,reset,dump
 
 `ifndef VERILATOR // {{{ Non-V_erilator tb
-reg           common_i_begin;
-reg [7:0]     common_i_dividend;
-reg [7:0]     common_i_divisor;
+reg               common_i_begin;
+reg [WIDTH-1:0]   common_i_dividend;
+reg [WIDTH-1:0]   common_i_divisor;
 
-wire           dividerFsm_8_o_busy;
-wire [7:0]     dividerFsm_8_o_quotient;
-wire [7:0]     dividerFsm_8_o_remainder;
+wire              dividerFsm_8_o_busy;
+wire [WIDTH-1:0]  dividerFsm_8_o_quotient;
+wire [WIDTH-1:0]  dividerFsm_8_o_remainder;
 
-wire           dividerFsm_8_abstract_o_busy;
-wire [7:0]     dividerFsm_8_abstract_o_quotient;
-wire [7:0]     dividerFsm_8_abstract_o_remainder;
+wire              dividerFsm_8_abstract_o_busy;
+wire [WIDTH-1:0]  dividerFsm_8_abstract_o_quotient;
+wire [WIDTH-1:0]  dividerFsm_8_abstract_o_remainder;
 
 always @(posedge clk)
   if (dividerFsm_8_o_busy) begin
     common_i_begin <= 1'b0;
   end else begin
     common_i_begin <= ($urandom_range(9, 0) == 0);
-    common_i_dividend <= $urandom_range(255, 0);
-    common_i_divisor <= $urandom_range(255, 0);
+    common_i_dividend <= $urandom_range((1 << WIDTH)-1, 0);
+    common_i_divisor <= $urandom_range((1 << WIDTH)-1, 0);
   end
 
 `endif // }}} Non-V_erilator tb
 
 dividerFsm #(
-  .WIDTH          (8),
+  .WIDTH          (WIDTH),
   .ABSTRACT_MODEL (0)
 ) u_dividerFsm_8 (
   .i_clk      (clk),
@@ -113,7 +115,7 @@ dividerFsm #(
 );
 
 dividerFsm #(
-  .WIDTH          (8),
+  .WIDTH          (WIDTH),
   .ABSTRACT_MODEL (1)
 ) u_dividerFsm_8_abstract (
   .i_clk      (clk),
@@ -129,9 +131,18 @@ dividerFsm #(
   .o_remainder(dividerFsm_8_abstract_o_remainder)
 );
 
-wire busy8 = dividerFsm_8_o_busy;
-`asrt(quotient, clk, !rst && !busy8, dividerFsm_8_o_quotient == dividerFsm_8_abstract_o_quotient)
-`asrt(remainder, clk, !rst && !busy8, dividerFsm_8_o_remainder == dividerFsm_8_abstract_o_remainder)
+`dff_cg_srst(reg, expectingResult, clk, cg, rst, '0)
+always @*
+  if (!dividerFsm_8_o_busy && common_i_begin)
+    expectingResult_d = 1'b1;
+  else if (expectingResult_q && !dividerFsm_8_o_busy)
+    expectingResult_d = 1'b0;
+  else
+    expectingResult_d = expectingResult_q;
+
+wire doAsserts = !rst && !dividerFsm_8_o_busy && cg && expectingResult_q;
+`asrt(quotient, clk, doAsserts, dividerFsm_8_o_quotient == dividerFsm_8_abstract_o_quotient)
+`asrt(remainder, clk, doAsserts, dividerFsm_8_o_remainder == dividerFsm_8_abstract_o_remainder)
 
 endmodule
 
