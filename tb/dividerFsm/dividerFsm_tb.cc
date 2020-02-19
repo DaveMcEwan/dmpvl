@@ -55,7 +55,7 @@ int main(int argc, char **argv, char **env) {
     tb->m_core->i_cg = (rand() % 4) != 0; // Drop i_cg 1/4.
     if (tb->m_core->dividerFsm_8_o_busy) {
       tb->m_core->common_i_begin = 0;
-    } else {
+    } else if (!tb->m_core->common_i_begin) {
       tb->m_core->common_i_begin = (rand() % 8) == 0;
       tb->m_core->common_i_dividend = rand() & 0xff;
       tb->m_core->common_i_divisor = rand() & 0xff;

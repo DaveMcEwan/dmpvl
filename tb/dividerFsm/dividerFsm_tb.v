@@ -74,7 +74,7 @@ always @* if (nCycles_q > 100000) $finish;
 // }}} clock,clockgate,reset,dump
 
 `ifndef VERILATOR // {{{ Non-V_erilator tb
-reg               common_i_begin;
+reg               common_i_begin = 0;
 reg [WIDTH-1:0]   common_i_dividend;
 reg [WIDTH-1:0]   common_i_divisor;
 
@@ -89,7 +89,7 @@ wire [WIDTH-1:0]  dividerFsm_8_abstract_o_remainder;
 always @(posedge clk)
   if (dividerFsm_8_o_busy) begin
     common_i_begin <= 1'b0;
-  end else begin
+  end else if (!common_i_begin) begin
     common_i_begin <= ($urandom_range(9, 0) == 0);
     common_i_dividend <= $urandom_range((1 << WIDTH)-1, 0);
     common_i_divisor <= $urandom_range((1 << WIDTH)-1, 0);
