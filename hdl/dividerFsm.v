@@ -37,7 +37,7 @@ always @*
 
 assign o_busy = (fsm_q != '0);
 
-`dff_cg_norst_d(reg [WIDTH-1:0], divisor, i_clk, i_cg, i_divisor)
+`dff_cg_norst_d(reg [WIDTH-1:0], divisor, i_clk, i_cg && i_begin, i_divisor)
 
 generate if (ABSTRACT_MODEL) begin : abstractModel
   // NOTE: When i_dividend==0, results are NaN.
