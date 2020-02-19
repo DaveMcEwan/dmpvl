@@ -17,7 +17,7 @@ void tbPrint(
 ) {
     const char * levels[] = {"ERROR", "WARNING", "NOTE"};
 
-    printf("%s:t%d:%s: ", levels[level], t);
+    printf("%s:t%d: ", levels[level], t);
 
     va_list vargs;
     va_start(vargs, msg);
