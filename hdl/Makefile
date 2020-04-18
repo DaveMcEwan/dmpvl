@@ -7,6 +7,7 @@ all: lint iverilog yosys
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG)
 lint:
+	verilator $(VERILATOR_FLAGS) bpRegMem.v
 	verilator $(VERILATOR_FLAGS) corrdet.v
 	verilator $(VERILATOR_FLAGS) logdropWindow.v
 	verilator $(VERILATOR_FLAGS) dividerFsm.v
@@ -34,6 +35,7 @@ lint:
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null
 iverilog:
+	iverilog $(IVERILOG_FLAGS) bpRegMem.v
 	iverilog $(IVERILOG_FLAGS) corrdet.v
 	iverilog $(IVERILOG_FLAGS) -i logdropWindow.v
 	iverilog $(IVERILOG_FLAGS) dividerFsm.v
@@ -59,6 +61,7 @@ iverilog:
 # None of these modules actually synthesize to anything useful on their own but
 # try reading them with yosys, to ensure files are compatible.
 yosys:
+	yosys -q -p 'read_verilog -sv bpRegMem.v'
 	yosys -q -p 'read_verilog -sv corrdet.v'
 	yosys -q -p 'read_verilog -sv logdropWindow.v'
 	yosys -q -p 'read_verilog -sv dividerFsm.v'
