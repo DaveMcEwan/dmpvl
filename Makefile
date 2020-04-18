@@ -27,7 +27,6 @@ run_tbs:
 	make -C tb/usbFullSpeedTransactions
 
 clean_tbs:
-	make -C tb/bpAxiMaster clean
 	make -C tb/dividerFsm clean
 	make -C tb/fifo clean
 	make -C tb/fxcs clean

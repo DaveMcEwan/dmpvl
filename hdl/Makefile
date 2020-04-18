@@ -11,7 +11,6 @@ lint:
 	verilator $(VERILATOR_FLAGS) corrdet.v
 	verilator $(VERILATOR_FLAGS) logdropWindow.v
 	verilator $(VERILATOR_FLAGS) dividerFsm.v
-	verilator $(VERILATOR_FLAGS) bpAxiMaster.v
 	verilator $(VERILATOR_FLAGS) edgeDetect.v
 	verilator $(VERILATOR_FLAGS) resetDetect.v
 	verilator $(VERILATOR_FLAGS) fifo.v
@@ -39,7 +38,6 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) corrdet.v
 	iverilog $(IVERILOG_FLAGS) -i logdropWindow.v
 	iverilog $(IVERILOG_FLAGS) dividerFsm.v
-	iverilog $(IVERILOG_FLAGS) bpAxiMaster.v
 	iverilog $(IVERILOG_FLAGS) edgeDetect.v
 	iverilog $(IVERILOG_FLAGS) resetDetect.v
 	iverilog $(IVERILOG_FLAGS) fifo.v
@@ -65,7 +63,6 @@ yosys:
 	yosys -q -p 'read_verilog -sv corrdet.v'
 	yosys -q -p 'read_verilog -sv logdropWindow.v'
 	yosys -q -p 'read_verilog -sv dividerFsm.v'
-	yosys -q -p 'read_verilog -sv bpAxiMaster.v'
 	yosys -q -p 'read_verilog -sv edgeDetect.v'
 	yosys -q -p 'read_verilog -sv resetDetect.v'
 	yosys -q -p 'read_verilog -sv fifo.v'
