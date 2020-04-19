@@ -9,12 +9,12 @@ V_SRC := \
 
 CC_SRC := \
 	fifo_model.cc \
-	fifo_utils.cc \
+	../../verif/modelPrint.cc \
 	$(TB).cc
 
 CC_H := \
 	fifo_model.h \
-	fifo_utils.h
+	../../verif/modelPrint.h
 
 # NOTE: Verilator only - no support for Icarus yet.
 VCD_IVERILOG :=

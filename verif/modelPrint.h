@@ -1,6 +1,6 @@
 
-#ifndef FIFO_UTILS_H_
-#define FIFO_UTILS_H_
+#ifndef MODELPRINT_H_
+#define MODELPRINT_H_
 
 typedef enum {ERROR, WARN, NOTE} PrintLevel;
 
@@ -10,5 +10,5 @@ void modelPrint(PrintLevel level,
                 char const * msg,
                 ...);
 
-#endif // FIFO_UTILS_H_
+#endif // MODELPRINT_H_
 

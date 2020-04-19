@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "fifo_model.h"
-#include "fifo_utils.h"
+#include "modelPrint.h"
 
 FifoModel::FifoModel (unsigned int w,
                       unsigned int d,

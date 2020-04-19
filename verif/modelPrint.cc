@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "fifo_utils.h"
+#include "modelPrint.h"
 
 void modelPrint(
     PrintLevel level,
