@@ -26,7 +26,7 @@
 - Multiple reads can be combined.
 */
 module bpRegMem #(
-  parameter N_REG = 64  // in {1..128}. Number of registers to implement.
+  parameter N_REG = 64  // in {2..128}. Number of registers to implement.
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -67,13 +67,16 @@ localparam ADDR_W = $clog2(N_REG);
 `dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg && txnBegin, i_rst, '0)
 always @* addr_d = i_bp_data[ADDR_W-1:0];
 
-(* mem2reg *) reg [7:0] memory_m [N_REG];
-always @ (posedge i_clk)
-  if (wrEnd)
-    memory_m[addr_q] <= i_bp_data;
+(* mem2reg *) reg [7:0] memory_q [N_REG]; // dff_cg_norst
+genvar i;
+generate for (i = 0; i < N_REG; i=i+1) begin : reg_b
+  always @ (posedge i_clk)
+    if (i_cg && wrEnd && (addr_q == i))
+      memory_q[i] <= i_bp_data;
+end : reg_b endgenerate
 
 `dff_cg_srst(reg [7:0], rdData, i_clk, i_cg && rdBegin, i_rst, '0)
-always @* rdData_d = memory_m[addr_q];
+always @* rdData_d = memory_q[addr_q];
 
 // Backpressure goes straight through so destination controls all flow, so the
 // host must keep accepting data.

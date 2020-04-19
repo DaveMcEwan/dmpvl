@@ -1,0 +1,83 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sun Apr 19 17:37:25 2020
+[*]
+[timestart] 414
+[size] 1853 1025
+[pos] -1 -1
+*-5.654180 73 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.bpRegMem_tb.
+[sst_width] 448
+[signals_width] 239
+[sst_expanded] 1
+[sst_vpaned_height] 301
+@28
+TOP.bpRegMem_tb.i_rst
+TOP.bpRegMem_tb.i_clk
+TOP.bpRegMem_tb.common_cg
+(0)TOP.bpRegMem_tb.common_bp_data[7:0]
+@22
+TOP.bpRegMem_tb.common_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.common_bp_valid
+TOP.bpRegMem_tb.common_bp_ready
+@c00200
+-nReg64
+@24
+TOP.bpRegMem_tb.u_bpRegMem_64.ADDR_W[31:0]
+TOP.bpRegMem_tb.u_bpRegMem_64.N_REG[31:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_ready
+TOP.bpRegMem_tb.u_bpRegMem_64.in_accepted
+@22
+TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_valid
+TOP.bpRegMem_tb.u_bpRegMem_64.out_accepted
+TOP.bpRegMem_tb.u_bpRegMem_64.rdBegin
+TOP.bpRegMem_tb.u_bpRegMem_64.rdEnd
+TOP.bpRegMem_tb.u_bpRegMem_64.rd_q
+TOP.bpRegMem_tb.u_bpRegMem_64.wrBegin
+TOP.bpRegMem_tb.u_bpRegMem_64.wrEnd
+TOP.bpRegMem_tb.u_bpRegMem_64.wr_q
+TOP.bpRegMem_tb.u_bpRegMem_64.txnBegin
+@22
+TOP.bpRegMem_tb.u_bpRegMem_64.addr_q[5:0]
+TOP.bpRegMem_tb.u_bpRegMem_64.rdData_q[7:0]
+@1401200
+-nReg64
+@800200
+-nReg5
+@24
+TOP.bpRegMem_tb.u_bpRegMem_5.ADDR_W[31:0]
+@23
+TOP.bpRegMem_tb.u_bpRegMem_5.N_REG[31:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_ready
+TOP.bpRegMem_tb.u_bpRegMem_5.in_accepted
+TOP.bpRegMem_tb.u_bpRegMem_5.txnBegin
+TOP.bpRegMem_tb.u_bpRegMem_5.addr_q[2:0]
+@22
+TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(0)[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(1)[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(2)[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(3)[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(4)[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_5.rdBegin
+TOP.bpRegMem_tb.u_bpRegMem_5.rdEnd
+TOP.bpRegMem_tb.u_bpRegMem_5.rd_q
+TOP.bpRegMem_tb.u_bpRegMem_5.wrBegin
+TOP.bpRegMem_tb.u_bpRegMem_5.wrEnd
+TOP.bpRegMem_tb.u_bpRegMem_5.wr_q
+@22
+TOP.bpRegMem_tb.u_bpRegMem_5.rdData_q[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_valid
+TOP.bpRegMem_tb.u_bpRegMem_5.out_accepted
+@1000200
+-nReg5
+[pattern_trace] 1
+[pattern_trace] 0
