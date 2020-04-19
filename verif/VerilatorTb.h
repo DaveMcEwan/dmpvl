@@ -6,28 +6,28 @@ typedef enum {ERROR, WARN, NOTE} TbPrintLevel;
 
 template <class VA> class VerilatorTb { // {{{
 public:
-  VA*               m_core;
+  VA*               m_dut;
   VerilatedVcdC*    m_trace;
   uint64_t          m_tickcount;
 
   VerilatorTb(void) : m_trace(NULL), m_tickcount(0l) {
-    m_core = new VA;
+    m_dut = new VA;
     Verilated::traceEverOn(true);
-    m_core->i_clk = 0;
-    m_core->i_rst = 1;
+    m_dut->i_clk = 0;
+    m_dut->i_rst = 1;
     eval(); // Get our initial values set properly.
   }
 
   virtual ~VerilatorTb(void) {
     closetrace();
-    delete m_core;
-    m_core = NULL;
+    delete m_dut;
+    m_dut = NULL;
   }
 
   virtual void opentrace(const char *vcdname) {
     if (!m_trace) {
       m_trace = new VerilatedVcdC;
-      m_core->trace(m_trace, 99);
+      m_dut->trace(m_trace, 99);
       m_trace->open(vcdname);
     }
   }
@@ -41,37 +41,37 @@ public:
   }
 
   virtual void eval(void) {
-    m_core->eval();
+    m_dut->eval();
   }
 
+  // Call from loop {check, drive, tick}
   virtual void tick(void) {
-    m_tickcount++;
+    // check
+    // drive
+    // rise eval dump
+    // fall eval dump
 
-    // Make sure we have our evaluations straight before the top
-    // of the clock.
-    // This is necessary since some of the connection modules may have made
-    // changes, for which some logic depends.
-    // This forces that logic to be recalculated before the top of the clock.
+    m_dut->i_clk = 1;
     eval();
-    if (m_trace) m_trace->dump((uint64_t)(10*m_tickcount-2));
+    if (m_trace) {
+      m_trace->dump((uint64_t)(10*m_tickcount));
+    }
 
-    m_core->i_clk = 1;
-    eval();
-    if (m_trace) m_trace->dump((uint64_t)(10*m_tickcount));
-
-    m_core->i_clk = 0;
+    m_dut->i_clk = 0;
     eval();
     if (m_trace) {
       m_trace->dump((uint64_t)(10*m_tickcount+5));
       m_trace->flush();
     }
+
+    m_tickcount++;
   }
 
   virtual void reset(void) {
-    m_core->i_rst = 1;
+    m_dut->i_rst = 1;
     for (int i = 0; i < 5; i++)
       tick();
-    m_core->i_rst = 0;
+    m_dut->i_rst = 0;
   }
 
   unsigned long tickcount(void) {
