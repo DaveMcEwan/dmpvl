@@ -67,16 +67,33 @@ localparam ADDR_W = $clog2(N_REG);
 `dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg && txnBegin, i_rst, '0)
 always @* addr_d = i_bp_data[ADDR_W-1:0];
 
+// Track validity of address to return zeros for out-of-range.
+wire addrInRange;
+generate if (ADDR_W == 'd7) begin
+  assign addrInRange = 1'b1;
+end else begin
+  localparam N_REG_= N_REG;
+  `dff_cg_srst(reg, addrInRange, i_clk, i_cg && txnBegin, i_rst, '0)
+  always @* addrInRange_d = (i_bp_data[6:0] < N_REG_[6:0]);
+  assign addrInRange = addrInRange_q;
+end endgenerate
+
+(* mem2reg *) reg [7:0] memory_d [N_REG];
 (* mem2reg *) reg [7:0] memory_q [N_REG]; // dff_cg_norst
 genvar i;
 generate for (i = 0; i < N_REG; i=i+1) begin : reg_b
-  always @ (posedge i_clk)
+  always @*
     if (i_cg && wrEnd && (addr_q == i))
-      memory_q[i] <= i_bp_data;
+      memory_d[i] = i_bp_data;
+    else
+      memory_d[i] = memory_q[i];
+
+  always @(posedge i_clk)
+      memory_q[i] <= memory_d[i];
 end : reg_b endgenerate
 
 `dff_cg_srst(reg [7:0], rdData, i_clk, i_cg && rdBegin, i_rst, '0)
-always @* rdData_d = memory_q[addr_q];
+always @* rdData_d = addrInRange ? memory_q[addr_q] : '0;
 
 // Backpressure goes straight through so destination controls all flow, so the
 // host must keep accepting data.
