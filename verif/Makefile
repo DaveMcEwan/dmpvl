@@ -7,7 +7,6 @@ all: lint iverilog yosys
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../hdl
 lint:
-	verilator $(VERILATOR_FLAGS) bpPacketSender.v
 	verilator $(VERILATOR_FLAGS) generateClock.v
 	verilator $(VERILATOR_FLAGS) tristateBuffer.v
 	verilator $(VERILATOR_FLAGS) usbFullSpeedPacketSender.v
@@ -23,7 +22,6 @@ lint:
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../hdl
 iverilog:
-	iverilog $(IVERILOG_FLAGS) bpPacketSender.v
 	iverilog $(IVERILOG_FLAGS) generateClock.v
 	iverilog $(IVERILOG_FLAGS) tristateBuffer.v
 	iverilog $(IVERILOG_FLAGS) usbFullSpeedPacketSender.v
