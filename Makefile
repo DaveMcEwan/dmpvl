@@ -19,6 +19,7 @@ check_verif:
 	make -C verif
 
 run_tbs:
+	make -C tb/bpRegMem
 	make -C tb/fifo
 	make -C tb/fxcs
 	make -C tb/onehotIdx
@@ -27,6 +28,7 @@ run_tbs:
 	make -C tb/usbFullSpeedTransactions
 
 clean_tbs:
+	make -C tb/bpRegMem clean
 	make -C tb/dividerFsm clean
 	make -C tb/fifo clean
 	make -C tb/fxcs clean
