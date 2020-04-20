@@ -1,0 +1,91 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Mon Apr 20 10:41:08 2020
+[*]
+[timestart] 5278
+[size] 1853 1025
+[pos] -57 -59
+*-6.000000 5500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.fifo_tb.
+[treeopen] TOP.fifo_tb.u_fifo_1_2_mem.
+[sst_width] 223
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 301
+@c00200
+-8_2_flops
+@24
+TOP.fifo_tb.u_fifo_8_2_flops.CNT_W[31:0]
+TOP.fifo_tb.u_fifo_8_2_flops.DEPTH[31:0]
+TOP.fifo_tb.u_fifo_8_2_flops.FLOPS_NOT_MEM[31:0]
+TOP.fifo_tb.u_fifo_8_2_flops.MAXPTR[31:0]
+TOP.fifo_tb.u_fifo_8_2_flops.PTR_W[31:0]
+TOP.fifo_tb.u_fifo_8_2_flops.WIDTH[31:0]
+@28
+TOP.fifo_tb.u_fifo_8_2_flops.i_clk
+TOP.fifo_tb.u_fifo_8_2_flops.i_rst
+TOP.fifo_tb.u_fifo_8_2_flops.i_cg
+TOP.fifo_tb.u_fifo_8_2_flops.i_flush
+TOP.fifo_tb.u_fifo_8_2_flops.doFlush
+TOP.fifo_tb.u_fifo_8_2_flops.i_pop
+TOP.fifo_tb.u_fifo_8_2_flops.doPop
+TOP.fifo_tb.u_fifo_8_2_flops.o_popped
+TOP.fifo_tb.u_fifo_8_2_flops.i_push
+TOP.fifo_tb.u_fifo_8_2_flops.doPush
+TOP.fifo_tb.u_fifo_8_2_flops.o_pushed
+@22
+TOP.fifo_tb.u_fifo_8_2_flops.i_data[7:0]
+TOP.fifo_tb.u_fifo_8_2_flops.o_data[7:0]
+TOP.fifo_tb.u_fifo_8_2_flops.o_entries[15:0]
+@28
+TOP.fifo_tb.u_fifo_8_2_flops.o_empty
+TOP.fifo_tb.u_fifo_8_2_flops.o_full
+TOP.fifo_tb.u_fifo_8_2_flops.o_nEntries[1:0]
+TOP.fifo_tb.u_fifo_8_2_flops.o_valid[1:0]
+TOP.fifo_tb.u_fifo_8_2_flops.rdptr_q[0]
+TOP.fifo_tb.u_fifo_8_2_flops.wrptr_q[0]
+TOP.fifo_tb.u_fifo_8_2_flops.rd_vec[1:0]
+TOP.fifo_tb.u_fifo_8_2_flops.wr_vec[1:0]
+TOP.fifo_tb.u_fifo_8_2_flops.o_rdptr[0]
+TOP.fifo_tb.u_fifo_8_2_flops.o_wrptr[0]
+@1401200
+-8_2_flops
+@800201
+-1_2_mem
+@25
+TOP.fifo_tb.u_fifo_1_2_mem.CNT_W[31:0]
+TOP.fifo_tb.u_fifo_1_2_mem.DEPTH[31:0]
+TOP.fifo_tb.u_fifo_1_2_mem.FLOPS_NOT_MEM[31:0]
+TOP.fifo_tb.u_fifo_1_2_mem.MAXPTR[31:0]
+TOP.fifo_tb.u_fifo_1_2_mem.PTR_W[31:0]
+TOP.fifo_tb.u_fifo_1_2_mem.WIDTH[31:0]
+@29
+TOP.fifo_tb.u_fifo_1_2_mem.i_clk
+TOP.fifo_tb.u_fifo_1_2_mem.i_rst
+TOP.fifo_tb.u_fifo_1_2_mem.i_cg
+TOP.fifo_tb.u_fifo_1_2_mem.i_flush
+TOP.fifo_tb.u_fifo_1_2_mem.doFlush
+TOP.fifo_tb.u_fifo_1_2_mem.i_pop
+TOP.fifo_tb.u_fifo_1_2_mem.doPop
+TOP.fifo_tb.u_fifo_1_2_mem.o_popped
+TOP.fifo_tb.u_fifo_1_2_mem.i_push
+TOP.fifo_tb.u_fifo_1_2_mem.doPush
+TOP.fifo_tb.u_fifo_1_2_mem.o_pushed
+TOP.fifo_tb.u_fifo_1_2_mem.i_data[0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_data[0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_entries[1:0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_empty
+TOP.fifo_tb.u_fifo_1_2_mem.o_full
+TOP.fifo_tb.u_fifo_1_2_mem.o_nEntries[1:0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_valid[1:0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_rdptr[0]
+TOP.fifo_tb.u_fifo_1_2_mem.o_wrptr[0]
+TOP.fifo_tb.u_fifo_1_2_mem.rdptr_q[0]
+TOP.fifo_tb.u_fifo_1_2_mem.wrptr_q[0]
+TOP.fifo_tb.u_fifo_1_2_mem.rd_vec[1:0]
+TOP.fifo_tb.u_fifo_1_2_mem.wr_vec[1:0]
+@1000201
+-1_2_mem
+[pattern_trace] 1
+[pattern_trace] 0

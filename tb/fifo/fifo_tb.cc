@@ -26,21 +26,10 @@ int main(int argc, char **argv, char **env) {
   FifoModel* model_8_2_flops = new FifoModel(8, 2, CIRCULAR, FLOPS);
 
   // Initialize simulation inputs
-  tb->m_dut->common_cg = 0;
-  tb->m_dut->common_flush = 0;
-  tb->m_dut->common_push = 0;
-  tb->m_dut->common_pop = 0;
-  tb->m_dut->common_data = 0;
-  tb->m_dut->fifo_8_8_mem_i_data = 0x55;
-  tb->m_dut->fifo_1_2_mem_i_data = 0;
-  tb->m_dut->fifo_5_5_mem_i_data = 0x15;
-  tb->m_dut->fifo_8_2_flops_i_data = 0x55;
   tb->reset();
 
   // Run simulation for N_CYCLES clock periods.
   while (tb->tickcount() < N_CYCLES) {
-
-    tb->tick(); // Checks performed at negedge times (tickcount*10+5).
 
     model_8_8_mem->check( // {{{
       tb->tickcount(),
@@ -158,16 +147,7 @@ int main(int argc, char **argv, char **env) {
       tb->m_dut->fifo_8_2_flops_o_entries
     ); // }}}
 
-    // Drivers evaluated at tickcount*10-2
-    tb->m_dut->common_cg   = (rand() % 100) != 0; // Drop i_cg 1/100.
-    tb->m_dut->common_flush = (rand() % 50) == 0; // Pulse i_flush high 1/50.
-    tb->m_dut->common_push = (rand() % 5) == 0; // Pulse i_push high 1/5.
-    tb->m_dut->common_pop  = (rand() % 6) == 0; // Pulse i_pop high 1/6.
-    tb->m_dut->common_data = rand();
-    tb->m_dut->fifo_8_8_mem_i_data = tb->m_dut->common_data & 0xff;
-    tb->m_dut->fifo_1_2_mem_i_data = tb->m_dut->common_data & 0x1;
-    tb->m_dut->fifo_5_5_mem_i_data = tb->m_dut->common_data & 0x1f;
-    tb->m_dut->fifo_8_2_flops_i_data = tb->m_dut->common_data & 0xff;
+    tb->tick(); // Checks performed at negedge times.
   }
 
   tb->closetrace();

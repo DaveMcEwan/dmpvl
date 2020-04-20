@@ -18,7 +18,7 @@ FifoModel::FifoModel (unsigned int w,
     nEntries = 0;
 
     // This is just a verif model so only support up to 32b data width.
-    data_mask = (width == 32) ? 0xffffffff : ((1 << width) - 1);
+    dataMask = (width == 32) ? 0xffffffff : ((1 << width) - 1);
 }
 
 char * FifoModel::info() {
@@ -33,87 +33,6 @@ char * FifoModel::info() {
         stores[storage]);
 
     return infobuff;
-}
-
-void FifoModel::flush() {
-    rd_ptr = 0;
-    wr_ptr = 0;
-    nEntries = 0;
-}
-
-int unsigned FifoModel::pop() {
-    int unsigned front = entries[rd_ptr];
-    nEntries--;
-
-    if (topology == CIRCULAR) {
-        // Wrap around read pointer.
-        rd_ptr = (rd_ptr == (depth-1)) ? 0 : (rd_ptr + 1);
-
-        // Data stays where it is.
-
-        // Write pointer doesn't change.
-    } else if (topology == LINEAR) {
-        // Read pointer is fixed to 0.
-
-        // Shuffle data down.
-        for (int i = 0; i < nEntries; i++) {
-            entries[i] = entries[i+1];
-        }
-
-        // Write pointer moves down to match data.
-        wr_ptr--;
-    }
-
-    return front;
-}
-
-void FifoModel::push(unsigned int back) {
-    entries[wr_ptr] = back & data_mask;
-    nEntries++;
-
-    if (topology == CIRCULAR) {
-        // Pushing doesn't move read pointer.
-
-        // Pushing doesn't move data.
-
-        // Wrap around write pointer.
-        wr_ptr = (wr_ptr == (depth-1)) ? 0 : (wr_ptr + 1);
-    } else if (topology == LINEAR) {
-        // Pushing doesn't move read pointer.
-
-        // Pushing doesn't move data.
-
-        // Increment write pointer.
-        wr_ptr = nEntries-1;
-    }
-}
-
-int unsigned FifoModel::getWidth() {
-    return width;
-}
-
-int unsigned FifoModel::getDepth() {
-    return depth;
-}
-
-int unsigned FifoModel::getNEntries() {
-    return nEntries;
-}
-
-int unsigned FifoModel::getDataMask() {
-    return data_mask;
-}
-
-int unsigned FifoModel::getEntry(int unsigned index) {
-    return entries[index];
-}
-
-bool FifoModel::isEmpty() {
-    return (nEntries == 0);
-}
-
-bool FifoModel::isFull() {
-    return (nEntries >= depth);
 }
 
 int unsigned FifoModel::popcnt(int unsigned o_valid) {
@@ -162,60 +81,84 @@ void FifoModel::check(
   ///////////////////////////////////////////////////////////////////////////
   // Model behaviour
   ///////////////////////////////////////////////////////////////////////////
+  bool empty = (nEntries == 0);
+  bool full = (nEntries >= depth);
+  int unsigned model_head = entries[rd_ptr];
+  int unsigned model_nEntries = nEntries;
 
+  // Pop-then-push ordering is important.
   if (i_cg) {
-    bool _isEmpty = isEmpty();
-    bool _isFull = isFull();
 
-    // Pop-then-push ordering is important.
+    if (i_flush) {
+      rd_ptr = 0;
+      wr_ptr = 0;
+      nEntries = 0;
+    }
 
-    if (i_flush)
-      flush();
+    if (!empty && i_pop && !i_flush) {
+      nEntries--;
 
-    if (!_isEmpty && i_pop && !i_flush)
-      pop();
+      if (topology == CIRCULAR) {
+          // Wrap around read pointer.
+          rd_ptr = (rd_ptr == (depth-1)) ? 0 : (rd_ptr + 1);
+          // Data stays where it is.
+          // Write pointer doesn't change.
+      } else if (topology == LINEAR) {
+          // Read pointer is fixed to 0.
+          // Shuffle data down.
+          for (int i = 0; i < nEntries; i++) {
+              entries[i] = entries[i+1];
+          }
+          // Write pointer moves down to match data.
+          wr_ptr--;
+      }
+    }
 
-    if (!_isFull && i_push && !i_flush)
-      push(i_data);
+    if (!full && i_push && !i_flush) {
+      entries[wr_ptr] = i_data & dataMask;
+      nEntries++;
+
+      // Pushing doesn't modify read pointer, or move data.
+      if (topology == CIRCULAR) {
+          // Wrap around write pointer.
+          wr_ptr = (wr_ptr == (depth-1)) ? 0 : (wr_ptr + 1);
+      } else if (topology == LINEAR) {
+          // Increment write pointer.
+          wr_ptr = nEntries-1;
+      }
+    }
+
   }
 
   ///////////////////////////////////////////////////////////////////////////
   // Check state
   ///////////////////////////////////////////////////////////////////////////
 
-  if (isEmpty() != (bool)o_empty) {
-    modelPrint(ERROR, t, info(),
-      "model: isEmpty=%d; design: o_empty=%d",
-      isEmpty(), o_empty);
+  if (empty != (bool)o_empty) {
+    modelPrint(ERROR, t, info(), "empty model=%d design=%d",
+      empty, o_empty);
   }
 
-  if (isFull() != (bool)o_full) {
-    modelPrint(ERROR, t, info(),
-      "model: isFull=%d; design: o_full=%d",
-      isFull(), o_full);
+  if (full != (bool)o_full) {
+    modelPrint(ERROR, t, info(), "full model=%d design=%d",
+      full, o_full);
   }
 
-  if (4 > depth && nEntries != popcnt(o_valid)) {
-    modelPrint(ERROR, t, info(),
-      "model: nEntries=%d; design: popcnt(o_valid)=%d o_valid=0x%x",
-      nEntries, popcnt(o_valid), o_valid);
+  if (4 > depth && model_nEntries != popcnt(o_valid)) {
+    modelPrint(ERROR, t, info(), "nEntries model=%d design=%d o_valid=0x%x",
+      model_nEntries, popcnt(o_valid), o_valid);
+  } else if (4 <= depth && model_nEntries != o_nEntries) {
+    modelPrint(ERROR, t, info(), "nEntries model=%d design=%d",
+      model_nEntries, o_nEntries);
   }
 
-  if (depth >= 4 && nEntries != o_nEntries) {
-    modelPrint(ERROR, t, info(),
-      "model: nEntries=%d; design: o_nEntries=%d",
-      nEntries, o_nEntries);
-  }
-
-  if ((o_data != getEntry(rd_ptr)) && !isEmpty()) {
-    modelPrint(ERROR, t, info(),
-      "model: getEntry(rd_ptr)=%x; design: o_data=%x",
-      getEntry(rd_ptr), o_data);
+  if ((model_head != o_data) && !empty) {
+    modelPrint(ERROR, t, info(), "head model=%x design=%x",
+      model_head, o_data);
 
     for (int i=0; i < depth; i++) {
-      modelPrint(WARN, t, info(),
-        "entry%d=%x",
-        i, getEntry(i));
+      modelPrint(WARN, t, info(), "entry%d=%x",
+        i, entries[i]);
     }
   }
 }

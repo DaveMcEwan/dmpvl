@@ -6,13 +6,7 @@
 module fifo_tb (
 
   // {{{ Default parameters.
-  input  wire           fifo_8_8_mem_i_clk,
-  input  wire           fifo_8_8_mem_i_rst,
-  input  wire           fifo_8_8_mem_i_cg,
-  input  wire           fifo_8_8_mem_i_flush,
-  input  wire           fifo_8_8_mem_i_push,
-  input  wire           fifo_8_8_mem_i_pop,
-  input  wire [ 7:0]    fifo_8_8_mem_i_data,
+  output wire [ 7:0]    fifo_8_8_mem_i_data,
   output wire [ 7:0]    fifo_8_8_mem_o_data,
   output wire           fifo_8_8_mem_o_empty,
   output wire           fifo_8_8_mem_o_full,
@@ -26,13 +20,7 @@ module fifo_tb (
   // }}} Default parameters.
 
   // {{{ Minimal width and depth.
-  input  wire           fifo_1_2_mem_i_clk,
-  input  wire           fifo_1_2_mem_i_rst,
-  input  wire           fifo_1_2_mem_i_cg,
-  input  wire           fifo_1_2_mem_i_flush,
-  input  wire           fifo_1_2_mem_i_push,
-  input  wire           fifo_1_2_mem_i_pop,
-  input  wire [ 0:0]    fifo_1_2_mem_i_data,
+  output wire [ 0:0]    fifo_1_2_mem_i_data,
   output wire [ 0:0]    fifo_1_2_mem_o_data,
   output wire           fifo_1_2_mem_o_empty,
   output wire           fifo_1_2_mem_o_full,
@@ -46,13 +34,7 @@ module fifo_tb (
   // }}} Minimal width and depth.
 
   // {{{ Non-pow2 width and depth.
-  input  wire           fifo_5_5_mem_i_clk,
-  input  wire           fifo_5_5_mem_i_rst,
-  input  wire           fifo_5_5_mem_i_cg,
-  input  wire           fifo_5_5_mem_i_flush,
-  input  wire           fifo_5_5_mem_i_push,
-  input  wire           fifo_5_5_mem_i_pop,
-  input  wire [ 4:0]    fifo_5_5_mem_i_data,
+  output wire [ 4:0]    fifo_5_5_mem_i_data,
   output wire [ 4:0]    fifo_5_5_mem_o_data,
   output wire           fifo_5_5_mem_o_empty,
   output wire           fifo_5_5_mem_o_full,
@@ -66,13 +48,7 @@ module fifo_tb (
   // }}} Non-pow2 width and depth.
 
   // {{{ Flops, not memory block.
-  input  wire           fifo_8_2_flops_i_clk,
-  input  wire           fifo_8_2_flops_i_rst,
-  input  wire           fifo_8_2_flops_i_cg,
-  input  wire           fifo_8_2_flops_i_flush,
-  input  wire           fifo_8_2_flops_i_push,
-  input  wire           fifo_8_2_flops_i_pop,
-  input  wire [ 7:0]    fifo_8_2_flops_i_data,
+  output wire [ 7:0]    fifo_8_2_flops_i_data,
   output wire [ 7:0]    fifo_8_2_flops_o_data,
   output wire           fifo_8_2_flops_o_empty,
   output wire           fifo_8_2_flops_o_full,
@@ -85,15 +61,29 @@ module fifo_tb (
   output wire [15:0]    fifo_8_2_flops_o_entries,
   // }}} Flops, not memory block.
 
+  output reg            common_cg,
+  output reg            common_flush,
+  output reg            common_push,
+  output reg            common_pop,
+
   input  wire           i_clk,
-  input  wire           i_rst,
-  input  wire           common_cg,
-  input  wire           common_flush,
-  input  wire           common_push,
-  input  wire           common_pop,
-  input  wire [31:0]    common_data
+  input  wire           i_rst
 
 );
+
+reg [31:0] common_data;
+always @(posedge i_clk) begin
+  common_cg     <= ($random % 100) != 0; // Drop i_cg 1/100.
+  common_flush  <= ($random % 50) == 0; // Pulse i_flush high 1/50.
+  common_push   <= ($random % 5) == 0; // Pulse i_push high 1/5.
+  common_pop    <= ($random % 6) == 0; // Pulse i_pop high 1/6.
+  common_data   <= $random;
+end
+
+assign fifo_8_8_mem_i_data = common_data[7:0];
+assign fifo_1_2_mem_i_data = common_data[0];
+assign fifo_5_5_mem_i_data = common_data[4:0];
+assign fifo_8_2_flops_i_data = common_data[7:0];
 
 // {{{ Default parameters.
 fifo #(

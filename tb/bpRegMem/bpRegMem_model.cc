@@ -102,6 +102,7 @@ void BpRegMemModel::check(
     if (txnBegin) {
       addr = i_bp_data & 0x7f;
     }
+
   }
 
 

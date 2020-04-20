@@ -6,60 +6,47 @@
 module bpRegMem_tb (
 
   // {{{ Default parameters.
-  input  wire           bpRegMem_64_i_clk,
-  input  wire           bpRegMem_64_i_rst,
-  input  wire           bpRegMem_64_i_cg,
-  input  wire [ 7:0]    bpRegMem_64_i_bp_data,
-  input  wire           bpRegMem_64_i_bp_valid,
-  output wire           bpRegMem_64_o_bp_ready,
   output wire [ 7:0]    bpRegMem_64_o_bp_data,
   output wire           bpRegMem_64_o_bp_valid,
-  input  wire           bpRegMem_64_i_bp_ready,
+  output wire           bpRegMem_64_o_bp_ready,
   // }}} Default parameters.
 
   // {{{ Minimal parameters.
-  input  wire           bpRegMem_2_i_clk,
-  input  wire           bpRegMem_2_i_rst,
-  input  wire           bpRegMem_2_i_cg,
-  input  wire [ 7:0]    bpRegMem_2_i_bp_data,
-  input  wire           bpRegMem_2_i_bp_valid,
-  output wire           bpRegMem_2_o_bp_ready,
   output wire [ 7:0]    bpRegMem_2_o_bp_data,
   output wire           bpRegMem_2_o_bp_valid,
-  input  wire           bpRegMem_2_i_bp_ready,
+  output wire           bpRegMem_2_o_bp_ready,
   // }}} Minimal parameters.
 
   // {{{ Maximal parameters.
-  input  wire           bpRegMem_128_i_clk,
-  input  wire           bpRegMem_128_i_rst,
-  input  wire           bpRegMem_128_i_cg,
-  input  wire [ 7:0]    bpRegMem_128_i_bp_data,
-  input  wire           bpRegMem_128_i_bp_valid,
-  output wire           bpRegMem_128_o_bp_ready,
   output wire [ 7:0]    bpRegMem_128_o_bp_data,
   output wire           bpRegMem_128_o_bp_valid,
-  input  wire           bpRegMem_128_i_bp_ready,
+  output wire           bpRegMem_128_o_bp_ready,
   // }}} Maximal parameters.
 
   // {{{ Non-pow2.
-  input  wire           bpRegMem_5_i_clk,
-  input  wire           bpRegMem_5_i_rst,
-  input  wire           bpRegMem_5_i_cg,
-  input  wire [ 7:0]    bpRegMem_5_i_bp_data,
-  input  wire           bpRegMem_5_i_bp_valid,
-  output wire           bpRegMem_5_o_bp_ready,
   output wire [ 7:0]    bpRegMem_5_o_bp_data,
   output wire           bpRegMem_5_o_bp_valid,
-  input  wire           bpRegMem_5_i_bp_ready,
+  output wire           bpRegMem_5_o_bp_ready,
   // }}} Non-pow2.
 
+  output reg            common_cg,
+  output wire [ 7:0]    common_bp_data,
+  output reg            common_bp_valid,
+  output reg            common_bp_ready,
+
   input  wire           i_clk,
-  input  wire           i_rst,
-  input  wire           common_cg,
-  input  wire [ 7:0]    common_bp_data,
-  input  wire           common_bp_valid,
-  input  wire           common_bp_ready
+  input  wire           i_rst
 );
+
+reg [31:0] common_bp_data_32b;
+
+always @(posedge i_clk) begin
+  common_cg       <= ($random % 100) != 0; // Drop i_cg 1/100.
+  common_bp_valid <= ($random % 5) == 0; // Pulse i_bp_valid 1/5.
+  common_bp_ready <= ($random % 6) != 0; // Drop i_bp_ready 1/6.
+  common_bp_data_32b <= $random;
+end
+assign common_bp_data = common_bp_data_32b[7:0];
 
 // {{{ Default parameters.
 bpRegMem #(

@@ -19,7 +19,7 @@ class FifoModel {
         int unsigned wr_ptr;
         int unsigned rd_ptr;
         int unsigned nEntries;
-        int unsigned data_mask;
+        int unsigned dataMask;
         int unsigned entries[MAX_ENTRIES];
 
     public:
