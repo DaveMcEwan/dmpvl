@@ -3,6 +3,7 @@
 
 module usbfsSerial #(
   parameter VIDPID_SQUAT = 1,
+  parameter ACM_NOT_GENERIC = 0,
   parameter MAX_PKT = 8  // in {8,16,32,64}. wMaxPacketSize
 ) (
   input  wire                       i_clk_48MHz,
@@ -123,6 +124,7 @@ usbfsTxn #( // {{{ u_txn
 usbfsEndpCtrlSerial #( // {{{ u_ctrlSerial
   .VENDOR_ID        (VENDOR_ID),
   .PRODUCT_ID       (PRODUCT_ID),
+  .ACM_NOT_GENERIC  (ACM_NOT_GENERIC),
   .MAX_PKT          (MAX_PKT)
 ) u_ctrlSerial (
   .i_clk                    (i_clk_48MHz),

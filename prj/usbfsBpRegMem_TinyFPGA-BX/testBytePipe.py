@@ -26,6 +26,7 @@ import functools
 import glob
 import locale
 import os
+import subprocess
 import sys
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -70,11 +71,11 @@ def getDevicePath(argDevice) -> str: # {{{
     return ret
 # }}} def getDevicePath
 
-def uploadBitfile(argBitfile): # {{{
+def uploadBitfile(bitfile): # {{{
 
-    bitfile = getBitfilePath(argBitfile)
+    p = subprocess.run(("tinyprog", "-p", bitfile))
 
-    return 0
+    return p.returncode
 # }}} def uploadBitfile
 
 def hwReadRegs(device, addrs:List[int]) -> Dict[int, int]: # {{{
@@ -99,6 +100,11 @@ argparser.add_argument("-b", "--bitfile",
          " Then try using the last item of `./usbfsBpRegMem.*.bin`;"
          " Then try using the bundled bitfile.")
 
+argparser.add_argument("--no-prog",
+    action="store_true",
+    help="Don't attempt to program a bitfile."
+         " Assume there's already a programmed device available.")
+
 argparser.add_argument("-d", "--device",
     type=str,
     default=None,
@@ -110,33 +116,25 @@ argparser.add_argument("-d", "--device",
 
 def main(args) -> int: # {{{
     '''
-    1. Upload bitfile to FPGA.
+    1. Upload bitfile to TinyFPGA-BX (optional).
     2. Open connection to device.
-    3. Read config RO registers.
-    4. Write config RW registers.
-    5. Read/check config RW registers.
-    6. Initialize GUI
-    7. GUI output loop:
-        1. Sleep for refresh period.
-        2. Read results RO registers.
-        2. Update results section.
-    8. GUI config loop:
-        1. Wait for <Enter>
-        2. Write config RW registers.
-        3. Read config RW registers, check they're what was written.
-    9. GUI input loop:
-        1. Wait for keypress.
-        2. Handle keypress by moving highlighted line or changing value.
+    3. Discover writable bits.
     '''
 
     locale.setlocale(locale.LC_ALL, '')
 
-    verb("Uploading bitfile...", end='')
-    uploadBitfile(args.bitfile)
-    verb("Done")
+    if not args.no_prog:
+        bitfile = getBitfilePath(args.bitfile)
+        verb("Uploading bitfile %s ..." % bitfile, end='')
+        uploadBitfile(bitfile)
+        verb("Done")
 
-    # Allow OS time to enumerate USB before looking for device.
-    time.sleep(0.25) # seconds
+        waitTime = 2.5 # seconds
+        verb("Waiting %0.01fs before connecting..." % waitTime, end='')
+        # Allow OS time to enumerate USB before looking for device.
+        time.sleep(waitTime)
+        verb("Done")
+
     devicePath = getDevicePath(args.device)
 
     # Keep lock on device to prevent other processes from accidentally messing
