@@ -1,29 +1,24 @@
 `include "dff.vh"
 
 /* BytePipe interface, indended to sit on top of USB for register access.
-- Approximately 17 dff, plus memory.
-- Address up to 128 positions.
-- Each position is 1B wide.
-- Start transaction with `{writeNotRead:1b, address:7b}`.
-- Each transaction consists of sending a 2B request, and receiving 1B reply.
-- Write transaction:
-  1. Receive byte, `{writeNotRead:1b=1, address:7b}`
-     Store the address.
-     Valid is high so wait for next byte containing data.
-  2. Receive byte `{data:8b}` is written to address, then the contents at
-     address are read and returned.
-- Read transaction:
-  1. Receive byte, `{writeNotRead:1b=0, address:7b}`
-     Store the address.
-     Valid is low so then contents at (previous) address are read and returned.
-  2. Receive byte, `{writeNotRead:1b=0, address:7b}`
-     Store the address.
-     Valid is low so then contents at (previous) address are read and returned.
-- Read value for invalid/unimplemented bits should always be zero.
-- All transactions return read data.
-  This means all writeable bits can be discovered by writing `0xff` to each
+
+- BytePipe has been designed with these goals:
+  1. Very low cost to implement (approximately 17 dff, plus memory),
+  2. Simple to reset to a known state.
+  3. Simple and efficient mechanism for confirming that state *was* what you
+     expected it to be as you update (functional monitoring).
+  4. Efficient polling loops for non-linear sequences of addresses.
+
+- All transactions generate 1B response.
+- All addressable locations are 1B wide.
+- Address is up to 7b wide (up to 128 positions).
+- Non-implemented addresses always read as 0.
+  This allows all writeable bits to be discovered by writing `0xff` to each
   position, inspecting the result.
-- Multiple reads can be combined.
+- Write transaction sends cmd+address byte, then data byte, then receives 1B
+  with previous/overwritten value at that address.
+- Read transaction sends cmd+address byte, then receives 1B with the value at
+  the previous address.
 */
 module bpRegMem #(
   parameter N_REG = 64  // in {2..128}. Number of registers to implement.
