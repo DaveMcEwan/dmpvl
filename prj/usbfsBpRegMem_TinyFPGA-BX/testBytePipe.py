@@ -143,11 +143,12 @@ def bpReadSequential(device, addrs:BpAddrs) -> BpAddrValues: # {{{
         assert 0 <= addr < 128, (i, addr)
         assert 1 == device.write(bytes([addr]))
 
+        value:int = ord(device.read(1))
+
         # First return value is discarded.
         if 0 == i:
             continue
         else:
-            value:int = ord(device.read(1))
             ret_.append((addrs[i-1], value))
 
     # Last address is sent again,
