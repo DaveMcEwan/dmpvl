@@ -129,6 +129,7 @@ def bpAddrValuesToMem(addrValues:BpAddrValues) -> BpMem: # {{{
 
     assert isinstance(ret, tuple), (type(ret), ret)
     assert 128 == len(ret), (len(ret), ret)
+
     return ret
 # }}} def bpAddrValuesToMem
 
@@ -147,7 +148,6 @@ def bpReadSequential(device, addrs:BpAddrs) -> BpAddrValues: # {{{
             continue
         else:
             value:int = ord(device.read(1))
-            dbg(value)
             ret_.append((addrs[i-1], value))
 
     # Last address is sent again,
@@ -185,6 +185,23 @@ def bpWriteSequential(device, addrValues:BpAddrValues) -> BpAddrValues: # {{{
 
     return ret
 # }}} def bpWriteSequential
+
+def printBpMem(title:str, mem:BpMem) -> None: # {{{
+
+    print(title.strip() + ':')
+
+    # Increasing left-to-right and top-to-bottom.
+    # Text of 16 lines of 8 bytes.
+    for i in range(16):
+        base = i*8
+
+        line = ' '.join("%02x" % mem[base + offset] \
+                        for offset in range(8))
+
+        print("  %3d .. %3d: %s" % (base, base+7, line))
+
+    return
+# }}} def printBpMem
 
 # {{{ argparser
 
@@ -265,16 +282,7 @@ def main(args) -> int: # {{{
         symdiff:BpMem = cast(BpMem, tuple(o ^ z for o,z in zip(ones, zeros)))
         verb("Done")
 
-        # Increasing left-to-right and top-to-bottom.
-        # Text of 16 lines of 8 bytes.
-        print("Writable bits:")
-        for i in range(16):
-            base = i*8
-
-            line = ' '.join("%02x" % symdiff[base + offset] \
-                            for offset in range(8))
-
-            print("  %3d .. %3d: %s" % (base, base+7, line))
+        printBpMem("Writable bits", symdiff)
 
     return 0
 # }}} def main
