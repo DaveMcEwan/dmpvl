@@ -204,6 +204,72 @@ def printBpMem(title:str, mem:BpMem) -> None: # {{{
     return
 # }}} def printBpMem
 
+def actionBits(rd, wr, mem): # {{{
+    verb("Writing ones to all register locations...", end='')
+    _ = mem( wr(list((addr, 0xff) for addr in range(128))) )
+    verb("Done")
+
+    verb("Writing zeros to all register locations...", end='')
+    ones:BpMem = mem( wr(list((addr, 0x00) for addr in range(128))) )
+    verb("Done")
+
+    verb("Reading all register locations...", end='')
+    zeros:BpMem = mem( rd(list(range(128))) )
+    verb("Checking writable bits...", end='')
+    symdiff:BpMem = cast(BpMem, tuple(o ^ z for o,z in zip(ones, zeros)))
+    verb("Done")
+
+    printBpMem("Writable bits", symdiff)
+
+    return # No return value
+# }}} def actionBits
+
+def actionDump(rd, wr, mem): # {{{
+    verb("Reading all register locations...", end='')
+    init0:BpMem = mem( rd(list(range(128))) )
+    verb("Done")
+
+    printBpMem("Dump", init0)
+
+    return # No return value
+# }}} def actionDump
+
+def actionTest(rd, wr, mem): # {{{
+    verb("Reading all register locations...", end='')
+    init0:BpMem = mem( rd(list(range(128))) )
+    verb("Done")
+    printBpMem("Initial values", init0)
+
+    verb("Writing ones to all register locations...", end='')
+    init1:BpMem = mem( wr(list((addr, 0xff) for addr in range(128))) )
+    verb("Checking previous unchanged...", end='')
+    assert all((i0 == i1) for i0,i1 in zip(init0, init1))
+    verb("Done")
+    printBpMem("Initial values (again)", init1)
+
+    verb("Writing zeros to all register locations...", end='')
+    ones:BpMem = mem( wr(list((addr, 0x00) for addr in range(128))) )
+    verb("Done")
+    printBpMem("Ones", ones)
+
+    verb("Reading all register locations...", end='')
+    zeros:BpMem = mem( rd(list(range(128))) )
+    verb("Checking writable bits...", end='')
+    symdiff:BpMem = cast(BpMem, tuple(o ^ z for o,z in zip(ones, zeros)))
+    verb("Done")
+    printBpMem("Zeros", zeros)
+    printBpMem("Writable bits", symdiff)
+
+    verb("Writing unique values to all register locations...", end='')
+    _ = mem( wr(list((addr, addr+10) for addr in range(128))) )
+    verb("Reading back...", end='')
+    addrPlus10:BpMem = mem( rd(list(range(128))) )
+    verb("Done")
+    printBpMem("mem[addr] <-- (addr+10)", addrPlus10)
+
+    return # No return value
+# }}} def actionTest
+
 # {{{ argparser
 
 argparser = argparse.ArgumentParser(
@@ -229,6 +295,19 @@ argparser.add_argument("-d", "--device",
     help="Serial device to connect to (immediately after progrmming)."
          " If None then try using environment variable `$TESTBYTEPIPE_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
+
+actions = {
+    "bits": actionBits,
+    "dump": actionDump,
+    "test": actionTest,
+}
+argparser.add_argument("action",
+    nargs='?',
+    choices=actions.keys(),
+    default="bits",
+    help="Perform a full test,"
+         " just dump the memory contents,"
+         " or identify all writable bits.")
 
 # }}} argparser
 
@@ -263,27 +342,7 @@ def main(args) -> int: # {{{
         wr:Callable = functools.partial(bpWriteSequential, device)
         mem:Callable = bpAddrValuesToMem
 
-        verb("Reading all register locations...", end='')
-        init0:BpMem = mem( rd(list(range(128))) )
-        verb("Done")
-
-        verb("Writing ones to all register locations...", end='')
-        init1:BpMem = mem( wr(list((addr, 0xff) for addr in range(128))) )
-        verb("Checking previous unchanged...", end='')
-        assert all((i0 == i1) for i0,i1 in zip(init0, init1))
-        verb("Done")
-
-        verb("Writing zeros to all register locations...", end='')
-        ones:BpMem = mem( wr(list((addr, 0x00) for addr in range(128))) )
-        verb("Done")
-
-        verb("Reading all register locations...", end='')
-        zeros:BpMem = mem( rd(list(range(128))) )
-        verb("Checking writable bits...", end='')
-        symdiff:BpMem = cast(BpMem, tuple(o ^ z for o,z in zip(ones, zeros)))
-        verb("Done")
-
-        printBpMem("Writable bits", symdiff)
+        actions[args.action](rd, wr, mem)
 
     return 0
 # }}} def main
