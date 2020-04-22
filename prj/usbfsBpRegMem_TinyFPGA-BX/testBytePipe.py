@@ -4,7 +4,7 @@
 # Dave McEwan 2020-04-20
 #
 # Plug in the board then run like:
-#    testBytePipe.py &
+#    python testBytePipe.py
 #
 # A bitfile implementing the usbfsBpRegMem logic is required to be build from
 # the SystemVerilog2005 implementation
@@ -100,8 +100,7 @@ def getDevicePath(argDevice) -> str: # {{{
     elif len(orderedDevices) > 0:
         ret = orderedDevices[-1]
     else:
-        ret = "/dev/null" # Useful for debug.
-        # TODO: raise OSError("Device not found. Use --help for details.")
+        raise OSError("Device not found. Use --help for details.")
 
     return ret
 # }}} def getDevicePath
@@ -320,19 +319,35 @@ def main(args) -> int: # {{{
 
     locale.setlocale(locale.LC_ALL, '')
 
-    if not args.no_prog:
+    if args.no_prog:
+        devicePath = getDevicePath(args.device)
+    else:
         bitfile = getBitfilePath(args.bitfile)
         verb("Uploading bitfile %s ..." % bitfile, end='')
         uploadBitfile(bitfile)
         verb("Done")
 
         # Allow OS time to enumerate USB before looking for device.
-        waitTime = 4.5 # seconds
-        verb("Waiting %0.01fs before connecting..." % waitTime, end='')
-        time.sleep(waitTime)
+        nAttempts = 10
+        waitTime = 1 # seconds
+        verb("Waiting up to %0.01fs..." % (nAttempts * waitTime), end='')
+
+        maybeDevicePath_:Optional[str] = None
+        for _ in range(nAttempts):
+            time.sleep(waitTime)
+            try:
+                maybeDevicePath_ = getDevicePath(args.device)
+                break
+            except OSError:
+                pass
+
+        if maybeDevicePath_ is None:
+            return 1
+        else:
+            devicePath = maybeDevicePath_
+
         verb("Done")
 
-    devicePath = getDevicePath(args.device)
 
     # Keep lock on device to prevent other processes from accidentally messing
     # with the state machine.
