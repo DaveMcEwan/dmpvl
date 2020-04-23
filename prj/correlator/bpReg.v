@@ -5,8 +5,8 @@ Unpack the register map to wires.
 */
 module bpReg #(
   parameter PRECISION = 8,
-  parameter METRIC_A = 3,
-  parameter METRIC_B = 4,
+  parameter METRIC_A = 3, // {1:Cls, 2:Cos, 3:Cov, 4:Dep, 5:Ham, 6:Tmt}
+  parameter METRIC_B = 4, // {1:Cls, 2:Cos, 3:Cov, 4:Dep, 5:Ham, 6:Tmt}
   parameter MAX_N_INPUTS = 5,
   parameter MAX_WINDOW_LENGTH_EXP = 31,
   parameter MAX_SAMPLE_RATE_NEGEXP = 31,
@@ -58,6 +58,14 @@ localparam ADDR_W = 4;
 `dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg && txnBegin, i_rst, '0)
 always @* addr_d = i_bp_data[ADDR_W-1:0];
 
+// Track validity of address to return zeros for out-of-range.
+wire addrInRange;
+localparam N_REG = 13;
+`dff_cg_srst(reg, addrInRange, i_clk, i_cg && txnBegin, i_rst, '0)
+always @* addrInRange_d = (i_bp_data[6:0] < N_REG[6:0]);
+
+assign addrInRange = addrInRange_q;
+
 // Address for all regs.
 localparam ADDR_PRECISION                 = 4'd0;
 localparam ADDR_METRIC_A                  = 4'd1;
@@ -74,12 +82,13 @@ localparam ADDR_SAMPLE_MODE               = 4'd11;
 localparam ADDR_SAMPLE_JITTER_NEGEXP      = 4'd12;
 
 // Write-enable for RW regs.
-wire wr_nInputs             = wrEnd && (addr_q == ADDR_N_INPUTS);
-wire wr_windowLengthExp     = wrEnd && (addr_q == ADDR_N_INPUTS);
-wire wr_windowShape         = wrEnd && (addr_q == ADDR_N_INPUTS);
-wire wr_sampleRateNegExp    = wrEnd && (addr_q == ADDR_N_INPUTS);
-wire wr_sampleMode          = wrEnd && (addr_q == ADDR_N_INPUTS);
-wire wr_sampleJitterNegExp  = wrEnd && (addr_q == ADDR_N_INPUTS);
+wire doWrite = i_cg && wrEnd && addrInRange;
+wire wr_nInputs             = doWrite && (addr_q == ADDR_N_INPUTS);
+wire wr_windowLengthExp     = doWrite && (addr_q == ADDR_WINDOW_LENGTH_EXP);
+wire wr_windowShape         = doWrite && (addr_q == ADDR_WINDOW_SHAPE);
+wire wr_sampleRateNegExp    = doWrite && (addr_q == ADDR_SAMPLE_RATE_NEGEXP);
+wire wr_sampleMode          = doWrite && (addr_q == ADDR_SAMPLE_MODE);
+wire wr_sampleJitterNegExp  = doWrite && (addr_q == ADDR_SAMPLE_JITTER_NEGEXP);
 
 // Widths and value enumerations.
 localparam N_INPUTS_W               = $clog2(MAX_N_INPUTS);
@@ -91,12 +100,12 @@ localparam SAMPLE_MODE_NONJITTER    = 1'd0;
 localparam SAMPLE_MODE_NONPERIODIC  = 1'd1;
 localparam SAMPLE_JITTER_NEGEXP_W   = $clog2(MAX_SAMPLE_JITTER_NEGEXP);
 
-`dff_cg_srst(reg [N_INPUTS_W-1:0],             nInputs,            i_clk, i_cg && wr_nInputs,            i_rst, '0)
-`dff_cg_srst(reg [WINDOW_LENGTH_EXP_W-1:0],    windowLengthExp,    i_clk, i_cg && wr_windowLengthExp,    i_rst, '0)
-`dff_cg_srst(reg,                              windowShape,        i_clk, i_cg && wr_windowShape,        i_rst, '0)
-`dff_cg_srst(reg [SAMPLE_RATE_NEGEXP_W-1:0],   sampleRateNegExp,   i_clk, i_cg && wr_sampleRateNegExp,   i_rst, '0)
-`dff_cg_srst(reg,                              sampleMode,         i_clk, i_cg && wr_sampleMode,         i_rst, '0)
-`dff_cg_srst(reg [SAMPLE_JITTER_NEGEXP_W-1:0], sampleJitterNegExp, i_clk, i_cg && wr_sampleJitterNegExp, i_rst, '0)
+`dff_cg_srst(reg [N_INPUTS_W-1:0],             nInputs,            i_clk, wr_nInputs,            i_rst, '0)
+`dff_cg_srst(reg [WINDOW_LENGTH_EXP_W-1:0],    windowLengthExp,    i_clk, wr_windowLengthExp,    i_rst, '0)
+`dff_cg_srst(reg,                              windowShape,        i_clk, wr_windowShape,        i_rst, '0)
+`dff_cg_srst(reg [SAMPLE_RATE_NEGEXP_W-1:0],   sampleRateNegExp,   i_clk, wr_sampleRateNegExp,   i_rst, '0)
+`dff_cg_srst(reg,                              sampleMode,         i_clk, wr_sampleMode,         i_rst, '0)
+`dff_cg_srst(reg [SAMPLE_JITTER_NEGEXP_W-1:0], sampleJitterNegExp, i_clk, wr_sampleJitterNegExp, i_rst, '0)
 always @* nInputs_d             = i_bp_data[N_INPUTS_W-1:0];
 always @* windowLengthExp_d     = i_bp_data[WINDOW_LENGTH_EXP_W-1:0];
 always @* windowShape_d         = i_bp_data[0];
@@ -114,26 +123,29 @@ assign o_reg_sampleJitterNegExp = sampleJitterNegExp_q;
 
 `dff_cg_srst(reg [7:0], rdData, i_clk, i_cg && rdBegin, i_rst, '0)
 always @*
-  case (addr_q)
-    // RO static
-    ADDR_PRECISION:                rdData_d = PRECISION;
-    ADDR_METRIC_A:                 rdData_d = METRIC_A;
-    ADDR_METRIC_B:                 rdData_d = METRIC_B;
-    ADDR_MAX_N_INPUTS:             rdData_d = MAX_N_INPUTS;
-    ADDR_MAX_WINDOW_LENGTH_EXP:    rdData_d = MAX_WINDOW_LENGTH_EXP;
-    ADDR_MAX_SAMPLE_RATE_NEGEXP:   rdData_d = MAX_SAMPLE_RATE_NEGEXP;
-    ADDR_MAX_SAMPLE_JITTER_NEGEXP: rdData_d = MAX_SAMPLE_JITTER_NEGEXP;
-                                                  /* verilator lint_off WIDTH */
-    // RW
-    ADDR_N_INPUTS:                 rdData_d = nInputs_q;
-    ADDR_WINDOW_LENGTH_EXP:        rdData_d = windowLengthExp_q;
-    ADDR_WINDOW_SHAPE:             rdData_d = windowShape_q;
-    ADDR_SAMPLE_RATE_NEGEXP:       rdData_d = sampleRateNegExp_q;
-    ADDR_SAMPLE_MODE:              rdData_d = sampleMode_q;
-    ADDR_SAMPLE_JITTER_NEGEXP:     rdData_d = sampleJitterNegExp_q;
-                                                  /* verilator lint_on  WIDTH */
-    default:                       rdData_d = '0;
-  endcase
+  if (addrInRange)
+    case (addr_q)
+      // RO static
+      ADDR_PRECISION:                rdData_d = PRECISION;
+      ADDR_METRIC_A:                 rdData_d = METRIC_A;
+      ADDR_METRIC_B:                 rdData_d = METRIC_B;
+      ADDR_MAX_N_INPUTS:             rdData_d = MAX_N_INPUTS;
+      ADDR_MAX_WINDOW_LENGTH_EXP:    rdData_d = MAX_WINDOW_LENGTH_EXP;
+      ADDR_MAX_SAMPLE_RATE_NEGEXP:   rdData_d = MAX_SAMPLE_RATE_NEGEXP;
+      ADDR_MAX_SAMPLE_JITTER_NEGEXP: rdData_d = MAX_SAMPLE_JITTER_NEGEXP;
+                                                    /* verilator lint_off WIDTH */
+      // RW
+      ADDR_N_INPUTS:                 rdData_d = nInputs_q;
+      ADDR_WINDOW_LENGTH_EXP:        rdData_d = windowLengthExp_q;
+      ADDR_WINDOW_SHAPE:             rdData_d = windowShape_q;
+      ADDR_SAMPLE_RATE_NEGEXP:       rdData_d = sampleRateNegExp_q;
+      ADDR_SAMPLE_MODE:              rdData_d = sampleMode_q;
+      ADDR_SAMPLE_JITTER_NEGEXP:     rdData_d = sampleJitterNegExp_q;
+                                                    /* verilator lint_on  WIDTH */
+      default:                       rdData_d = '0;
+    endcase
+  else
+    rdData_d = '0;
 
 // Backpressure goes straight through so destination controls all flow, so the
 // host must keep accepting data.
