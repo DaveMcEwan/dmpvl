@@ -210,7 +210,7 @@ def main(args) -> int: # {{{
     else:
         bitfile = getBitfilePath(args.bitfile)
         verb("Uploading bitfile %s ..." % bitfile, end='')
-        uploadBitfile(bitfile)
+        assert 0 == uploadBitfile(bitfile)
         verb("Done")
 
         # Allow OS time to enumerate USB before looking for device.
