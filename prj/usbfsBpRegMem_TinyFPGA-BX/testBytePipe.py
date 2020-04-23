@@ -194,9 +194,10 @@ def printBpMem(title:str, mem:BpMem) -> None: # {{{
     # Text of 16 lines of 8 bytes.
     for i in range(16):
         base = i*8
+        values = [mem[base + offset] for offset in range(8)]
 
-        line = ' '.join("%02x" % mem[base + offset] \
-                        for offset in range(8))
+        line = ' '.join("--" if v < 0 else ("%02x" % v) \
+                        for v in values)
 
         print("  %3d .. %3d: %s" % (base, base+7, line))
 
@@ -241,10 +242,11 @@ def actionTest(rd, wr, mem): # {{{
 
     verb("Writing ones to all register locations...", end='')
     init1:BpMem = mem( wr(list((addr, 0xff) for addr in range(128))) )
+    verb("Done")
+    printBpMem("Initial values (again)", init1)
     verb("Checking previous unchanged...", end='')
     assert all((i0 == i1) for i0,i1 in zip(init0, init1))
     verb("Done")
-    printBpMem("Initial values (again)", init1)
 
     verb("Writing zeros to all register locations...", end='')
     ones:BpMem = mem( wr(list((addr, 0x00) for addr in range(128))) )
