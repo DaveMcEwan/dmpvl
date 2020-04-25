@@ -38,7 +38,7 @@ synth: $(BUILD)/$(PROJ).yosys.json
 pnr: $(BUILD)/$(PROJ).nextpnr.asc $(BUILD)/$(PROJ).arachne.asc
 pack: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).arachne.icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).arachne.icetime.rpt
-all: synth pnr pack rpt
+all: synth pnr pack rpt test
 
 $(BUILD)/pll48.v:
 	mkdir -p $(BUILD)
@@ -82,9 +82,15 @@ gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 prog: $(BUILD)/$(PROJ).icepack.bin
 	tinyprog -p $<
 
+# Setup venv for Python 3.6+ ...
+# git clone https://github.com/DaveMcEwan/dmppl.git
+# pip install -e ./dmppl
+test: $(BUILD)/$(PROJ).icepack.bin
+	bytePipe-utils -v --bitfile $< test
+
 clean:
 	rm -rf build
 	rm -rf multipnr
 
 .SECONDARY:
-.PHONY: default all synth pnr pack rpt prog clean gui
+.PHONY: default all synth pnr pack rpt prog test clean gui
