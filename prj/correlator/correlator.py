@@ -41,13 +41,13 @@ from dmppl.base import run, verb, dbg
 from dmppl.bytePipe import BpAddrs, BpAddrValues, BpMem, \
     bpReadSequential, bpWriteSequential, bpPrintMem, bpAddrValuesToMem
 from dmppl.color import CursesWindow, cursesInitPairs, \
-    whiteBlue, whiteRed, greenBlack
+    whiteBlue, whiteRed, greenBlack, yellowBlack
 
 __version__ = "0.1.0"
 
 maxSampleRate_kHz:int = 48000
 
-# NOTE: Must match dmpvl/prj/correlator/bpReg.v
+# NOTE: Must match addresses in bpReg.v
 @enum.unique
 class HwReg(enum.Enum): # {{{
     # Static, RO
@@ -139,7 +139,7 @@ mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
 
     # Controls register "SampleJitterNegExp".
     # Domain defined by HwReg.MaxSampleJitterNegExp
-    GuiReg.SampleJitter: "(samples) = WindowLength/2**j; j ∊ ℤ ∩ [1, %d]",
+    GuiReg.SampleJitter: "(samples) = windowLength/2**j; j ∊ ℤ ∩ [1, %d]",
 } # }}}
 
 mapMetricIntToStr:Dict[int, str] = { # {{{
@@ -312,6 +312,36 @@ def updateRegs(selectIdx:int,
     return
 # }}} def updateRegs
 
+def calc_bitsPerWindow(hwRegs:Dict[HwReg, Any]) -> int: # {{{
+
+    precision:int = hwRegs[HwReg.Precision] # bits
+    nInputs:int = hwRegs[HwReg.NInputs] # unitless
+
+    ret:int = precision * (nInputs**2 - nInputs)
+
+    return ret
+# }}} def calc_bitsPerWindow
+
+def calc_windowsPerSecond(guiRegs:Dict[GuiReg, Any]) -> float: # {{{
+
+    sampleRate:float = guiRegs[GuiReg.SampleRate] # kHz
+    windowLength:int = guiRegs[GuiReg.WindowLength] # samples
+
+    ret:float = 1000 * sampleRate / windowLength
+
+    return ret
+# }}} def calc_windowsPerSecond
+
+def calc_bitRate(guiRegs:Dict[GuiReg, Any], hwRegs:Dict[HwReg, Any]) -> float: # {{{
+
+    bitsPerWindow:int = calc_bitsPerWindow(hwRegs)
+    windowsPerSecond:float = calc_windowsPerSecond(guiRegs)
+
+    ret:float = bitsPerWindow * windowsPerSecond
+
+    return ret
+# }}} def calc_bitRate
+
 class FullWindow(CursesWindow): # {{{
     '''The "full" window is a rectangle in the middle of the screen.
 
@@ -395,8 +425,7 @@ class InputWindow(CursesWindow): # {{{
     |labelN     valueN     domainN|
     +----------- ... -------------+
     '''
-    def draw(self,
-                   guiRegs:Dict[GuiReg, Any],
+    def draw(self, guiRegs:Dict[GuiReg, Any],
                    selectIdx:int=0,
                    outstanding:bool=False) -> None: # {{{
         '''Draw all the parameter lines.
@@ -448,6 +477,69 @@ class InputWindow(CursesWindow): # {{{
     # }}} def draw
 # }}} class InputWindow
 
+class InfoWindow(CursesWindow): # {{{
+    '''The "info" window contains a list of convenience calculations.
+
+    +----------- ... -------------+
+    |label0     value0     domain0|
+    |label1     value1     domain1|
+    ...                         ...
+    |labelN     valueN     domainN|
+    +----------- ... -------------+
+    '''
+    def draw(self, guiRegs:Dict[GuiReg, Any], hwRegs:Dict[HwReg, Any]) -> None: # {{{
+        '''Draw all the parameter lines.
+
+        <label> ... <value> ... <domain>
+        '''
+        infos = (
+            ("bits/window",
+             calc_bitsPerWindow(hwRegs),
+             "= precision * nInputs * (nInputs-1)"),
+            ("windows/s",
+             calc_windowsPerSecond(guiRegs),
+             "= sampleRate / windowLength"),
+            ("bits/s",
+             calc_bitRate(guiRegs, hwRegs),
+             "= bits/window * windows/s"),
+        )
+
+        maxLenName:int = max(len(nm) for nm,v,d in infos)
+
+        self.win.clear()
+
+        for i,(nm, v, d) in enumerate(infos):
+
+            left:str = ' '*(maxLenName - len(nm)) + nm + " = "
+            right:str = d
+
+            if isinstance(v, str):
+              mid = v
+            elif isinstance(v, bool):
+              mid = "True" if v else "False"
+            elif isinstance(v, int):
+              mid = "%d" % v
+            elif isinstance(v, float):
+              mid = "%0.5f" % v
+            elif isinstance(v, enum.Enum):
+              mid = v.name
+            else:
+              mid = str(v)
+
+            midBegin:int = len(left) + 2
+            rightBegin:int = 30
+
+            # Fill whole line with background.
+            self.drawStr(' '*self.charsWidth, y=i+1)
+
+            self.drawStr(left, y=i+1)
+            self.drawStr(mid, midBegin, y=i+1)
+            self.drawStr(right, rightBegin, y=i+1)
+
+        return # No return value
+    # }}} def draw
+# }}} class InfoWindow
+
 def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     '''
     Window objects:
@@ -470,7 +562,7 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     cursesInitPairs() # Initialize colors
 
     full:CursesWindow = FullWindow(scr,
-        nLines=len(GuiReg)+6, nChars=80,
+        nLines=len(GuiReg)+10, nChars=80,
         colorPair=whiteBlue)
     full.win.box()
     full.drawTitle(deviceName, hwRegs)
@@ -484,6 +576,13 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     inpt.draw(guiRegs_)
     inpt.win.keypad(True)
     inpt.win.refresh()
+
+    info:CursesWindow = InfoWindow(full.win,
+        nLines=3+2, nChars=full.nChars-2,
+        colorPair=yellowBlack,
+        beginY=full.lineTop+len(GuiReg)+2, beginX=1)
+    info.draw(guiRegs_, hwRegs_)
+    info.win.refresh()
 
     while 1:
         c = inpt.win.getch() # Calls refresh for this and derived windows.
@@ -535,6 +634,9 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
         # Update display.
         inpt.draw(guiRegs_, selectIdx_, outstanding_)
         inpt.win.refresh()
+
+        info.draw(guiRegs_, hwRegs_)
+        info.win.refresh()
 
     return # No return value
 # }}} def gui
