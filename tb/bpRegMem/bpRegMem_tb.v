@@ -3,7 +3,14 @@
  * Instance name should be u_bpRegMem_<N_REG>
  * Connecting wires should be <instance>_<port>
  */
+
+`include "dff.vh"
 module bpRegMem_tb (
+
+`ifdef VERILATOR
+  input  wire           i_clk,
+  input  wire           i_rst,
+`endif
 
   // {{{ Default parameters.
   output wire [ 7:0]    bpRegMem_63_o_bp_data,
@@ -32,11 +39,29 @@ module bpRegMem_tb (
   output reg            common_cg,
   output wire [ 7:0]    common_bp_data,
   output reg            common_bp_valid,
-  output reg            common_bp_ready,
-
-  input  wire           i_clk,
-  input  wire           i_rst
+  output reg            common_bp_ready
 );
+
+`ifndef VERILATOR
+reg i_clk;
+generateClock u_clk (
+  .o_clk(i_clk),
+  .i_periodHi(8'd0),
+  .i_periodLo(8'd0),
+  .i_jitterControl(8'd0)
+);
+`endif
+
+`dff_nocg_norst(reg [31:0], nCycles, i_clk)
+initial nCycles_q = '0;
+always @* nCycles_d = nCycles_q + 'd1;
+
+`ifndef VERILATOR
+reg i_rst;
+always @* i_rst = (nCycles_q > 5);
+
+always @* if (nCycles_q > 1000) $finish;
+`endif
 
 reg [31:0] common_bp_data_32b;
 

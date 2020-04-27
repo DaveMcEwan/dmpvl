@@ -62,15 +62,16 @@ wire [6:0] cmdAddr = i_bp_data[6:0];
 
 wire txnBegin = !wr_q && in_accepted;
 wire inBurst = (burst_q != '0);
-wire inBurstWrite = inBurst && wr_q;
-wire inBurstRead = inBurst && rd_q;
+wire inBurstWr = inBurst && wr_q;
+wire inBurstRd = inBurst && rd_q;
+wire doWrite = wr_q && in_accepted;
 
 wire wrSet = txnBegin && cmdWr;
 wire wrClr = wr_q && in_accepted;
 wire rdSet = (txnBegin && cmdRd) || wrClr;
 wire rdClr = out_accepted;
 wire burstInit = wrClr && (addr_q == '0);
-wire burstDecr = inBurstWrite || inBurstRead;
+wire burstDecr = (inBurstRd && out_accepted) || (inBurstWr && in_accepted);
 
 always @*
   if      (wrSet) wr_d = 1'b1;
@@ -110,7 +111,7 @@ genvar r;
 generate for (r = 0; r < N_REG; r=r+1) begin : reg_b
   localparam a = r+1;
   always @(posedge i_clk)
-    if (i_cg && wrClr && (addr_q == a[ADDR_W-1:0]) && addrInRange)
+    if (i_cg && doWrite && (addr_q == a[ADDR_W-1:0]) && addrInRange)
       memory_m[a] <= i_bp_data;
 end : reg_b endgenerate
 
@@ -121,7 +122,7 @@ always @*
     rdData_d = rdData_q;
 
 // Backpressure goes straight through so destination controls all flow, so the
-// host must keep accepting data.
+// sink must keep accepting data.
 assign o_bp_ready = i_bp_ready;
 
 assign o_bp_data = rdData_q;

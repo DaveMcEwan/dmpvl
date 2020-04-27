@@ -97,7 +97,10 @@ void BpRegMemModel::check(
       wr = true;
     } else if (wrEnd) {
       for (int i=0; i < nReg; i++) {
-        if ((i+startAddr) == addr) {
+        if (0 == addr) {
+          burst = i_bp_data & 0xff;
+          break;
+        } else if ((i+startAddr) == addr) {
           regs[i] = i_bp_data & 0xff;
           isKnown[i] = true;
           break;

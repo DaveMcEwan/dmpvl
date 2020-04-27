@@ -16,6 +16,7 @@ class BpRegMemModel {
         bool rd = false;
         bool wr = false;
         int unsigned addr = 0;
+        int unsigned burst = 0;
         int unsigned rdData = 0;
         int unsigned regs[MAX_N_REG] = {0};
         bool isKnown[MAX_N_REG] = {0};
