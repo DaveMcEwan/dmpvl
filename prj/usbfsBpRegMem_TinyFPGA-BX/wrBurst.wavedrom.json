@@ -1,0 +1,38 @@
+{
+"signal": [
+  {"name": "i_clk",
+   "wave": "P........."},
+
+  {"name": "i_bp_data",
+   "wave": "x34x3444x.",
+   "data": ["{wr,0}", "2", "{wr,100}", "d1", "d2", "d3"]},
+
+  {"name": "o_bp_ready",
+   "wave": "1..01....."},
+
+  {"name": "addr_q",
+   "wave": "x.2..3....",
+   "data": ["0", "100"]},
+
+  {"name": "burst_q",
+   "wave": "2..5..52..",
+   "data": ["0", "2", "1", "0"]},
+
+  {"name": "rd_q",
+   "wave": "0..10...10"},
+
+  {"name": "wr_q",
+   "wave": "0.10.1..0."},
+
+  {"name": "o_bp_data",
+   "wave": "x..3....3.",
+   "data": ["@0", "@100"]},
+
+  {"name": "o_bp_valid",
+   "wave": "0..10...10"}
+],
+
+"foot": {"tock": 0},
+
+"config": {"hscale": 2}
+}

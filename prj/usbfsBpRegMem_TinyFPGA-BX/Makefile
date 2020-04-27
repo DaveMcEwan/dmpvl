@@ -38,7 +38,7 @@ synth: $(BUILD)/$(PROJ).yosys.json
 pnr: $(BUILD)/$(PROJ).nextpnr.asc $(BUILD)/$(PROJ).arachne.asc
 pack: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).arachne.icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).arachne.icetime.rpt
-all: synth pnr pack rpt test
+all: synth pnr pack rpt test wavedrom
 
 $(BUILD)/pll48.v:
 	mkdir -p $(BUILD)
@@ -88,9 +88,18 @@ prog: $(BUILD)/$(PROJ).icepack.bin
 test: $(BUILD)/$(PROJ).icepack.bin
 	bytePipe-utils -v --bitfile $< test
 
+# Setup venv for Python 3.6+ ...
+# pip install wavedrom
+WAVEDROM_JSON = $(wildcard *.wavedrom.json)
+WAVEDROM_SVG = $(WAVEDROM_JSON:.wavedrom.json=.wavedrom.svg)
+wavedrom: $(WAVEDROM_SVG)
+%.wavedrom.svg: %.wavedrom.json
+	wavedrompy -i $^ -s $@
+
 clean:
 	rm -rf build
 	rm -rf multipnr
+	rm *.wavedrom.svg
 
 .SECONDARY:
-.PHONY: default all synth pnr pack rpt prog test clean gui
+.PHONY: default all synth pnr pack rpt prog test wavedrom clean gui
