@@ -4,8 +4,9 @@
 #include "bpRegMem_model.h"
 #include "modelPrint.h"
 
-BpRegMemModel::BpRegMemModel (unsigned int n) {
+BpRegMemModel::BpRegMemModel (unsigned int n, unsigned int v) {
     nReg = n;
+    value0 = v;
 }
 
 char * BpRegMemModel::info() {
@@ -70,14 +71,20 @@ void BpRegMemModel::check(
 
   bool doDataCheck = false;
 
+  isKnown[0] = true;
+
   if (i_cg) {
 
     if (rdBegin) {
       rdData = 0;
-      for (int i=0; i < nReg; i++) {
-        if (i == addr) {
-          rdData = regs[i];
-          break;
+      if (0 == addr) {
+          rdData = value0;
+      } else {
+        for (int i=0; i < nReg; i++) {
+          if ((i+startAddr) == addr) {
+            rdData = regs[i];
+            break;
+          }
         }
       }
       rd = true;
@@ -90,7 +97,7 @@ void BpRegMemModel::check(
       wr = true;
     } else if (wrEnd) {
       for (int i=0; i < nReg; i++) {
-        if (i == addr) {
+        if ((i+startAddr) == addr) {
           regs[i] = i_bp_data & 0xff;
           isKnown[i] = true;
           break;

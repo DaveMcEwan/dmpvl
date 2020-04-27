@@ -20,10 +20,10 @@ int main(int argc, char **argv, char **env) {
   tb->m_trace->dump(0); // Initialize waveform at beginning of time.
 
   // Instance models to compare against the tb.
-  BpRegMemModel* model_64   = new BpRegMemModel(64);
-  BpRegMemModel* model_2    = new BpRegMemModel(2);
-  BpRegMemModel* model_128  = new BpRegMemModel(128);
-  BpRegMemModel* model_5    = new BpRegMemModel(5);
+  BpRegMemModel* model_63   = new BpRegMemModel(63,   0);
+  BpRegMemModel* model_2    = new BpRegMemModel(2,    0x55);
+  BpRegMemModel* model_127  = new BpRegMemModel(127,  0x56);
+  BpRegMemModel* model_5    = new BpRegMemModel(5,    0x57);
 
   // Initialize simulation inputs
   tb->reset();
@@ -31,7 +31,7 @@ int main(int argc, char **argv, char **env) {
   // Run simulation for N_CYCLES clock periods.
   while (tb->tickcount() < N_CYCLES) {
 
-    model_64->check( // {{{
+    model_63->check( // {{{
       tb->tickcount(),
 
       tb->m_dut->i_clk,
@@ -40,14 +40,14 @@ int main(int argc, char **argv, char **env) {
 
       tb->m_dut->common_bp_data,
       tb->m_dut->common_bp_valid,
-      tb->m_dut->bpRegMem_64_o_bp_ready,
+      tb->m_dut->bpRegMem_63_o_bp_ready,
 
-      tb->m_dut->bpRegMem_64_o_bp_data,
-      tb->m_dut->bpRegMem_64_o_bp_valid,
+      tb->m_dut->bpRegMem_63_o_bp_data,
+      tb->m_dut->bpRegMem_63_o_bp_valid,
       tb->m_dut->common_bp_ready
     ); // }}}
 
-    model_128->check( // {{{
+    model_127->check( // {{{
       tb->tickcount(),
 
       tb->m_dut->i_clk,
@@ -56,10 +56,10 @@ int main(int argc, char **argv, char **env) {
 
       tb->m_dut->common_bp_data,
       tb->m_dut->common_bp_valid,
-      tb->m_dut->bpRegMem_128_o_bp_ready,
+      tb->m_dut->bpRegMem_127_o_bp_ready,
 
-      tb->m_dut->bpRegMem_128_o_bp_data,
-      tb->m_dut->bpRegMem_128_o_bp_valid,
+      tb->m_dut->bpRegMem_127_o_bp_data,
+      tb->m_dut->bpRegMem_127_o_bp_valid,
       tb->m_dut->common_bp_ready
     ); // }}}
 

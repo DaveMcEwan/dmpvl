@@ -4,7 +4,10 @@
 class BpRegMemModel {
     private:
         static const int unsigned INFO_BUFFLEN = 128;
-        static const int unsigned MAX_N_REG = 128;
+        static const int unsigned MAX_N_REG = 127;
+
+        static const int unsigned startAddr = 1;
+        int unsigned value0;
 
         int unsigned nReg;
 
@@ -18,7 +21,7 @@ class BpRegMemModel {
         bool isKnown[MAX_N_REG] = {0};
 
     public:
-        BpRegMemModel(unsigned int n);
+        BpRegMemModel(unsigned int n, unsigned int v);
         char * info();
         void check(
             int unsigned t, // tickcount

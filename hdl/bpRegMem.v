@@ -10,7 +10,9 @@
   4. Efficient polling loops for non-linear sequences of addresses.
 
 - All addressable locations are 1B wide.
-- Address is up to 7b wide (up to 128 positions).
+- Up to 127 writable locations, 128 readable locations.
+  Location 0 is reserved for the writing the burst counter, but may be read to
+  provide a status, config, or magic value.
 - Non-implemented addresses always read as 0.
   This allows all writeable bits to be discovered by writing `0xff` to each
   position, inspecting the result.
@@ -24,7 +26,8 @@
 */
 module bpRegMem #(
   parameter ZERO_UNIMPL = 1, // Unimplemented locations return 0->unknown, 1->zero.
-  parameter N_REG = 64  // in {2..128}. Number of registers to implement.
+  parameter VALUE0 = 8'd0, // in {0x00..0xff}. Arbitrary value read from location 0.
+  parameter N_REG = 63  // in {2..127}. Number of registers to implement.
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -39,12 +42,16 @@ module bpRegMem #(
   input  wire         i_bp_ready
 );
 
-localparam ADDR_W = $clog2(N_REG);
+localparam N_LOC = N_REG+1;
+localparam ADDR_W = $clog2(N_LOC);
+localparam ADDR_REG_LO = 1;
+localparam ADDR_REG_HI = ADDR_REG_LO + N_REG - 1;
 
 `dff_cg_srst(reg, wr, i_clk, i_cg, i_rst, '0) // 1b FSM
 `dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0) // 1b FSM
 `dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg, i_rst, '0)
 `dff_cg_srst(reg [7:0], rdData, i_clk, i_cg, i_rst, '0)
+`dff_cg_srst(reg [7:0], burst, i_clk, i_cg, i_rst, '0) // 8b downcounter
 
 // IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
@@ -54,10 +61,16 @@ wire cmdRd = !i_bp_data[7];
 wire [6:0] cmdAddr = i_bp_data[6:0];
 
 wire txnBegin = !wr_q && in_accepted;
+wire inBurst = (burst_q != '0);
+wire inBurstWrite = inBurst && wr_q;
+wire inBurstRead = inBurst && rd_q;
+
 wire wrSet = txnBegin && cmdWr;
 wire wrClr = wr_q && in_accepted;
 wire rdSet = (txnBegin && cmdRd) || wrClr;
 wire rdClr = out_accepted;
+wire burstInit = wrClr && (addr_q == '0);
+wire burstDecr = inBurstWrite || inBurstRead;
 
 always @*
   if      (wrSet) wr_d = 1'b1;
@@ -73,33 +86,37 @@ always @* addr_d = txnBegin ?
   cmdAddr[ADDR_W-1:0] :
   addr_q;
 
+always @*
+  if      (burstInit) burst_d = i_bp_data;
+  else if (burstDecr) burst_d = burst_q - 8'd1;
+  else                burst_d = burst_q;
+
 // Track validity of address to return zeros for out-of-range.
 wire addrInRange;
-generate if ((N_REG == 'd128) || (ZERO_UNIMPL == 0)) begin
+generate if ((N_REG == 'd127) || (ZERO_UNIMPL == 0)) begin
   assign addrInRange = 1'b1;
 end else begin
-  localparam ADDR_HI = N_REG-1;
-
   `dff_cg_srst(reg, addrInRange, i_clk, i_cg, i_rst, '0)
   always @* addrInRange_d = txnBegin ?
-    (ADDR_HI[6:0] >= cmdAddr) :
+    (ADDR_REG_HI[6:0] >= cmdAddr) :
     addrInRange_q;
 
   assign addrInRange = addrInRange_q;
 end endgenerate
 
-(* mem2reg *) reg [7:0] memory_q [N_REG]; // dff_cg_norst
-genvar i;
-generate for (i = 0; i < N_REG; i=i+1) begin : reg_b
-  localparam j = i;
+(* mem2reg *) reg [7:0] memory_m [N_LOC]; // dff_cg_norst
+always @* memory_m[0] = VALUE0;
+genvar r;
+generate for (r = 0; r < N_REG; r=r+1) begin : reg_b
+  localparam a = r+1;
   always @(posedge i_clk)
-    if (i_cg && wrClr && (addr_q == j[ADDR_W-1:0]) && addrInRange)
-      memory_q[i] <= i_bp_data;
+    if (i_cg && wrClr && (addr_q == a[ADDR_W-1:0]) && addrInRange)
+      memory_m[a] <= i_bp_data;
 end : reg_b endgenerate
 
 always @*
   if (rdSet)
-    rdData_d = addrInRange ? memory_q[addr_q] : '0;
+    rdData_d = addrInRange ? memory_m[addr_q] : '0;
   else
     rdData_d = rdData_q;
 

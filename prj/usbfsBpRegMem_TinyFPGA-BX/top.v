@@ -113,7 +113,7 @@ usbfsSerial #(
 );
 
 bpRegMem #(
-  .N_REG  (128) // in {2..128}
+  .N_REG  (127) // in {2..127}
 ) u_bpRegMem128 (
   .i_clk              (clk_48MHz),
   .i_rst              (rst),
