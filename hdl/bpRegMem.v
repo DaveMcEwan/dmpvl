@@ -21,6 +21,7 @@
   the previous address.
 */
 module bpRegMem #(
+  parameter ZERO_UNIMPL = 1, // Unimplemented locations return 0->unknown, 1->zero.
   parameter N_REG = 64  // in {2..128}. Number of registers to implement.
 ) (
   input wire          i_clk,
@@ -68,13 +69,13 @@ always @* addr_d = txnBegin ?
 
 // Track validity of address to return zeros for out-of-range.
 wire addrInRange;
-generate if (N_REG == 'd128) begin
+generate if ((N_REG == 'd128) || (ZERO_UNIMPL == 0)) begin
   assign addrInRange = 1'b1;
 end else begin
-  localparam N_REG_= N_REG;
+  localparam ADDR_HI = N_REG-1;
 
   `dff_cg_srst(reg, addrInRange, i_clk, i_cg && txnBegin, i_rst, '0)
-  always @* addrInRange_d = (i_bp_data[6:0] < N_REG_[6:0]);
+  always @* addrInRange_d = (ADDR_HI[6:0] >= i_bp_data[6:0]);
 
   assign addrInRange = addrInRange_q;
 end endgenerate
@@ -82,8 +83,9 @@ end endgenerate
 (* mem2reg *) reg [7:0] memory_q [N_REG]; // dff_cg_norst
 genvar i;
 generate for (i = 0; i < N_REG; i=i+1) begin : reg_b
+  localparam j = i;
   always @(posedge i_clk)
-    if (i_cg && wrClr && (addr_q == i) && addrInRange)
+    if (i_cg && wrClr && (addr_q == j[ADDR_W-1:0]) && addrInRange)
       memory_q[i] <= i_bp_data;
 end : reg_b endgenerate
 
