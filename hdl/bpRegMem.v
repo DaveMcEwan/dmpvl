@@ -36,35 +36,39 @@ module bpRegMem #(
   input  wire         i_bp_ready
 );
 
-wire in_accepted = i_bp_valid && o_bp_ready;
-wire out_accepted = o_bp_valid && i_bp_ready;
+localparam ADDR_W = $clog2(N_REG);
 
 `dff_cg_srst(reg, wr, i_clk, i_cg, i_rst, '0)
 `dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0)
+`dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg, i_rst, '0)
+`dff_cg_srst(reg [7:0], rdData, i_clk, i_cg, i_rst, '0)
+
+wire in_accepted = i_bp_valid && o_bp_ready;
+wire out_accepted = o_bp_valid && i_bp_ready;
 
 wire txnBegin = !wr_q && in_accepted;
-wire wrBegin = txnBegin && i_bp_data[7];
-wire wrEnd = wr_q && in_accepted;
-wire rdBegin = (txnBegin && !wrBegin) || wrEnd;
-wire rdEnd = out_accepted;
+wire wrSet = txnBegin && i_bp_data[7];
+wire wrClr = wr_q && in_accepted;
+wire rdSet = (txnBegin && !wrSet) || wrClr;
+wire rdClr = out_accepted;
 
 always @*
-  if      (wrBegin) wr_d = 1'b1;
-  else if (wrEnd)   wr_d = 1'b0;
-  else              wr_d = wr_q;
+  if      (wrSet) wr_d = 1'b1;
+  else if (wrClr) wr_d = 1'b0;
+  else            wr_d = wr_q;
 
 always @*
-  if      (rdBegin) rd_d = 1'b1;
-  else if (rdEnd)   rd_d = 1'b0;
-  else              rd_d = rd_q;
+  if      (rdSet) rd_d = 1'b1;
+  else if (rdClr) rd_d = 1'b0;
+  else            rd_d = rd_q;
 
-localparam ADDR_W = $clog2(N_REG);
-`dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg && txnBegin, i_rst, '0)
-always @* addr_d = i_bp_data[ADDR_W-1:0];
+always @* addr_d = txnBegin ?
+  i_bp_data[ADDR_W-1:0] :
+  addr_q;
 
 // Track validity of address to return zeros for out-of-range.
 wire addrInRange;
-generate if (ADDR_W == 'd7) begin
+generate if (N_REG == 'd128) begin
   assign addrInRange = 1'b1;
 end else begin
   localparam N_REG_= N_REG;
@@ -79,12 +83,15 @@ end endgenerate
 genvar i;
 generate for (i = 0; i < N_REG; i=i+1) begin : reg_b
   always @(posedge i_clk)
-    if (i_cg && wrEnd && (addr_q == i) && addrInRange)
+    if (i_cg && wrClr && (addr_q == i) && addrInRange)
       memory_q[i] <= i_bp_data;
 end : reg_b endgenerate
 
-`dff_cg_srst(reg [7:0], rdData, i_clk, i_cg && rdBegin, i_rst, '0)
-always @* rdData_d = addrInRange ? memory_q[addr_q] : '0;
+always @*
+  if (rdSet)
+    rdData_d = addrInRange ? memory_q[addr_q] : '0;
+  else
+    rdData_d = rdData_q;
 
 // Backpressure goes straight through so destination controls all flow, so the
 // host must keep accepting data.
