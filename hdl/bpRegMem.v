@@ -25,7 +25,7 @@
   the previous address.
 */
 module bpRegMem #(
-  parameter ZERO_UNIMPL = 1, // Unimplemented locations return 0->unknown, 1->zero.
+  parameter ALIASED_UNIMPL = 0, // Unimplemented locations return 0->zero, 1->aliased/unknown.
   parameter VALUE0 = 8'd0, // in {0x00..0xff}. Arbitrary value read from location 0.
   parameter N_REG = 63  // in {2..127}. Number of registers to implement.
 ) (
@@ -71,7 +71,7 @@ wire doWrite = wr_q && in_accepted;
 
 wire [ADDR_W-1:0] rdAddr = addr_q[ADDR_W-1:0];
 wire addrReadable;
-generate if (N_REG == 127) begin
+generate if ((N_REG == 127) || (ALIASED_UNIMPL != 0)) begin
   assign addrReadable = 1'b1;
 end else begin
   assign addrReadable = (ADDR_REG_HI[6:0] >= addr_q);
