@@ -43,9 +43,19 @@ module bpRegMem_tb (
 );
 
 `ifndef VERILATOR
+wire [31:0] nCyclesRunTime;
+  `ifdef N_CYCLES
+// NOTE: Keep iverilog runtime short since there's no checking - it's only
+// enabled to check compatability and give visibility of possible reset issues.
+assign nCyclesRunTime = 'd100;//`N_CYCLES;
+  `else
+assign nCyclesRunTime = 'd100;
+  `endif
+
 initial begin
   $dumpfile("build/bpRegMem_tb.iverilog.vcd");
   $dumpvars(0, bpRegMem_tb);
+  $display("N_CYCLES=%d", nCyclesRunTime);
 end
 
 reg i_clk;
@@ -63,9 +73,9 @@ always @* nCycles_d = nCycles_q + 'd1;
 
 `ifndef VERILATOR
 reg i_rst;
-always @* i_rst = (nCycles_q > 5);
+always @* i_rst = (nCycles_q < 5);
 
-always @* if (nCycles_q > 1000) $finish;
+always @* if (nCycles_q > nCyclesRunTime) $finish;
 `endif
 
 reg [31:0] common_bp_data_32b;

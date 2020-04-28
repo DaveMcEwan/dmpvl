@@ -59,6 +59,7 @@ $(BUILD)/$(TB).vvp: $(V_SRC)
 		-I../../hdl \
 		-I../../verif \
 		-M$(BUILD)/$(TB).iverilog.deps \
+		-DN_CYCLES=$(N_CYCLES) \
 		-o $@ \
 		-s $(IVERILOG_TOP) \
 		$(V_SRC)
