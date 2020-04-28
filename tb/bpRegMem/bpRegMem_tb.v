@@ -43,6 +43,11 @@ module bpRegMem_tb (
 );
 
 `ifndef VERILATOR
+initial begin
+  $dumpfile("build/bpRegMem_tb.iverilog.vcd");
+  $dumpvars(0, bpRegMem_tb);
+end
+
 reg i_clk;
 generateClock u_clk (
   .o_clk(i_clk),

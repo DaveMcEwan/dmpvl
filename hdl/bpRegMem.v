@@ -47,14 +47,14 @@ localparam ADDR_W = $clog2(N_LOC);
 localparam ADDR_REG_LO = 1;
 localparam ADDR_REG_HI = ADDR_REG_LO + N_REG - 1;
 
+localparam VALUE0_ = VALUE0; // Localparam for bit-slicing.
+wire [7:0] value0 = VALUE0_[7:0];
+
 `dff_cg_srst(reg, wr, i_clk, i_cg, i_rst, '0) // 1b FSM
 `dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0) // 1b FSM
-//`dff_cg_norst(reg [ADDR_W-1:0], addr, i_clk, i_cg)
-//`dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg, i_rst, '0)
-//`dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg, i_rst, '1)
-`dff_cg_srst(reg [6:0], addr, i_clk, i_cg, i_rst, '1)
-`dff_cg_srst(reg [7:0], rdData, i_clk, i_cg, i_rst, '0)
+`dff_cg_norst(reg [6:0], addr, i_clk, i_cg)
 `dff_cg_srst(reg [7:0], burst, i_clk, i_cg, i_rst, '0) // 8b downcounter
+`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg)
 
 // IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
@@ -68,11 +68,13 @@ wire inBurst = (burst_q != '0) && (addr_q != '0);
 wire inBurstWr = inBurst && wr_q;
 wire inBurstRd = inBurst && rd_q;
 wire doWrite = wr_q && in_accepted;
-wire addrInRange;
+
+wire [ADDR_W-1:0] rdAddr = addr_q[ADDR_W-1:0];
+wire addrReadable;
 generate if (N_REG == 127) begin
-  assign addrInRange = 1'b1;
+  assign addrReadable = 1'b1;
 end else begin
-  assign addrInRange = (ADDR_REG_HI[6:0] >= addr_q);
+  assign addrReadable = (ADDR_REG_HI[6:0] >= addr_q);
 end endgenerate
 
 wire wrSet = txnBegin && cmdWr;
@@ -92,35 +94,25 @@ always @*
   else if (rdClr) rd_d = 1'b0;
   else            rd_d = rd_q;
 
-always @* addr_d = txnBegin ?
-  //cmdAddr[ADDR_W-1:0] :
-  cmdAddr :
-  addr_q;
+always @* addr_d = txnBegin ?  cmdAddr : addr_q;
 
 always @*
   if      (burstInit) burst_d = i_bp_data;
   else if (burstDecr) burst_d = burst_q - 8'd1;
   else                burst_d = burst_q;
 
-(* mem2reg *) reg [7:0] memory_m [N_REG]; // dff_cg_norst
-genvar r;
-generate for (r = 0; r < N_REG; r=r+1) begin : reg_b
-  localparam a = r+1;
+(* mem2reg *) reg [7:0] memory_m [N_LOC]; // dff_cg_norst
+always @* memory_m[0] = value0;
+genvar a;
+generate for (a = ADDR_REG_LO; a <= ADDR_REG_HI; a=a+1) begin : reg_b
   always @(posedge i_clk)
     if (i_cg && doWrite && (addr_q == a[6:0]))
-      memory_m[r] <= i_bp_data;
+      memory_m[a] <= i_bp_data;
 end : reg_b endgenerate
 
-wire [6:0] regAddr = addr_q - 7'd1;
-wire [$clog2(N_REG)-1:0] rdAddr = regAddr[$clog2(N_REG)-1:0];
 always @*
   if (rd_d)
-    if (addr_q == '0)
-      rdData_d = VALUE0;
-    else if (addrInRange)
-      rdData_d = memory_m[rdAddr];
-    else
-      rdData_d = '0;
+      rdData_d = addrReadable ? memory_m[rdAddr] : '0;
   else
     rdData_d = rdData_q;
 
