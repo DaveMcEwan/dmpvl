@@ -4,6 +4,7 @@
 Unpack the register map to wires.
 */
 module bpReg #(
+  parameter VALUE0 = 8'd0, // in {0x00..0xff}. Arbitrary value read from location 0.
   parameter PRECISION = 8,
   parameter METRIC_A = 3, // {1:Cls, 2:Cos, 3:Cov, 4:Dep, 5:Ham, 6:Tmt}
   parameter METRIC_B = 4, // {1:Cls, 2:Cos, 3:Cov, 4:Dep, 5:Ham, 6:Tmt}
@@ -32,63 +33,84 @@ module bpReg #(
   input  wire         i_bp_ready
 );
 
+// Address for all regs.
+localparam N_REG = 13;
+localparam ADDR_REG_LO = 1;
+localparam ADDR_REG_HI = ADDR_REG_LO + N_REG - 1;
+localparam ADDR_PRECISION                 = ADDR_REG_LO + 0;
+localparam ADDR_METRIC_A                  = ADDR_REG_LO + 1;
+localparam ADDR_METRIC_B                  = ADDR_REG_LO + 2;
+localparam ADDR_MAX_N_INPUTS              = ADDR_REG_LO + 3;
+localparam ADDR_MAX_WINDOW_LENGTH_EXP     = ADDR_REG_LO + 4;
+localparam ADDR_MAX_SAMPLE_RATE_NEGEXP    = ADDR_REG_LO + 5;
+localparam ADDR_MAX_SAMPLE_JITTER_NEGEXP  = ADDR_REG_LO + 6;
+localparam ADDR_N_INPUTS                  = ADDR_REG_LO + 7;
+localparam ADDR_WINDOW_LENGTH_EXP         = ADDR_REG_LO + 8;
+localparam ADDR_WINDOW_SHAPE              = ADDR_REG_LO + 9;
+localparam ADDR_SAMPLE_RATE_NEGEXP        = ADDR_REG_LO + 10;
+localparam ADDR_SAMPLE_MODE               = ADDR_REG_LO + 11;
+localparam ADDR_SAMPLE_JITTER_NEGEXP      = ADDR_REG_LO + 12;
+
+localparam N_LOC = N_REG+1; // Registers plus burst@0.
+localparam ADDR_W = $clog2(N_LOC);
+
+localparam VALUE0_ = VALUE0; // Localparam for bit-slicing.
+wire [7:0] value0 = VALUE0_[7:0];
+
+`dff_cg_srst(reg, wr, i_clk, i_cg, i_rst, '0) // 1b FSM
+`dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0) // 1b FSM
+`dff_cg_norst(reg [6:0], addr, i_clk, i_cg)
+`dff_cg_srst(reg [7:0], burst, i_clk, i_cg, i_rst, '0) // 8b downcounter
+`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rd_d)
+
+// IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
 wire out_accepted = o_bp_valid && i_bp_ready;
-
-`dff_cg_srst(reg, wr, i_clk, i_cg, i_rst, '0)
-`dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0)
+wire cmdWr = i_bp_data[7];
+wire cmdRd = !i_bp_data[7];
+wire [6:0] cmdAddr = i_bp_data[6:0];
 
 wire txnBegin = !wr_q && in_accepted;
-wire wrBegin = txnBegin && i_bp_data[7];
-wire wrEnd = wr_q && in_accepted;
-wire rdBegin = (txnBegin && !wrBegin) || wrEnd;
-wire rdEnd = out_accepted;
+wire inBurst = (burst_q != '0) && (addr_q != '0);
+wire inBurstWr = inBurst && wr_q;
+wire inBurstRd = inBurst && rd_q;
+wire doWrite = wr_q && in_accepted;
+
+wire [ADDR_W-1:0] rdAddr = addr_q[ADDR_W-1:0];
+wire addrInRange = (ADDR_REG_HI[6:0] >= addr_q);
+
+wire wrSet = txnBegin && cmdWr;
+wire wrClr = doWrite && !inBurst;
+wire rdSet = (txnBegin && cmdRd) || wrClr;
+wire rdClr = out_accepted && !inBurst;
+wire burstInit = doWrite && (addr_q == '0);
+wire burstDecr = (inBurstWr && in_accepted) || (inBurstRd && out_accepted);
 
 always @*
-  if      (wrBegin) wr_d = 1'b1;
-  else if (wrEnd)   wr_d = 1'b0;
-  else              wr_d = wr_q;
+  if      (wrSet) wr_d = 1'b1;
+  else if (wrClr) wr_d = 1'b0;
+  else            wr_d = wr_q;
 
 always @*
-  if      (rdBegin) rd_d = 1'b1;
-  else if (rdEnd)   rd_d = 1'b0;
-  else              rd_d = rd_q;
+  if      (rdSet) rd_d = 1'b1;
+  else if (rdClr) rd_d = 1'b0;
+  else            rd_d = rd_q;
 
-localparam ADDR_W = 4;
-`dff_cg_srst(reg [ADDR_W-1:0], addr, i_clk, i_cg && txnBegin, i_rst, '0)
-always @* addr_d = i_bp_data[ADDR_W-1:0];
+always @* addr_d = txnBegin ?  cmdAddr : addr_q;
 
-// Track validity of address to return zeros for out-of-range.
-wire addrInRange;
-localparam N_REG = 13;
-`dff_cg_srst(reg, addrInRange, i_clk, i_cg && txnBegin, i_rst, '0)
-always @* addrInRange_d = (i_bp_data[6:0] < N_REG[6:0]);
-
-assign addrInRange = addrInRange_q;
-
-// Address for all regs.
-localparam ADDR_PRECISION                 = 4'd0;
-localparam ADDR_METRIC_A                  = 4'd1;
-localparam ADDR_METRIC_B                  = 4'd2;
-localparam ADDR_MAX_N_INPUTS              = 4'd3;
-localparam ADDR_MAX_WINDOW_LENGTH_EXP     = 4'd4;
-localparam ADDR_MAX_SAMPLE_RATE_NEGEXP    = 4'd5;
-localparam ADDR_MAX_SAMPLE_JITTER_NEGEXP  = 4'd6;
-localparam ADDR_N_INPUTS                  = 4'd7;
-localparam ADDR_WINDOW_LENGTH_EXP         = 4'd8;
-localparam ADDR_WINDOW_SHAPE              = 4'd9;
-localparam ADDR_SAMPLE_RATE_NEGEXP        = 4'd10;
-localparam ADDR_SAMPLE_MODE               = 4'd11;
-localparam ADDR_SAMPLE_JITTER_NEGEXP      = 4'd12;
+always @*
+  if      (burstInit) burst_d = i_bp_data;
+  else if (burstDecr) burst_d = burst_q - 8'd1;
+  else                burst_d = burst_q;
 
 // Write-enable for RW regs.
-wire doWrite = i_cg && wrEnd && addrInRange;
-wire wr_nInputs             = doWrite && (addr_q == ADDR_N_INPUTS);
-wire wr_windowLengthExp     = doWrite && (addr_q == ADDR_WINDOW_LENGTH_EXP);
-wire wr_windowShape         = doWrite && (addr_q == ADDR_WINDOW_SHAPE);
-wire wr_sampleRateNegExp    = doWrite && (addr_q == ADDR_SAMPLE_RATE_NEGEXP);
-wire wr_sampleMode          = doWrite && (addr_q == ADDR_SAMPLE_MODE);
-wire wr_sampleJitterNegExp  = doWrite && (addr_q == ADDR_SAMPLE_JITTER_NEGEXP);
+wire doWriteReg = i_cg && wrClr && addrInRange;
+wire wr_nInputs             = doWriteReg && (addr_q == ADDR_N_INPUTS);
+wire wr_windowLengthExp     = doWriteReg && (addr_q == ADDR_WINDOW_LENGTH_EXP);
+wire wr_windowShape         = doWriteReg && (addr_q == ADDR_WINDOW_SHAPE);
+wire wr_sampleRateNegExp    = doWriteReg && (addr_q == ADDR_SAMPLE_RATE_NEGEXP);
+wire wr_sampleMode          = doWriteReg && (addr_q == ADDR_SAMPLE_MODE);
+wire wr_sampleJitterNegExp  = doWriteReg && (addr_q == ADDR_SAMPLE_JITTER_NEGEXP);
 
 // Widths and value enumerations.
 localparam N_INPUTS_W               = $clog2(MAX_N_INPUTS);
@@ -121,10 +143,11 @@ assign o_reg_sampleRateNegExp   = sampleRateNegExp_q;
 assign o_reg_sampleMode         = sampleMode_q;
 assign o_reg_sampleJitterNegExp = sampleJitterNegExp_q;
 
-`dff_cg_srst(reg [7:0], rdData, i_clk, i_cg && rdBegin, i_rst, '0)
 always @*
   if (addrInRange)
     case (addr_q)
+      '0:                            rdData_d = value0;
+
       // RO static
       ADDR_PRECISION:                rdData_d = PRECISION;
       ADDR_METRIC_A:                 rdData_d = METRIC_A;
@@ -148,8 +171,8 @@ always @*
     rdData_d = '0;
 
 // Backpressure goes straight through so destination controls all flow, so the
-// host must keep accepting data.
-assign o_bp_ready = i_bp_ready;
+// sink must keep accepting data.
+assign o_bp_ready = i_bp_ready && !inBurstRd;
 
 assign o_bp_data = rdData_q;
 assign o_bp_valid = rd_q;

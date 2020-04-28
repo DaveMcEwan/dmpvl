@@ -51,21 +51,21 @@ maxSampleRate_kHz:int = 48000
 @enum.unique
 class HwReg(enum.Enum): # {{{
     # Static, RO
-    Precision               = 0
-    MetricA                 = 1
-    MetricB                 = 2
-    MaxNInputs              = 3
-    MaxWindowLengthExp      = 4
-    MaxSampleRateNegExp     = 5
-    MaxSampleJitterNegExp   = 6
+    Precision               = 1
+    MetricA                 = 2
+    MetricB                 = 3
+    MaxNInputs              = 4
+    MaxWindowLengthExp      = 5
+    MaxSampleRateNegExp     = 6
+    MaxSampleJitterNegExp   = 7
 
     # Dynamic, RW
-    NInputs                 = 7
-    WindowLengthExp         = 8
-    WindowShape             = 9
-    SampleRateNegExp        = 10
-    SampleMode              = 11
-    SampleJitterNegExp      = 12
+    NInputs                 = 8
+    WindowLengthExp         = 9
+    WindowShape             = 10
+    SampleRateNegExp        = 11
+    SampleMode              = 12
+    SampleJitterNegExp      = 13
 # }}} Enum HwReg
 mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
 
