@@ -1,35 +1,69 @@
 {
 "signal": [
   {"name": "i_clk",
-   "wave": "P........."},
+   "wave": "P........"},
 
   {"name": "i_bp_data",
-   "wave": "x34x3444x.",
+   "wave": "x343444x.",
    "data": ["{wr,0}", "2", "{wr,100}", "d1", "d2", "d3"]},
 
   {"name": "o_bp_ready",
-   "wave": "1..01....."},
+   "wave": "01......."},
 
   {"name": "addr_q",
-   "wave": "x.2..3....",
+   "wave": "x.2.3....",
    "data": ["0", "100"]},
 
   {"name": "burst_q",
-   "wave": "2..5..52..",
+   "wave": "2..5.52..",
    "data": ["0", "2", "1", "0"]},
 
   {"name": "rd_q",
-   "wave": "0..10...10"},
+   "wave": "0..10..10"},
 
   {"name": "wr_q",
-   "wave": "0.10.1..0."},
+   "wave": "0.101..0."},
 
   {"name": "o_bp_data",
-   "wave": "x..3....3.",
+   "wave": "x..3...3.",
    "data": ["@0", "@100"]},
 
   {"name": "o_bp_valid",
-   "wave": "0..10...10"}
+   "wave": "0..10..10"},
+
+  {},
+
+  {"name": "txnBegin",
+   "wave": "01010...."},
+
+  {"name": "inBurst",
+   "wave": "0...1.0.."},
+
+  {"name": "inBurstRd",
+   "wave": "0........"},
+
+  {"name": "inBurstWr",
+   "wave": "0...1.0.."},
+
+  {},
+
+  {"name": "rdSet",
+   "wave": "0.10..10."},
+
+  {"name": "rdClr",
+   "wave": "0..10..10"},
+
+  {"name": "wrSet",
+   "wave": "01010...."},
+
+  {"name": "wrClr",
+   "wave": "0.10..10."},
+
+  {"name": "burstInit",
+   "wave": "0.10....."},
+
+  {"name": "burstDecr",
+   "wave": "0...1.0.."}
 ],
 
 "foot": {"tock": 0},

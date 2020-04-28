@@ -1,17 +1,12 @@
-[*]
-[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Sun Apr 19 17:37:25 2020
-[*]
-[timestart] 414
-[size] 1853 1025
 [pos] -1 -1
-*-5.654180 73 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.654180 505 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.bpRegMem_tb.
-[sst_width] 448
+[treeopen] TOP.bpRegMem_tb.u_bpRegMem_2.
+[sst_width] 257
 [signals_width] 239
 [sst_expanded] 1
-[sst_vpaned_height] 301
+[sst_vpaned_height] 299
 @28
 TOP.bpRegMem_tb.i_rst
 TOP.bpRegMem_tb.i_clk
@@ -22,62 +17,125 @@ TOP.bpRegMem_tb.common_bp_data[7:0]
 @28
 TOP.bpRegMem_tb.common_bp_valid
 TOP.bpRegMem_tb.common_bp_ready
+@24
+TOP.bpRegMem_tb.nCycles_q[31:0]
+@20000
+-
 @c00200
--nReg64
-@24
-TOP.bpRegMem_tb.u_bpRegMem_64.ADDR_W[31:0]
-TOP.bpRegMem_tb.u_bpRegMem_64.N_REG[31:0]
-@28
-TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_ready
-TOP.bpRegMem_tb.u_bpRegMem_64.in_accepted
+-nReg2
 @22
-TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_data[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_2.i_bp_data[7:0]
 @28
-TOP.bpRegMem_tb.u_bpRegMem_64.o_bp_valid
-TOP.bpRegMem_tb.u_bpRegMem_64.out_accepted
-TOP.bpRegMem_tb.u_bpRegMem_64.rdBegin
-TOP.bpRegMem_tb.u_bpRegMem_64.rdEnd
-TOP.bpRegMem_tb.u_bpRegMem_64.rd_q
-TOP.bpRegMem_tb.u_bpRegMem_64.wrBegin
-TOP.bpRegMem_tb.u_bpRegMem_64.wrEnd
-TOP.bpRegMem_tb.u_bpRegMem_64.wr_q
-TOP.bpRegMem_tb.u_bpRegMem_64.txnBegin
+TOP.bpRegMem_tb.u_bpRegMem_2.o_bp_ready
+TOP.bpRegMem_tb.u_bpRegMem_2.addr_q[1:0]
 @22
-TOP.bpRegMem_tb.u_bpRegMem_64.addr_q[5:0]
-TOP.bpRegMem_tb.u_bpRegMem_64.rdData_q[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_2.burst_q[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_2.rd_q
+TOP.bpRegMem_tb.u_bpRegMem_2.wr_q
+@22
+TOP.bpRegMem_tb.u_bpRegMem_2.o_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_2.o_bp_valid
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_2.in_accepted
+TOP.bpRegMem_tb.u_bpRegMem_2.out_accepted
+TOP.bpRegMem_tb.u_bpRegMem_2.txnBegin
+TOP.bpRegMem_tb.u_bpRegMem_2.inBurst
+TOP.bpRegMem_tb.u_bpRegMem_2.inBurstRd
+TOP.bpRegMem_tb.u_bpRegMem_2.inBurstWr
+TOP.bpRegMem_tb.u_bpRegMem_2.doWrite
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_2.rdSet
+TOP.bpRegMem_tb.u_bpRegMem_2.rdClr
+TOP.bpRegMem_tb.u_bpRegMem_2.wrSet
+TOP.bpRegMem_tb.u_bpRegMem_2.wrClr
+TOP.bpRegMem_tb.u_bpRegMem_2.burstInit
+TOP.bpRegMem_tb.u_bpRegMem_2.burstDecr
 @1401200
--nReg64
-@800200
+-nReg2
+@20000
+-
+@c00201
 -nReg5
-@24
-TOP.bpRegMem_tb.u_bpRegMem_5.ADDR_W[31:0]
-@23
-TOP.bpRegMem_tb.u_bpRegMem_5.N_REG[31:0]
+@22
+TOP.bpRegMem_tb.u_bpRegMem_5.i_bp_data[7:0]
 @28
 TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_ready
-TOP.bpRegMem_tb.u_bpRegMem_5.in_accepted
-TOP.bpRegMem_tb.u_bpRegMem_5.txnBegin
 TOP.bpRegMem_tb.u_bpRegMem_5.addr_q[2:0]
 @22
-TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(0)[7:0]
-TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(1)[7:0]
-TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(2)[7:0]
-TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(3)[7:0]
-TOP.bpRegMem_tb.u_bpRegMem_5.memory_q(4)[7:0]
-TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_data[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.burst_q[7:0]
 @28
-TOP.bpRegMem_tb.u_bpRegMem_5.rdBegin
-TOP.bpRegMem_tb.u_bpRegMem_5.rdEnd
 TOP.bpRegMem_tb.u_bpRegMem_5.rd_q
-TOP.bpRegMem_tb.u_bpRegMem_5.wrBegin
-TOP.bpRegMem_tb.u_bpRegMem_5.wrEnd
 TOP.bpRegMem_tb.u_bpRegMem_5.wr_q
 @22
-TOP.bpRegMem_tb.u_bpRegMem_5.rdData_q[7:0]
+TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_data[7:0]
 @28
 TOP.bpRegMem_tb.u_bpRegMem_5.o_bp_valid
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_5.in_accepted
 TOP.bpRegMem_tb.u_bpRegMem_5.out_accepted
-@1000200
+TOP.bpRegMem_tb.u_bpRegMem_5.txnBegin
+TOP.bpRegMem_tb.u_bpRegMem_5.inBurst
+TOP.bpRegMem_tb.u_bpRegMem_5.inBurstRd
+TOP.bpRegMem_tb.u_bpRegMem_5.inBurstWr
+TOP.bpRegMem_tb.u_bpRegMem_5.doWrite
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_5.rdSet
+TOP.bpRegMem_tb.u_bpRegMem_5.rdClr
+TOP.bpRegMem_tb.u_bpRegMem_5.wrSet
+TOP.bpRegMem_tb.u_bpRegMem_5.wrClr
+TOP.bpRegMem_tb.u_bpRegMem_5.burstInit
+TOP.bpRegMem_tb.u_bpRegMem_5.burstDecr
+@1401201
 -nReg5
+@20000
+-
+@c00200
+-nReg127
+@22
+TOP.bpRegMem_tb.u_bpRegMem_127.i_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_127.o_bp_ready
+@22
+TOP.bpRegMem_tb.u_bpRegMem_127.addr_q[6:0]
+@24
+TOP.bpRegMem_tb.u_bpRegMem_127.burst_q[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_127.rd_q
+TOP.bpRegMem_tb.u_bpRegMem_127.wr_q
+@22
+TOP.bpRegMem_tb.u_bpRegMem_127.o_bp_data[7:0]
+@28
+TOP.bpRegMem_tb.u_bpRegMem_127.o_bp_valid
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_127.in_accepted
+TOP.bpRegMem_tb.u_bpRegMem_127.out_accepted
+TOP.bpRegMem_tb.u_bpRegMem_127.txnBegin
+TOP.bpRegMem_tb.u_bpRegMem_127.inBurst
+TOP.bpRegMem_tb.u_bpRegMem_127.inBurstRd
+TOP.bpRegMem_tb.u_bpRegMem_127.inBurstWr
+TOP.bpRegMem_tb.u_bpRegMem_127.doWrite
+@20000
+-
+@28
+TOP.bpRegMem_tb.u_bpRegMem_127.rdSet
+TOP.bpRegMem_tb.u_bpRegMem_127.rdClr
+TOP.bpRegMem_tb.u_bpRegMem_127.wrSet
+TOP.bpRegMem_tb.u_bpRegMem_127.wrClr
+TOP.bpRegMem_tb.u_bpRegMem_127.burstInit
+TOP.bpRegMem_tb.u_bpRegMem_127.burstDecr
+@1401200
+-nReg127
 [pattern_trace] 1
 [pattern_trace] 0
