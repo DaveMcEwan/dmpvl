@@ -62,12 +62,28 @@ bytePipe-utils -v --no-prog -a=55 -d=123 poke
 bytePipe-utils -v --no-prog -a=0x37 -d=0x7b poke
 ```
 
-Get (read) an arbitrary number of bytes from an address into a file.
+Get (read) an arbitrary number of bytes from an address to a file.
 It is intended that some locations are backed by a FIFO or other stream of data
 so this uses the underlying bandwidth of the USB-FS channel efficiently to
 retreive a specified number of bytes.
 ```
 bytePipe-utils -v --no-prog -a=55 -f=myFile.bin -n=123 get
+```
+
+Put (write) an arbitrary number of bytes to an address from a file.
+```
+bytePipe-utils -v --no-prog -a=55 -f=myFile.bin -n=123 put
+```
+
+Measure and record read bandwidth by reading a large number of bytes to nowhere.
+Or similarly, for write bandwidth by writing a large number of bytes from
+anywhere.
+The `--record-time` option creates a CSV file `./bpRecordTime.csv` with two
+columns - number of bytes on the left, and time (ns since epoch) on the right.
+This file may be processed and plotted as desired.
+```
+bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/null -n=99999999 get
+bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/urandom -n=99999999 put
 ```
 
 
@@ -100,6 +116,7 @@ address was previously in the `addr` register, and updates `addr`.
 E.G. If `addr` contains `0x12`, and the host begins a single read transaction
 by sending `0x55`, then the device will return the contents of location
 `0x12` and update `addr` to be `0x55`.
+
 ![BytePipe Read Single][rdSingle]
 
 A single write transaction is initiated by the host sending a single byte with
@@ -113,6 +130,7 @@ E.G. If the host begins a single write transaction by sending `0xD5`, then the
 device will update `addr` to `0x55`.
 When the host sends the next byte, `0xAA` the device will write the value `0xAA`
 to address `0x55`.
+
 ![BytePipe Write Single][wrSingle]
 
 A read burst is initiated by the host by performing a single write transaction
@@ -124,6 +142,7 @@ The first byte returned is the value at address 0, which is
 implementation-specific.
 Each subsequent byte returned by the device decrements `burst`, and when
 `burst=0` the transaction is complete.
+
 ![BytePipe Read Burst][rdBurst]
 
 A write burst is initiated by the host by performing a single write transaction
@@ -133,6 +152,7 @@ The host then sends another byte with the top bit set and the address in the
 lower 7b, as with a single write.
 Each subsequent byte received by the device decrements `burst`, and when
 `burst=0` the transaction is complete.
+
 ![BytePipe Write Burst][wrBurst]
 
 All burst transactions therefore have an overhead of 5B.
