@@ -100,7 +100,7 @@ address was previously in the `addr` register, and updates `addr`.
 E.G. If `addr` contains `0x12`, and the host begins a single read transaction
 by sending `0x55`, then the device will return the contents of location
 `0x12` and update `addr` to be `0x55`.
-![alt text][rdSingle]
+![BytePipe Read Single][rdSingle]
 
 A single write transaction is initiated by the host sending a single byte with
 the top bit set; I.E. Value greater than 127.
@@ -113,7 +113,7 @@ E.G. If the host begins a single write transaction by sending `0xD5`, then the
 device will update `addr` to `0x55`.
 When the host sends the next byte, `0xAA` the device will write the value `0xAA`
 to address `0x55`.
-![alt text][wrSingle]
+![BytePipe Write Single][wrSingle]
 
 A read burst is initiated by the host by performing a single write transaction
 to address 0 where the value is the number of bytes desired.
@@ -124,7 +124,7 @@ The first byte returned is the value at address 0, which is
 implementation-specific.
 Each subsequent byte returned by the device decrements `burst`, and when
 `burst=0` the transaction is complete.
-![alt text][rdBurst]
+![BytePipe Read Burst][rdBurst]
 
 A write burst is initiated by the host by performing a single write transaction
 to address 0 where the value is the number of bytes-1 desired.
@@ -133,7 +133,7 @@ The host then sends another byte with the top bit set and the address in the
 lower 7b, as with a single write.
 Each subsequent byte received by the device decrements `burst`, and when
 `burst=0` the transaction is complete.
-![alt text][wrBurst]
+![BytePipe Write Burst][wrBurst]
 
 All burst transactions therefore have an overhead of 5B.
 The maximum efficiency of a burst read is `255/(255+5)`, just over 98%.
