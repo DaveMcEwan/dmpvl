@@ -8,5 +8,8 @@
 # Spyder IDE
 .spyproject/*
 
-# Wavedrom SVG output
+# Wavedrom output
 *.wavedrom.svg
+*.wavedrom.png
+*.wavedrom.pdf
+
