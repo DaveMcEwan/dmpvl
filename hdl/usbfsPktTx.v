@@ -61,7 +61,8 @@ generate for (b=0; b < MAX_PKT; b=b+1) begin
 end endgenerate
 `endif
 
-`dff_cg_srst_d(reg [NBYTES_W-1:0], wrNBytes, i_clk_48MHz, i_wrEn, i_rst || (tx_accepted && !i_wrEn), '0, i_wrIdx + 'd1)
+`dff_cg_srst(reg [NBYTES_W-1:0], wrNBytes, i_clk_48MHz, i_wrEn, i_rst || (tx_accepted && !i_wrEn), '0)
+always @* wrNBytes_d = i_wrIdx + 'd1;
 
 // {{{ PID store and decode
 
