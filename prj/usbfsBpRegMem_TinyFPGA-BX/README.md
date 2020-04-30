@@ -80,11 +80,26 @@ Or similarly, for write bandwidth by writing a large number of bytes from
 anywhere.
 The `--record-time` option creates a CSV file `./bpRecordTime.csv` with two
 columns - number of bytes on the left, and time (ns since epoch) on the right.
-This file may be processed and plotted as desired.
 ```
 bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/null -n=99999999 get
 bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/urandom -n=99999999 put
 ```
+
+[bwRead]: ./img/BytePipe_bandwidth25s_read.png "Bandwidth over 25s Read"
+[bwWrite]: ./img/BytePipe_bandwidth25s_write.png "Bandwidth over 25s Write"
+
+The dmppl repository also includes a general plotting tool for CSV data which
+can be used to plot the bandwidth.
+Shift and reduce time (X-axis) to get microseconds since the beginning of
+transfer, and plot the transfer rate `bytes'/time'` over time.
+```
+plotCsv -v bpRecordTime.csv \
+  --baseX --mulX=0.001 \
+  --product --diffX --diffY --invX \
+  --xlabel="Time (us)" --ylabel="Rate (MB/s)" --marker=""
+```
+![Bandwidth over 25s Read][bwRead]
+![Bandwidth over 25s Write][bwWrite]
 
 
 BytePipe Protocol

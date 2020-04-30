@@ -99,7 +99,7 @@ wavedrom: $(WAVEDROM_SVG)
 clean:
 	rm -rf build
 	rm -rf multipnr
-	rm *.wavedrom.svg
+	rm -f *.wavedrom.svg
 
 .SECONDARY:
 .PHONY: default all synth pnr pack rpt prog test wavedrom clean gui
