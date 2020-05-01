@@ -117,6 +117,7 @@ There are 17 mandatory bits of state (`addr:7b`, `burst:8b`, `rd:1b`, `wr:1b`),
 and flow control uses valid/ready handshaking with the same semantics as AXI.
 
 There ara a small number of simple rules foverning the internal state machine:
+
 1. A transaction is initiated by the host sending the device 1 byte, while the
    device is not already processing a transaction.
 2. The `addr` register is updated on the initiation of each transaction.

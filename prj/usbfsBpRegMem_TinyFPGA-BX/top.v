@@ -80,7 +80,7 @@ wire       hostToDev_ready;
 // convert all the memories to flops instead of using BRAMs.
 usbfsSerial #(
   .ACM_NOT_GENERIC  (1),
-  .MAX_PKT  (16) // in {8,16,32,64} TODO: Split RX/TX_MAX_PKT
+  .MAX_PKT  (32) // in {8,16,32,64}
 ) u_dev (
   .i_clk_48MHz        (clk_48MHz),
   .i_rst              (rst),
