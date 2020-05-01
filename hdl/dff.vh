@@ -265,11 +265,12 @@ always @ (posedge clk) \
 // Synchronous reset to zero.
 // {{{ `dff_upcounter (logic [9:0], foo, i_clk, i_cg, i_rst)
 `define dff_upcounter(t, n, clk, cg, rst) \
-t n``_q; \
+t n``_plus1, n``_q; \
 always @ (posedge clk) \
   if (rst)      n``_q <= '0; \
-  else if (cg)  n``_q <= n``_q + 'd1; \
-  else          n``_q <= n``_q;
+  else if (cg)  n``_q <= n``_plus1; \
+  else          n``_q <= n``_q; \
+always @* n``_plus1 = n``_q + 'd1;
 // }}}
 
 `endif // DFF_VH_
