@@ -85,7 +85,7 @@ prog: $(BUILD)/$(PROJ).icepack.bin
 # Setup venv for Python 3.6+ ...
 # git clone https://github.com/DaveMcEwan/dmppl.git
 # pip install -e ./dmppl
-test: $(BUILD)/$(PROJ).icepack.bin
+test: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).icetime.rpt
 	bytePipe-utils -v --bitfile $< test
 	for i in $(shell seq 0 270); do \
 		bytePipe-utils -v --no-prog -a=1 -n=$$i -f=/dev/null get; \
