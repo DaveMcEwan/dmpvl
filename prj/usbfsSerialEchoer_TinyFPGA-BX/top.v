@@ -79,6 +79,7 @@ wire       hostToDev_ready;
 // NOTE: Setting MAX_PKT to 8 will actually *increase* LUT usage as yosys will
 // convert all the memories to flops instead of using BRAMs.
 usbfsSerial #(
+  .ACM_NOT_GENERIC  (0),
   .MAX_PKT  (16) // in {8,16,32,64} TODO: Split RX/TX_MAX_PKT
 ) u_dev (
   .i_clk_48MHz        (clk_48MHz),
