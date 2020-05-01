@@ -37,7 +37,7 @@ module usbfsPktTx #(
 // Max number of bytes in a packet is (1<SOP> + 1<PID> + MAX_PKT + 2<CRC16>)
 // SOP is always sent when (nBytesSent_q == 0).
 // PID is always sent when (nBytesSent_q == 1).
-localparam NBYTES_W = $clog2(MAX_PKT + 1);
+localparam NBYTES_W = $clog2(MAX_PKT + 5);
 localparam IDX_W = $clog2(MAX_PKT);
 
 // NOTE: Packet will begin driving SYNC_SOP in cycle following this.
@@ -61,8 +61,9 @@ generate for (b=0; b < MAX_PKT; b=b+1) begin
 end endgenerate
 `endif
 
-`dff_cg_srst(reg [NBYTES_W-1:0], wrNBytes, i_clk_48MHz, i_wrEn, i_rst || (tx_accepted && !i_wrEn), '0)
-always @* wrNBytes_d = i_wrIdx + 'd1;
+wire wrNBytes_incr = i_wrEn;
+wire wrNBytes_zero = tx_accepted;
+`dff_upcounter(reg [NBYTES_W-1:0], wrNBytes, i_clk_48MHz, wrNBytes_incr, i_rst || wrNBytes_zero)
 
 // {{{ PID store and decode
 
@@ -81,11 +82,15 @@ wire pidGrp_isHandshake = (pidCodingGroup == PIDGROUP_HANDSHAKE);
 // {{{ Count bits and bytes.
 // approx 7 dff with minimal MAX_PKT
 
-`dff_upcounter(reg [2:0], bitCntr, i_clk_48MHz, i_strobe_12MHz && !doStuff && inflight_q, i_rst || (o_eopDone && i_strobe_12MHz))
+wire bitCntr_incr = i_strobe_12MHz && !doStuff && inflight_q;
+wire bitCntr_zero = i_strobe_12MHz && o_eopDone;
+`dff_upcounter(reg [2:0], bitCntr, i_clk_48MHz, bitCntr_incr, i_rst || bitCntr_zero)
 
 wire byteSent = (bitCntr_q == '1) && inflight_q && !doStuff;
 
-`dff_upcounter(reg [NBYTES_W-1:0], nBytesSent, i_clk_48MHz, i_strobe_12MHz && byteSent, i_rst || (tx_accepted && i_strobe_12MHz))
+wire nBytesSent_incr = i_strobe_12MHz && byteSent;
+wire nBytesSent_zero = i_strobe_12MHz && tx_accepted;
+`dff_upcounter(reg [NBYTES_W-1:0], nBytesSent, i_clk_48MHz, nBytesSent_incr, i_rst || nBytesSent_zero)
 
 `ifndef SYNTHESIS
 wire [NBYTES_W-1:0] nBytesPkt_handshake = 'd2; // SOP, PID
@@ -121,7 +126,7 @@ always @*
 
 // Mini state machine for sequencing CRC[0], CRC[1], EOP.
 // approx 3 dff
-wire isLastDataByte = ((wrNBytes_q + 'd1) == nBytesSent_q);
+wire isLastDataByte = (wrNBytes_plus1 == nBytesSent_q);
 `dff_cg_srst(reg [2:0], lastDataBytes, i_clk_48MHz, i_strobe_12MHz, i_rst, '0)
 always @*
   if (tx_accepted)
