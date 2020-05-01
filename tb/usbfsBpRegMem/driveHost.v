@@ -124,23 +124,15 @@ always @*
     end
     'd1: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd2: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd3: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd4: begin
       o_txnType = TXNTYPE_OUT;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
       o_et0Data_nBytes = 'd0;
     end
     // }}} GET_DESCRIPTOR DEVICE
@@ -150,60 +142,38 @@ always @*
     // Config descriptor for /dev/ttyACM* is 67B
     'd5: begin
       o_txnType = TXNTYPE_SETUP;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
       o_et0Data = setupPayload_getDescriptor_config;
       o_et0Data_nBytes = 'd8;
     end
     'd6: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd7: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd8: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd9: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd10: begin
       o_txnType = TXNTYPE_IN; // Should NAK on extra IN transactions.
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd11: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd12: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd13: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd14: begin
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     'd15: begin
       o_txnType = TXNTYPE_OUT;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
       o_et0Data_nBytes = 'd0;
     end
     // }}} GET_DESCRIPTOR CONFIG
@@ -211,87 +181,64 @@ always @*
     // {{{ GET_DESCRIPTOR STRING
     'd16: begin
       o_txnType = TXNTYPE_SETUP;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
       o_et0Data = setupPayload_getDescriptor_string;
       o_et0Data_nBytes = 'd8;
     end
     'd17: begin // Should STALL for unsupported descriptor.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     // }}} GET_DESCRIPTOR STRING
 
     // {{{ SET_ADDRESS
     'd18: begin
       o_txnType = TXNTYPE_SETUP;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
       o_et0Data = setupPayload_setAddress;
       o_et0Data_nBytes = 'd8;
     end
     'd19: begin // Should keep default address until this completes.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = 7'd0; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     // }}} SET_ADDRESS
 
     // {{{ GET_DESCRIPTOR STRING (to new device address)
     'd20: begin
       o_txnType = TXNTYPE_SETUP;
-      o_txnAddr = DEVADDR; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
+      o_txnAddr = DEVADDR; // New address
       o_et0Data = setupPayload_getDescriptor_string;
       o_et0Data_nBytes = 'd8;
     end
     'd21: begin // Should STALL for unsupported descriptor.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = DEVADDR; // Default address
-      o_txnEndp = 4'd0; // Control endpoint
     end
     // }}} GET_DESCRIPTOR STRING (to new device address)
 
-    // {{{ OUT/IN loopback
+    // {{{ BytePipe transactions
     'd22: begin
       o_txnType = TXNTYPE_OUT;
-      o_txnAddr = DEVADDR;
       o_txnEndp = 4'd1; // Data endpoint
-      o_et1Data = 64'h0011223344556677;
-      o_et1Data_nBytes = 'd5;
+      o_et1Data = 64'h0780; // Burst of length 7.
+      o_et1Data_nBytes = 'd2;
     end
-    // TODO: Bug in VGW code, probably put there by me with fifo.
-    'd23: begin // Expect to see 'hxxxxxx1364754657 as case bit is flipped.
+    'd23: begin // Expect to see 'h00 as value @0.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = DEVADDR;
-      o_txnEndp = 4'd1; // Data endpoint
     end
     'd24: begin
       o_txnType = TXNTYPE_OUT;
-      o_txnAddr = DEVADDR;
-      o_txnEndp = 4'd1; // Data endpoint
-      o_et1Data = 64'h8899aabbccddeeff;
+      o_et1Data = 64'h45; // Read (burst) @0x45
       o_et1Data_nBytes = 'd1;
     end
-    'd25: begin
+    'd25: begin // Expect to see 8B returned.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = DEVADDR;
-      o_txnEndp = 4'd1; // Data endpoint
     end
     'd26: begin
       o_txnType = TXNTYPE_OUT;
-      o_txnAddr = DEVADDR;
-      o_txnEndp = 4'd1; // Data endpoint
-      o_et1Data = 64'h5555555555555555;
+      o_et1Data = 64'h46; // Read (single) @0x46
       o_et1Data_nBytes = 'd1;
     end
-    'd27: begin
+    'd27: begin // Expect to see 1B returned.
       o_txnType = TXNTYPE_IN;
-      o_txnAddr = DEVADDR;
-      o_txnEndp = 4'd1; // Data endpoint
     end
-    // }}} OUT/IN loopback
+    // }}} BytePipe transactions
 
     // Random OUT/IN transfers, mostly to the correct device on endpoint 1.
     default: begin

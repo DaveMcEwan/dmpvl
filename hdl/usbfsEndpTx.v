@@ -26,8 +26,6 @@ module usbfsEndpTx #(
 wire accepted = o_ready && i_valid;
 wire et_accepted = i_etReady && o_etValid; // ACK received
 
-`asrt(etTxAccepted, i_clk, !i_rst && i_etTxAccepted, i_valid)
-
 wire fifo_o_empty;
 wire fifo_o_full;
 wire _unused_fifo_o_pushed;
