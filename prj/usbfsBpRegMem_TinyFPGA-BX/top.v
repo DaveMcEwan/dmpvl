@@ -78,9 +78,10 @@ wire       hostToDev_ready;
 
 // NOTE: Setting MAX_PKT to 8 will actually *increase* LUT usage as yosys will
 // convert all the memories to flops instead of using BRAMs.
+// Lower values of MAX_PKT result in lower bandwidth efficiency for bursts.
 usbfsSerial #(
   .ACM_NOT_GENERIC  (1),
-  .MAX_PKT  (32) // in {8,16,32,64}
+  .MAX_PKT  (64) // in {8,16,32,64}
 ) u_dev (
   .i_clk_48MHz        (clk_48MHz),
   .i_rst              (rst),
@@ -101,8 +102,17 @@ usbfsSerial #(
   .i_hostToDev_ready  (hostToDev_ready)
 );
 
+// NOTE: It's a struggle on iCE40 to pack all the logic for 127 regs into a
+// small enough space to meet timing at 48MHz.
+// If you really want all 127 regs then you can opt to use WR_ACK_NOT_PREV to
+// use less logic on the write path but data returned by writes may not be the
+// previous value (functional monitoring feature), so the returned value is
+// just an opaque acknowledgement.
+// The returned value is *either* the previous value, or the new value, but
+// there isn't a reliable way to detect which it is.
 bpRegMem #(
-  .N_REG  (127) // in {2..127}
+  .WR_ACK_NOT_PREV  (0),
+  .N_REG  (100) // in {2..127}
 ) u_bpRegMem128 (
   .i_clk              (clk_48MHz),
   .i_rst              (rst),

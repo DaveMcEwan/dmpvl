@@ -26,6 +26,7 @@
 */
 module bpRegMem #(
   parameter ALIASED_UNIMPL = 0, // Unimplemented locations return 0->zero, 1->aliased/unknown.
+  parameter WR_ACK_NOT_PREV = 0, // Writes return 0->ACK/unknown value, 1->previous value.
   parameter VALUE0 = 8'd0, // in {0x00..0xff}. Arbitrary value read from location 0.
   parameter N_REG = 63  // in {2..127}. Number of registers to implement.
 ) (
@@ -54,7 +55,6 @@ wire [7:0] value0 = VALUE0_[7:0];
 `dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0) // 1b FSM
 `dff_cg_norst(reg [6:0], addr, i_clk, i_cg)
 `dff_cg_srst(reg [7:0], burst, i_clk, i_cg, i_rst, '0) // 8b downcounter
-`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg)
 
 // IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
@@ -72,7 +72,7 @@ wire doWrite = wr_q && in_accepted;
 wire [ADDR_W-1:0] rdAddr = addr_q[ADDR_W-1:0];
 wire addrReadable;
 generate if ((N_REG == 127) || (ALIASED_UNIMPL != 0)) begin
-  assign addrReadable = 1'b1;
+  assign addrReadable = 1'b1; // Faster, less logic.
 end else begin
   assign addrReadable = (ADDR_REG_HI[6:0] >= addr_q);
 end endgenerate
@@ -101,20 +101,32 @@ always @*
   else if (burstDecr) burst_d = burst_q - 8'd1;
   else                burst_d = burst_q;
 
+wire memory_updt;
+generate if (WR_ACK_NOT_PREV != 0) begin
+  // The returned value for on writes is not necessarily the previous value
+  // since memory is updated in preparation for accepting.
+  // Relies on data being held steady while valid is high but ready is low.
+  assign memory_updt = i_cg && wr_q && i_bp_valid; // Faster, less logic.
+end else begin
+  assign memory_updt = i_cg && doWrite;
+end endgenerate
+
 (* mem2reg *) reg [7:0] memory_m [N_LOC]; // dff_cg_norst
 always @* memory_m[0] = value0;
 genvar a;
 generate for (a = ADDR_REG_LO; a <= ADDR_REG_HI; a=a+1) begin : reg_b
   always @(posedge i_clk)
-    if (i_cg && doWrite && (addr_q == a[6:0]))
+    if (memory_updt && (addr_q == a[6:0]))
       memory_m[a] <= i_bp_data;
 end : reg_b endgenerate
 
-always @*
-  if (rd_d)
-      rdData_d = addrReadable ? memory_m[rdAddr] : '0;
-  else
-    rdData_d = rdData_q;
+wire rdData_updt =
+  (!wr_q && i_bp_valid) ||    // Single Read initiated
+  rd_q ||                     // Burst Read in-progress
+  wr_q;                       // End of Write
+
+`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rdData_updt)
+always @* rdData_d = addrReadable ? memory_m[rdAddr] : '0;
 
 // Backpressure goes straight through so destination controls all flow, so the
 // sink must keep accepting data.
