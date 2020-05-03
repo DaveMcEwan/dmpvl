@@ -45,11 +45,15 @@ build_projects:
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX
 	make -C prj/usbfsSerialEchoer_TinyFPGA-BX
+	make -C prj/usbfsBpRegMem_TinyFPGA-BX
+	make -C prj/usbfsXoroshiro_TinyFPGA-BX
 
 clean_projects:
 	make -C prj/probsys0 clean
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX clean
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX clean
 	make -C prj/usbfsSerialEchoer_TinyFPGA-BX clean
+	make -C prj/usbfsBpRegMem_TinyFPGA-BX clean
+	make -C prj/usbfsXoroshiro_TinyFPGA-BX clean
 
 clean: clean_tbs clean_projects
