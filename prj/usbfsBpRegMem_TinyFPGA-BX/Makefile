@@ -35,9 +35,9 @@ PNR_SEED ?= 5
 default: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
 
 synth: $(BUILD)/$(PROJ).yosys.json
-pnr: $(BUILD)/$(PROJ).nextpnr.asc $(BUILD)/$(PROJ).arachne.asc
-pack: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).arachne.icepack.bin
-rpt: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).arachne.icetime.rpt
+pnr: $(BUILD)/$(PROJ).nextpnr.asc
+pack: $(BUILD)/$(PROJ).icepack.bin
+rpt: $(BUILD)/$(PROJ).icetime.rpt
 all: synth pnr pack rpt test wavedrom
 
 $(BUILD)/pll48.v:
@@ -65,12 +65,17 @@ $(BUILD)/pll48.v:
 		--seed $(PNR_SEED) \
 		--opt-timing \
 		--json $*.yosys.json \
+		--write $*.nextpnr.json \
 		--asc $@
 
 gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 	nextpnr-ice40 --gui \
 		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
-		--json $*.yosys.json \
+		-l $(BUILD)/$(PROJ).nextpnr.log \
+		--freq $(TGT_FMAX) \
+		--seed $(PNR_SEED) \
+		--opt-timing \
+		--json $(BUILD)/$(PROJ).yosys.json \
 		--asc $(BUILD)/$(PROJ).asc
 
 %.icepack.bin: %.nextpnr.asc

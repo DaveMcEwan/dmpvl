@@ -13,3 +13,7 @@
 *.wavedrom.png
 *.wavedrom.pdf
 
+# bytePipe-utils
+bp.bin
+bpRecordTime.csv
+

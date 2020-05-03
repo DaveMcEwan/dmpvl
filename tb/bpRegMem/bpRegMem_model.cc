@@ -145,19 +145,19 @@ void BpRegMemModel::check(
 
   if (doDataCheck && (model_o_bp_data != o_bp_data)) {
     modelPrint(ERROR, t, info(),
-      "o_bp_data model=%x; design=%x",
+      "o_bp_data model=%x design=%x",
       model_o_bp_data, o_bp_data);
   }
 
   if (model_o_bp_valid != o_bp_valid) {
     modelPrint(ERROR, t, info(),
-      "o_bp_valid model=%d; design=%d",
+      "o_bp_valid model=%d design=%d",
       model_o_bp_valid, o_bp_valid);
   }
 
   if (model_o_bp_ready != o_bp_ready) {
     modelPrint(ERROR, t, info(),
-      "o_bp_ready model=%d; design=%d",
+      "o_bp_ready model=%d design=%d",
       model_o_bp_ready, o_bp_ready);
   }
 
