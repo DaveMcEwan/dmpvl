@@ -1,0 +1,19 @@
+
+# Python temporary files.
+*/__pycache__/*
+*.pyc
+*.pyo
+**/.mypy_cache/*
+
+# Spyder IDE
+.spyproject/*
+
+# Wavedrom output
+*.wavedrom.svg
+*.wavedrom.png
+*.wavedrom.pdf
+
+# bytePipe-utils
+bp.bin
+bpRecordTime.csv
+
