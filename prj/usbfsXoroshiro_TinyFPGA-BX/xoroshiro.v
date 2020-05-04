@@ -73,12 +73,6 @@ wire rdData_updt =
   rd_q ||                     // Burst Read in-progress
   wr_q;                       // End of Write
 
-// The only writable thing is the 128b seed which is split into 2 addresses.
-wire seedValid = memory_updt && addr_q[1]; // @2..3
-reg [63:0] seedS0, seedS1;
-always @* seedS0 = (addr_q[0] == 1'd0) ? {s0[55:0],  i_bp_data} : s0;
-always @* seedS1 = (addr_q[0] == 1'd1) ? {s1[55:0],  i_bp_data} : s1;
-
 wire [63:0] s0, s1, result;
 prngXoroshiro128p u_prng (
   .i_clk              (i_clk),
@@ -94,29 +88,28 @@ prngXoroshiro128p u_prng (
   .o_result           (result)
 );
 
-(* mem2reg *) reg [7:0] seedReadMem [16]; // @16..31
-always @* begin
-  seedReadMem[0]   = s0[7:0];
-  seedReadMem[1]   = s0[15:8];
-  seedReadMem[2]   = s0[23:16];
-  seedReadMem[3]   = s0[31:24];
-  seedReadMem[4]   = s0[39:32];
-  seedReadMem[5]   = s0[47:40];
-  seedReadMem[6]   = s0[55:48];
-  seedReadMem[7]   = s0[63:56];
-  seedReadMem[8]   = s1[7:0];
-  seedReadMem[9]   = s1[15:8];
-  seedReadMem[10]  = s1[23:16];
-  seedReadMem[11]  = s1[31:24];
-  seedReadMem[12]  = s1[39:32];
-  seedReadMem[13]  = s1[47:40];
-  seedReadMem[14]  = s1[55:48];
-  seedReadMem[15]  = s1[63:56];
-end
+// The only writable thing is the 128b seed.
+wire seedValid = memory_updt && addr_q[0]; // @1
+wire [127:0] s1s0_wr = {s1[55:0],  s0,  i_bp_data};
+wire [63:0] seedS0 = s1s0_wr[0 +: 64];
+wire [63:0] seedS1 = s1s0_wr[64 +: 64];
 
+wire [127:0] s1s0_rd = {s1, s0};
+wire [7:0] stateByte = s1s0_rd[8*addr_q[3:0] +: 8]; // @16..31
+
+/*
+Vigna and Blackman note that the lower bits fail linearity tests.
+
+    We suggest to use a sign test to extract a random Boolean value, and
+    right shifts to extract subsets of bits.
+
+Data is generated much faster than can be read over USB at 64b per cycle at
+48MHz (3.072 Gb/s) so only the upper byte of the result is readable.
+*/
+wire [7:0] resultByte = result[56 +: 8];
 `dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rdData_updt)
-always @* rdData_d = addr_q[4] ? seedReadMem[addr_q[3:0]] :
-                                ((addr_q == '0) ? '0 : result[7:0]);
+always @* rdData_d = addr_q[4] ? stateByte :
+                                ((addr_q == '0) ? '0 : resultByte);
 
 // Backpressure goes straight through so destination controls all flow, so the
 // sink must keep accepting data.
