@@ -2,7 +2,7 @@
 usbfsBpRegMem
 =============
 
-Simple 128B register block as example implementation of BytePipe over USB-FS.
+Simple 100B register block as example implementation of BytePipe over USB-FS.
 
 Use the `bytePipe-utils` script from dmppl to interact and test.
 
