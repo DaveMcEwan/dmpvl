@@ -4,13 +4,12 @@ logdropWindow_tb.sv - Testbench for logdropWindow_m
  */
 module logdropWindow_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
-  input  wire [ 5:0]  logdropWindow_A_i_t,
-  input  wire [ 7:0]  logdropWindow_A_i_x,
+  input  wire [31:0]  logdropWindow_i_t,
+  input  wire [31:0]  logdropWindow_i_x,
+
   output wire [ 7:0]  logdropWindow_A_o_y,
   output wire [ 7:0]  logdropWindow_A_abstract_o_y,
 
-  input  wire [ 3:0]  logdropWindow_B_i_t,
-  input  wire [ 4:0]  logdropWindow_B_i_x,
   output wire [ 4:0]  logdropWindow_B_o_y,
   output wire [ 4:0]  logdropWindow_B_abstract_o_y
 `endif
@@ -49,8 +48,9 @@ task driveExhaustive;
   logdropWindow_B_i_x = '0;
   #10;
 
-  for (t=0; t < 150; t=t+1)
-    for (x=0; x < (1 << 16); x=x+1) begin
+  for (x=0; x < 2000; x=x+1)
+    for (t=0; t < 200; t=t+1) begin
+      $display("x=%d, t=%d", x, t)
       restrictInputs(8, t, x, logdropWindow_A_i_t, logdropWindow_A_i_x);
       restrictInputs(5, t, x, logdropWindow_B_i_t, logdropWindow_B_i_x);
       #10;
@@ -71,7 +71,7 @@ task checkAgainstModel (
 );
   if (i_abstractModel_o_y != i_realModel_o_y)
     $display("ERROR:t%0t DATA_W=%0d abstract.o_y=%h real.o_y=%h",
-      $time, i_width, i_abstractModel_o_y, i_realModel_o_y);
+      $time, i_DATA_W, i_abstractModel_o_y, i_realModel_o_y);
 endtask
 
 initial begin
@@ -87,7 +87,12 @@ always @* begin
   checkAgainstModel(8, logdropWindow_A_abstract_o_y, logdropWindow_A_o_y);
   checkAgainstModel(5, logdropWindow_B_abstract_o_y, logdropWindow_B_o_y);
 end
-`endif // }}} Non-V_erilator tb
+`else // }}} Non-V_erilator tb
+wire [5:0] logdropWindow_A_i_t = logdropWindow_i_t[5:0];
+wire [7:0] logdropWindow_A_i_x = logdropWindow_i_x[7:0];
+wire [3:0] logdropWindow_B_i_t = logdropWindow_i_t[3:0];
+wire [4:0] logdropWindow_B_i_x = logdropWindow_i_x[4:0];
+`endif
 
 logdropWindow #(
   .DATA_W         (8),
