@@ -22,6 +22,7 @@ run_tbs:
 	make -C tb/bpRegMem
 	make -C tb/fifo
 	make -C tb/fxcs
+	make -C tb/logdropWindow
 	make -C tb/onehotIdx
 	make -C tb/popcnt6
 	make -C tb/usbFullSpeedPackets
@@ -32,6 +33,7 @@ clean_tbs:
 	make -C tb/dividerFsm clean
 	make -C tb/fifo clean
 	make -C tb/fxcs clean
+	make -C tb/logdropWindow clean
 	make -C tb/onehotIdx clean
 	make -C tb/popcnt6 clean
 	make -C tb/usbFullSpeedPackets clean
