@@ -1,7 +1,8 @@
 `include "dff.vh"
 
 module xoroshiro #(
-  parameter WR_ACK_NOT_PREV = 0 // Writes return 0->ACK/unknown value, 1->previous value.
+  parameter WINLEN = 256, // Must be power-of-2, at least 8, or 0 for no window.
+  parameter WR_ACK_NOT_PREV = 1 // Writes return 0->ACK/unknown value, 1->previous value.
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -105,8 +106,27 @@ Vigna and Blackman note that the lower bits fail linearity tests.
 
 Data is generated much faster than can be read over USB at 64b per cycle at
 48MHz (3.072 Gb/s) so only the upper byte of the result is readable.
+
+Where WINLEN is non-zero a windowing function "logdrop" is applied.
 */
-wire [7:0] resultByte = result[56 +: 8];
+wire [7:0] resultByte;
+generate if (WINLEN != 0) begin
+  localparam WINLEN_W = $clog2(WINLEN);
+  `dff_upcounter(reg [WINLEN_W-1:0], t, i_clk, i_cg, i_rst)
+
+  logdropWindow #(
+    .DATA_W         (8),
+    .WINLEN         (WINLEN),
+    .ABSTRACT_MODEL (0)
+  ) u_win (
+    .i_t  (t_q),
+    .i_x  (result[56 +: 8]),
+    .o_y  (resultByte)
+  );
+end else begin
+  assign resultByte = result[56 +: 8];
+end endgenerate
+
 `dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rdData_updt)
 always @* rdData_d = addr_q[4] ? stateByte :
                                 ((addr_q == '0) ? '0 : resultByte);
