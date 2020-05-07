@@ -119,14 +119,6 @@ plotBandwidth:
 		--ylabel="Rate (MB/s)" --ylim=0,0.8 \
 		--marker=""
 
-# Setup venv for Python 3.6+ ...
-# pip install wavedrom
-WAVEDROM_JSON = $(wildcard *.wavedrom.json)
-WAVEDROM_SVG = $(WAVEDROM_JSON:.wavedrom.json=.wavedrom.svg)
-wavedrom: $(WAVEDROM_SVG)
-%.wavedrom.svg: %.wavedrom.json
-	wavedrompy -i $^ -s $@
-
 clean:
 	rm -rf build
 	rm -rf multipnr
