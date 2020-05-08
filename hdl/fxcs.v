@@ -50,14 +50,15 @@ else begin : realModel
   wire [WIDTH2-1:0] selnand [N_LEVELS];
   for (level=0; level < N_LEVELS; level=level+1) begin : selNandLevel
     localparam SEL_W = 1 << level;
+    wire tgtBit = i_target[level];
 
     for (b=0; b < WIDTH2; b=b+1) begin : selNandBit
-      localparam SEL_L = ((b >> level) ^ 1) << level;
-      localparam TGT_DIR = ((b >> level) ^ 1) & 1; // {0, 1}, only use bottom bit.
+      localparam B = b >> level;
+      localparam SEL_L = (B ^ 1) << level;
 
-      assign selnand[level][b] =
-        (|paddedVector[SEL_L +: SEL_W]) &&
-        !(TGT_DIR[0] ^ i_target[level]);
+      wire anySel = |paddedVector[SEL_L +: SEL_W];
+
+      assign selnand[level][b] = anySel && (B[0] ? !tgtBit : tgtBit);
     end : selNandBit
   end : selNandLevel
 
