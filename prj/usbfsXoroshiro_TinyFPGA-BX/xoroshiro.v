@@ -1,7 +1,7 @@
 `include "dff.vh"
 
 module xoroshiro #(
-  parameter WINLEN = 256, // Must be power-of-2, at least 8, or 0 for no window.
+  parameter WINLEN = 256, // Must be power-of-2, at least 4, or 0 for no window.
   parameter WR_ACK_NOT_PREV = 1 // Writes return 0->ACK/unknown value, 1->previous value.
 ) (
   input wire          i_clk,
