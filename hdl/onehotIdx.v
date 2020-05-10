@@ -6,7 +6,7 @@
  * Purely combinatorial.
  */
 module onehotIdx #(
-  parameter WIDTH = 15 // Must be 1 or more.
+  parameter WIDTH = 7 // Must be 1 or more.
 ) (
   input  wire [WIDTH-1:0]            i_onehot,
   output wire [$clog2(WIDTH)-1:0]    o_index,

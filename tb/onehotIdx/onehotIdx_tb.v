@@ -10,13 +10,13 @@ module onehotIdx_tb (
   output wire [ 3:0]  onehotIdx_16_o_index,
   output wire         onehotIdx_16_o_valid,
 
-  input  wire [ 6:0]  onehotIdx_7_i_onehot,
-  output wire [ 2:0]  onehotIdx_7_o_index,
-  output wire         onehotIdx_7_o_valid,
-
   input  wire [ 8:0]  onehotIdx_9_i_onehot,
   output wire [ 3:0]  onehotIdx_9_o_index,
-  output wire         onehotIdx_9_o_valid
+  output wire         onehotIdx_9_o_valid,
+
+  input  wire [ 6:0]  onehotIdx_7_i_onehot,
+  output wire [ 2:0]  onehotIdx_7_o_index,
+  output wire         onehotIdx_7_o_valid
 `endif
 );
 

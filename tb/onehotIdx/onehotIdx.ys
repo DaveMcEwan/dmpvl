@@ -1,0 +1,17 @@
+
+# Not a testbench, but gives some insight to how the module is processed by
+# the synthesis tool.
+read_verilog -sv ../../hdl/onehotIdx.v
+synth
+
+# Only the onehot0 lines are important usually, but having this reference is
+# useful for seeing what happens when the input isn't onehot.
+tee -o ./build/yosys.eval.txt eval -table i_onehot
+
+# Topological diagram to confirm number of gates on each path.
+show -width -stretch -enum -colors 4 -prefix ./build/yosys.show -format svg
+
+# Netlist for onehotIdx with WIDTH=7 is simple enough to read and match up to
+# the topological diagram.
+write_verilog -attr2comment -renameprefix auto ./build/yosys.synth.v
+
