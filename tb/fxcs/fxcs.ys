@@ -1,0 +1,18 @@
+
+# Not a testbench, but gives some insight to how the module is processed by
+# the synthesis tool.
+read_verilog -sv ../../hdl/fxcs.v
+synth
+
+# Only the onehot0 lines are important usually, but having this reference is
+# useful for seeing what happens when the input isn't onehot.
+tee -o ./build/yosys.eval.mssb.txt eval -set i_target 3'b111 -table i_vector
+tee -o ./build/yosys.eval.lssb.txt eval -set i_target 3'b000 -table i_vector
+
+# Topological diagram to confirm number of gates on each path.
+show -width -stretch -enum -colors 4 -prefix ./build/yosys.show -format svg
+
+# Netlist for fxcs with WIDTH=7 is simple enough to read and match up to
+# the topological diagram.
+write_verilog -attr2comment -renameprefix auto ./build/yosys.synth.v
+

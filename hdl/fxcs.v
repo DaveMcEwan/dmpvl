@@ -7,7 +7,7 @@
  * Purely combinatorial.
  */
 module fxcs #(
-  parameter WIDTH = 9, // Must be 2 or more.
+  parameter WIDTH = 7, // Must be 2 or more.
   parameter ABSTRACT_MODEL = 0 // Set for faster simulation.
 ) (
   input  wire [$clog2(WIDTH)-1:0] i_target,
