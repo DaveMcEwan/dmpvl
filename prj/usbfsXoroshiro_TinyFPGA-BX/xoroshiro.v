@@ -2,6 +2,7 @@
 
 module xoroshiro #(
   parameter WINLEN = 256, // Must be power-of-2, at least 4, or 0 for no window.
+  parameter WINPERIODIC = 0, // 0->Time randomly sampled, 1->Time from wrapping counter.
   parameter WR_ACK_NOT_PREV = 1 // Writes return 0->ACK/unknown value, 1->previous value.
 ) (
   input wire          i_clk,
@@ -74,7 +75,7 @@ wire rdData_updt =
   rd_q ||                     // Burst Read in-progress
   wr_q;                       // End of Write
 
-wire [63:0] s0, s1, result;
+wire [63:0] s0, s1, prngResult;
 prngXoroshiro128p u_prng (
   .i_clk              (i_clk),
   .i_rst              (i_rst),
@@ -86,8 +87,16 @@ prngXoroshiro128p u_prng (
 
   .o_s0               (s0),
   .o_s1               (s1),
-  .o_result           (result)
+  .o_result           (prngResult)
 );
+wire [7:0] prngResultByte7 = prngResult[8*7 +: 8];
+wire [7:0] prngResultByte6 = prngResult[8*6 +: 8];
+wire [7:0] prngResultByte5 = prngResult[8*5 +: 8];
+wire [7:0] prngResultByte4 = prngResult[8*4 +: 8];
+wire [7:0] prngResultByte3 = prngResult[8*3 +: 8];
+wire [7:0] prngResultByte2 = prngResult[8*2 +: 8];
+wire [7:0] prngResultByte1 = prngResult[8*1 +: 8];
+wire [7:0] prngResultByte0 = prngResult[8*0 +: 8];
 
 // The only writable thing is the 128b seed.
 wire seedValid = memory_updt && addr_q[0]; // @1
@@ -112,19 +121,26 @@ Where WINLEN is non-zero a windowing function "logdrop" is applied.
 wire [7:0] resultByte;
 generate if (WINLEN != 0) begin
   localparam WINLEN_W = $clog2(WINLEN);
-  `dff_upcounter(reg [WINLEN_W-1:0], t, i_clk, i_cg, i_rst)
+
+  wire [WINLEN_W-1:0] winIdx;
+  if (WINPERIODIC != 0) begin
+    `dff_upcounter(reg [WINLEN_W-1:0], t, i_clk, i_cg, i_rst)
+    assign winIdx = t_q;
+  end else begin
+    assign winIdx = prngResultByte6;
+  end
 
   logdropWindow #(
     .DATA_W         (8),
     .WINLEN         (WINLEN),
     .ABSTRACT_MODEL (0)
   ) u_win (
-    .i_t  (t_q),
-    .i_x  (result[56 +: 8]),
+    .i_t  (winIdx),
+    .i_x  (prngResultByte7),
     .o_y  (resultByte)
   );
 end else begin
-  assign resultByte = result[56 +: 8];
+  assign resultByte = prngResultByte7;
 end endgenerate
 
 `dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rdData_updt)
