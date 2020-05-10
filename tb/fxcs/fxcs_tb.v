@@ -13,7 +13,12 @@ module fxcs_tb (
   input  wire [ 3:0]  fxcs_9_i_target,
   input  wire [ 8:0]  fxcs_9_i_vector,
   output wire [ 8:0]  fxcs_9_o_onehot,
-  output wire [ 8:0]  fxcs_9_abstract_o_onehot
+  output wire [ 8:0]  fxcs_9_abstract_o_onehot,
+
+  input  wire [ 2:0]  fxcs_7_i_target,
+  input  wire [ 6:0]  fxcs_7_i_vector,
+  output wire [ 6:0]  fxcs_7_o_onehot,
+  output wire [ 6:0]  fxcs_7_abstract_o_onehot
 `endif
 );
 
@@ -27,6 +32,11 @@ reg  [ 3:0]  fxcs_9_i_target;
 reg  [ 8:0]  fxcs_9_i_vector;
 wire [ 8:0]  fxcs_9_o_onehot;
 wire [ 8:0]  fxcs_9_abstract_o_onehot;
+
+reg  [ 2:0]  fxcs_7_i_target;
+reg  [ 6:0]  fxcs_7_i_vector;
+wire [ 6:0]  fxcs_7_o_onehot;
+wire [ 6:0]  fxcs_7_abstract_o_onehot;
 
 int tgt;
 int vec;
@@ -48,12 +58,15 @@ task driveExhaustive;
   fxcs_16_i_vector = '0;
   fxcs_9_i_target = '0;
   fxcs_9_i_vector = '0;
+  fxcs_7_i_target = '0;
+  fxcs_7_i_vector = '0;
   #10;
 
   for (tgt=0; tgt < 16; tgt=tgt+1)
     for (vec=0; vec < (1 << 16); vec=vec+1) begin
       restrictInputs(16, tgt, vec, fxcs_16_i_target, fxcs_16_i_vector);
       restrictInputs(9,  tgt, vec, fxcs_9_i_target,  fxcs_9_i_vector);
+      restrictInputs(7,  tgt, vec, fxcs_7_i_target,  fxcs_7_i_vector);
       #10;
     end
 
@@ -62,6 +75,8 @@ task driveExhaustive;
   fxcs_16_i_vector = '0;
   fxcs_9_i_target = '0;
   fxcs_9_i_vector = '0;
+  fxcs_7_i_target = '0;
+  fxcs_7_i_vector = '0;
   #20;
 endtask
 
@@ -87,6 +102,7 @@ always @* begin
   #1; // Allow logic to resolve before checking.
   checkAgainstModel(16, fxcs_16_abstract_o_onehot, fxcs_16_o_onehot);
   checkAgainstModel(9,  fxcs_9_abstract_o_onehot,  fxcs_9_o_onehot);
+  checkAgainstModel(7,  fxcs_7_abstract_o_onehot,  fxcs_7_o_onehot);
 end
 `endif // }}} Non-V_erilator tb
 
@@ -124,6 +140,24 @@ fxcs #(
   .i_target   (fxcs_9_i_target),
   .i_vector   (fxcs_9_i_vector),
   .o_onehot   (fxcs_9_abstract_o_onehot)
+);
+
+fxcs #(
+  .WIDTH          (7),
+  .ABSTRACT_MODEL (0)
+) u_fxcs_7 (
+  .i_target   (fxcs_7_i_target),
+  .i_vector   (fxcs_7_i_vector),
+  .o_onehot   (fxcs_7_o_onehot)
+);
+
+fxcs #(
+  .WIDTH          (7),
+  .ABSTRACT_MODEL (1)
+) u_fxcs_7_abstract (
+  .i_target   (fxcs_7_i_target),
+  .i_vector   (fxcs_7_i_vector),
+  .o_onehot   (fxcs_7_abstract_o_onehot)
 );
 
 endmodule

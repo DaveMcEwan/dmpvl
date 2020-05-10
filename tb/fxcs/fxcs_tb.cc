@@ -20,12 +20,22 @@ int main(int argc, char **argv, char **env) {
   vcd->open ("build/fxcs_tb.verilator.vcd");
 
   // Initialize simulation inputs
+  fxcs_tb->fxcs_7_i_vector = 0;
   fxcs_tb->fxcs_9_i_vector = 0;
   fxcs_tb->fxcs_16_i_vector = 0;
+
+  fxcs_tb->fxcs_7_i_target = 0;
   fxcs_tb->fxcs_9_i_target = 0;
   fxcs_tb->fxcs_16_i_target = 0;
   fxcs_tb->eval();
   vcd->dump(t++);
+
+  if (fxcs_tb->fxcs_7_o_onehot != fxcs_tb->fxcs_7_abstract_o_onehot) {
+    printf("ERROR: Initial fxcs_7.o_onehot, %x, %x\n",
+      fxcs_tb->fxcs_7_o_onehot,
+      fxcs_tb->fxcs_7_abstract_o_onehot);
+    n_errors++;
+  }
 
   if (fxcs_tb->fxcs_9_o_onehot != fxcs_tb->fxcs_9_abstract_o_onehot) {
     printf("ERROR: Initial fxcs_9.o_onehot, %x, %x\n",
@@ -43,12 +53,24 @@ int main(int argc, char **argv, char **env) {
 
   for (int unsigned tgt = 0; tgt < 16; tgt++) {
     for (int unsigned vec = 0; vec < (1 << 16); vec++) {
+      fxcs_tb->fxcs_7_i_target = tgt % 7;
       fxcs_tb->fxcs_9_i_target = tgt % 9;
       fxcs_tb->fxcs_16_i_target = tgt % 16;
+
+      fxcs_tb->fxcs_7_i_vector = vec & 0x7f;
       fxcs_tb->fxcs_9_i_vector = vec & 0x1ff;
       fxcs_tb->fxcs_16_i_vector = vec & 0xffff;
+
       fxcs_tb->eval();
       vcd->dump(t++);
+
+      if (fxcs_tb->fxcs_7_o_onehot != fxcs_tb->fxcs_7_abstract_o_onehot) {
+        printf("ERROR: t=%d, vec=0x%x, tgt=%d, fxcs_7.o_onehot, %x, %x\n",
+          t, vec, tgt,
+          fxcs_tb->fxcs_7_o_onehot,
+          fxcs_tb->fxcs_7_abstract_o_onehot);
+        n_errors++;
+      }
 
       if (fxcs_tb->fxcs_9_o_onehot != fxcs_tb->fxcs_9_abstract_o_onehot) {
         printf("ERROR: t=%d, vec=0x%x, tgt=%d, fxcs_9.o_onehot, %x, %x\n",
@@ -73,6 +95,7 @@ int main(int argc, char **argv, char **env) {
   }
 
   // Last couple of evaluations just for pretty waves.
+  fxcs_tb->fxcs_7_i_vector = 0;
   fxcs_tb->fxcs_9_i_vector = 0;
   fxcs_tb->fxcs_16_i_vector = 0;
   fxcs_tb->eval();
