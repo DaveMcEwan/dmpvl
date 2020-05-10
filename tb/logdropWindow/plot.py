@@ -57,7 +57,7 @@ def w_0idx(t, n):
     #print("onehotIdxN=", onehotIdxN)
 
     # min(t, n-t-1) increments then decrements with t.
-    # Use a sawtooth counter, or opposing up/down counters.
+    # Use a bi-directional counter, or opposing up/down counters.
     if t < n / 2:
         a = t
     else:
@@ -82,7 +82,7 @@ def w_1idx(t, n):
     #print("onehotIdxN=", onehotIdxN)
 
     # min(t, n-t-1) increments then decrements with t.
-    # Use a sawtooth counter, or opposing up/down counters.
+    # Use a bi-directional counter, or opposing up/down counters.
     if t <= n / 2:
         a = t
     else:

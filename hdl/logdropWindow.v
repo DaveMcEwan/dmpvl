@@ -56,7 +56,7 @@ def w_1idx(t, n):
     onehotIdxN = log2(n/2)
 
     # min(t, n-t-1) increments then decrements with t.
-    # Use a sawtooth counter, or opposing up/down counters.
+    # Use a bi-directional counter, or opposing up/down counters.
     if t <= n / 2:
         a = t
     else:
@@ -103,38 +103,25 @@ wire firstHalf = !i_t[WINLEN_W-1];
 wire centerHalf = ^i_t[WINLEN_W-1:WINLEN_W-2];
 wire lastHalf = i_t[WINLEN_W-1];
 
-// Sawtooth counter derived from t counts from 0 thru 2**WINLEN-1, then down.
+// bi-directional counter derived from t counts from 0 thru 2**WINLEN-1, then down.
 // a = min(t, n-t-1)
 // WINLEN=16 => a in 0..7
 // WINLEN=32 => a in 0..15
 // WINLEN=64 => a in 0..31
-localparam SAWTOOTH_W = WINLEN_W - 1;
-wire [SAWTOOTH_W-1:0] a = lastHalf ? ~i_t[SAWTOOTH_W-1:0] : i_t[SAWTOOTH_W-1:0];
+localparam BICNTR_W = WINLEN_W - 1;
+wire [BICNTR_W-1:0] a = lastHalf ? ~i_t[BICNTR_W-1:0] : i_t[BICNTR_W-1:0];
 
-// Find last set bit of sawtooth counter.
-// WINLEN=16 => aOnlyMsb in 0,1,2,4
-// WINLEN=32 => aOnlyMsb in 0,1,2,4,8
-// WINLEN=64 => aOnlyMsb in 0,1,2,4,8,16
-wire [SAWTOOTH_W-1:0] aOnlyMsb;
-fxcs #(
-  .WIDTH (SAWTOOTH_W)
-) onlyMsb_u (
-  .i_target   ('1),
-  .i_vector   (a),
-  .o_onehot   (aOnlyMsb)
-);
-
-// Find index of last set bit of sawtooth counter.
+// Find index of most significant set bit of bi-directional counter.
 // WINLEN=16 => aOnehotVld,Idx in (False,0),(True,0),(True,1),(True,2)
 // WINLEN=32 => aOnehotVld,Idx in (False,0),(True,0),(True,1),(True,2),(True,3)
 // WINLEN=64 => aOnehotVld,Idx in (False,0),(True,0),(True,1),(True,2),(True,3),(True,4)
 localparam MUXIDX_W = $clog2(WINLEN_W);
 wire [MUXIDX_W-1:0] aOnehotIdx;
 wire aOnehotVld;
-onehotIdx #(
-  .WIDTH (SAWTOOTH_W)
-) muxSelect_u (
-  .i_onehot   (aOnlyMsb),
+mssbIdx #(
+  .WIDTH  (BICNTR_W)
+) u_mssbIdx_7 (
+  .i_vector   (a),
   .o_index    (aOnehotIdx),
   .o_valid    (aOnehotVld)
 );
@@ -147,7 +134,7 @@ wire [MUXIDX_W-1:0] muxIdx = aOnehotIdx + (aOnehotVld ? 1 : 0);
 (* mem2reg *) reg [DATA_W-1:0] muxSrc [WINLEN_W];
 genvar i;
 for (i = 0; i < WINLEN_W; i=i+1) begin : muxSrc_b
-  localparam SHIFT = SAWTOOTH_W - i;
+  localparam SHIFT = BICNTR_W - i;
   always @* muxSrc[i] = i_x >> SHIFT;
 end : muxSrc_b
 

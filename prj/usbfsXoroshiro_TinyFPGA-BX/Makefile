@@ -14,6 +14,7 @@ SRC := \
 	../../hdl/prngXoroshiro128p.v \
 	../../hdl/fxcs.v \
 	../../hdl/onehotIdx.v \
+	../../hdl/mssbIdx.v \
 	../../hdl/logdropWindow.v \
 	../../hdl/fifo.v \
 	../../hdl/fpgaReset.v \
