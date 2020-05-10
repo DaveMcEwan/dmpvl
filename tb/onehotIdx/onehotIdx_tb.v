@@ -10,6 +10,10 @@ module onehotIdx_tb (
   output wire [ 3:0]  onehotIdx_16_o_index,
   output wire         onehotIdx_16_o_valid,
 
+  input  wire [ 6:0]  onehotIdx_7_i_onehot,
+  output wire [ 2:0]  onehotIdx_7_o_index,
+  output wire         onehotIdx_7_o_valid,
+
   input  wire [ 8:0]  onehotIdx_9_i_onehot,
   output wire [ 3:0]  onehotIdx_9_o_index,
   output wire         onehotIdx_9_o_valid
@@ -25,6 +29,10 @@ reg  [ 8:0]  onehotIdx_9_i_onehot;
 wire [ 3:0]  onehotIdx_9_o_index;
 wire         onehotIdx_9_o_valid;
 
+reg  [ 6:0]  onehotIdx_7_i_onehot;
+wire [ 2:0]  onehotIdx_7_o_index;
+wire         onehotIdx_7_o_valid;
+
 int i;
 
 task restrictInputs (
@@ -39,18 +47,21 @@ endtask
 task driveExhaustive;
   onehotIdx_16_i_onehot = '0;
   onehotIdx_9_i_onehot = '0;
+  onehotIdx_7_i_onehot = '0;
   #10;
 
   // 3x as many as required to (paranoidly) check against lurking states.
   for (i=0; i < 3*16; i=i+1) begin
     restrictInputs(16, i, onehotIdx_16_i_onehot);
     restrictInputs(9,  i, onehotIdx_9_i_onehot);
+    restrictInputs(7,  i, onehotIdx_7_i_onehot);
     #10;
   end
 
   // Pretty waves at end of time.
   onehotIdx_16_i_onehot = '0;
   onehotIdx_9_i_onehot = '0;
+  onehotIdx_7_i_onehot = '0;
   #20;
 endtask
 
@@ -98,6 +109,7 @@ always @* begin
   #1; // Allow logic to resolve before checking.
   checker(16, onehotIdx_16_i_onehot, onehotIdx_16_o_index, onehotIdx_16_o_valid);
   checker(9, onehotIdx_9_i_onehot, onehotIdx_9_o_index, onehotIdx_9_o_valid);
+  checker(7, onehotIdx_7_i_onehot, onehotIdx_7_o_index, onehotIdx_7_o_valid);
 end
 `endif // }}} Non-V_erilator tb
 
@@ -115,6 +127,14 @@ onehotIdx #(
   .i_onehot   (onehotIdx_9_i_onehot),
   .o_index    (onehotIdx_9_o_index),
   .o_valid    (onehotIdx_9_o_valid)
+);
+
+onehotIdx #(
+  .WIDTH  (7)
+) u_onehotIdx_7 (
+  .i_onehot   (onehotIdx_7_i_onehot),
+  .o_index    (onehotIdx_7_o_index),
+  .o_valid    (onehotIdx_7_o_valid)
 );
 
 endmodule

@@ -20,16 +20,27 @@ int main(int argc, char **argv, char **env) {
   vcd->open ("build/onehotIdx_tb.verilator.vcd");
 
   // Initialize simulation inputs
+  onehotIdx_tb->onehotIdx_7_i_onehot = 0;
   onehotIdx_tb->onehotIdx_9_i_onehot = 0;
   onehotIdx_tb->onehotIdx_16_i_onehot = 0;
   onehotIdx_tb->eval();
   vcd->dump(0);
+
+  if (onehotIdx_tb->onehotIdx_7_o_index != 0) {
+    printf("ERROR: Initial onehotIdx_7 != 0\n");
+    n_errors++;
+  }
   if (onehotIdx_tb->onehotIdx_9_o_index != 0) {
     printf("ERROR: Initial onehotIdx_9 != 0\n");
     n_errors++;
   }
   if (onehotIdx_tb->onehotIdx_16_o_index != 0) {
     printf("ERROR: Initial onehotIdx_16 != 0\n");
+    n_errors++;
+  }
+
+  if (onehotIdx_tb->onehotIdx_7_o_valid != 0) {
+    printf("ERROR: Initial onehotIdx_7 != invalid\n");
     n_errors++;
   }
   if (onehotIdx_tb->onehotIdx_9_o_valid != 0) {
@@ -43,11 +54,24 @@ int main(int argc, char **argv, char **env) {
 
   for (int unsigned t = 0; t < 16; t++) {
     vec = 1 << t;
+    onehotIdx_tb->onehotIdx_7_i_onehot = vec & 0x7f;
     onehotIdx_tb->onehotIdx_9_i_onehot = vec & 0x1ff;
     onehotIdx_tb->onehotIdx_16_i_onehot = vec & 0xffff;
 
     onehotIdx_tb->eval();
     vcd->dump(t+1);
+
+    if (t < 7) {
+      if (onehotIdx_tb->onehotIdx_7_o_index != t) {
+        printf("ERROR: t=%d onehotIdx_7 != %d\n", t, t);
+        n_errors++;
+      }
+
+      if (onehotIdx_tb->onehotIdx_7_o_valid == 0) {
+        printf("ERROR: t=%d onehotIdx_7 == invalid\n", t);
+        n_errors++;
+      }
+    }
 
     if (t < 9) {
       if (onehotIdx_tb->onehotIdx_9_o_index != t) {
@@ -72,6 +96,7 @@ int main(int argc, char **argv, char **env) {
   }
 
   // Last couple of evaluations just for pretty waves.
+  onehotIdx_tb->onehotIdx_7_i_onehot = 0;
   onehotIdx_tb->onehotIdx_9_i_onehot = 0;
   onehotIdx_tb->onehotIdx_16_i_onehot = 0;
   onehotIdx_tb->eval();
