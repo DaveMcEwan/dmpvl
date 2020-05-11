@@ -28,11 +28,11 @@ def fractionFmt(x, pos):
 def plotLogdropWindow(ts, ys, eqn, nm):
     plt.figure(figsize=figsize)
     plt.rc("text", usetex=True)
-    plt.rc("font", family="serif")
+    plt.rc("font", family="serif", size=12)
     _, ax = plt.subplots()
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(fractionFmt))
 
-    plt.title(eqn)
+    #plt.title(eqn)
     plt.xlabel("$t$")
     plt.ylabel("$w(t)$", y=0.7, rotation="vertical")
 
@@ -67,7 +67,7 @@ def plotFreqResponse(window):
 
     plt.figure(figsize=figsize)
     plt.rc("text", usetex=True)
-    plt.rc("font", family="serif")
+    plt.rc("font", family="serif", size=12)
     _, ax = plt.subplots()
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(radiansFmt))
 
