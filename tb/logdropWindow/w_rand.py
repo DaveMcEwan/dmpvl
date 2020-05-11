@@ -14,6 +14,88 @@ from math import *
 n = 256 # WINLEN
 figsize = (16,10)
 
+# {{{ PDF
+p256 = np.empty(256)
+p256[0:2] = 9
+p256[2:4] = 7
+p256[4:8] = 6
+p256[8:16] = 5
+p256[16:32] = 4
+p256[32:64] = 3
+p256[64:128] = 2
+p256[128:256] = 1
+p256 /= 9
+
+p128 = np.empty(256)
+p128[0:4] = 8
+p128[4:8] = 6
+p128[8:16] = 5
+p128[16:32] = 4
+p128[32:64] = 3
+p128[64:128] = 2
+p128[128:256] = 1
+p128 /= 8
+
+p64 = np.empty(256)
+p64[0:8] = 7
+p64[8:16] = 5
+p64[16:32] = 4
+p64[32:64] = 3
+p64[64:128] = 2
+p64[128:256] = 1
+p64 /= 7
+
+p32 = np.empty(256)
+p32[0:16] = 6
+p32[16:32] = 4
+p32[32:64] = 3
+p32[64:128] = 2
+p32[128:256] = 1
+p32 /= 6
+
+p16 = np.empty(256)
+p16[0:32] = 5
+p16[32:64] = 3
+p16[64:128] = 2
+p16[128:256] = 1
+p16 /= 5
+
+p8 = np.empty(256)
+p8[0:64] = 4
+p8[64:128] = 2
+p8[128:256] = 1
+p8 /= 4
+
+ys = [
+    (p8, 'g-', "n=8"),
+    #(p16, '-', "n=16"),
+    (p32, 'k-', "n=32"),
+    #(p64, '-', "n=64"),
+    #(p128, '-', "n=128"),
+    (p256, 'b-', "n=256"),
+]
+
+def plotManual(ys, nm):
+    fig = plt.figure(0, figsize=(8, 5))
+    plt.rc("text", usetex=True)
+    plt.rc("font", family="serif", size=12)
+    plt.xticks([2**v-1 for v in range(3, 8+1)])
+    for y,s,l in ys:
+        plt.plot(y, s, label=l)
+    plt.xlim(0, 255)
+    plt.xlabel("Byte value as unsigned integer")
+    plt.ylim(0, 1.05)
+    plt.yticks([0, 1])
+    plt.ylabel("Proportion", rotation="vertical")
+    plt.legend()
+    plt.savefig(nm + ".pdf", bbox_inches="tight")
+    plt.close()
+
+plotManual(ys, "logdropWindow_PDF")
+
+# }}} PDF
+
+
 def plot(y, nm):
     fig = plt.figure(0, figsize=figsize)
     plt.xticks(list(range(0, 256, 8)))
