@@ -57,7 +57,7 @@ always @*
     s0_d =
       {s0[63-a:0], s0[63:64-a]} ^
       s1 ^
-      (s1 << 16);
+      (s1 << b);
 assign o_s0 = s0_q;
 
 always @*
