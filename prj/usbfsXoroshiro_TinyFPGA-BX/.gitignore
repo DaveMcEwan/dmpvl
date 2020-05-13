@@ -17,3 +17,9 @@
 bp.bin
 bpRecordTime.csv
 
+# multipnr
+multipnr.ALGORITHM=*/*/*.asc
+multipnr.ALGORITHM=*/*/*.rpt
+multipnr.ALGORITHM=*/*/*.log
+multipnr.ALGORITHM=*/results.csv
+
