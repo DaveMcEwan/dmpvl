@@ -3,6 +3,12 @@
 module xoroshiro #(
   parameter WINLEN = 256, // Must be power-of-2, at least 4, or 0 for no window.
   parameter WINPERIODIC = 0, // 0->Time randomly sampled, 1->Time from wrapping counter.
+  parameter ALGORITHM = 1, // 0->Dummy, for baseline logic measurement only.
+                           // 1->Xoroshiro128+
+                           // 2->Xoshiro128++
+                           // 3->Xoshiro128+
+                           // 4->Xoshiro256+
+                           // 5->Xoroshiro64*
   parameter WR_ACK_NOT_PREV = 1 // Writes return 0->ACK/unknown value, 1->previous value.
 ) (
   input wire          i_clk,
@@ -75,20 +81,114 @@ wire rdData_updt =
   rd_q ||                     // Burst Read in-progress
   wr_q;                       // End of Write
 
+// The only writable thing is the 128b seed.
+wire seedValid = memory_updt && addr_q[0]; // @1
+wire [127:0] s1s0_wr = {s1[55:0],  s0,  i_bp_data};
+wire [63:0] seedS0 = s1s0_wr[0 +: 64];
+wire [63:0] seedS1 = s1s0_wr[64 +: 64];
+
 wire [63:0] s0, s1, prngResult;
-prngXoroshiro128p u_prng (
-  .i_clk              (i_clk),
-  .i_rst              (i_rst),
-  .i_cg               (i_cg),
+generate if (ALGORITHM == 1) begin
+  prngXoroshiro128p u_prng (
+    .i_clk              (i_clk),
+    .i_rst              (i_rst),
+    .i_cg               (i_cg),
 
-  .i_seedValid        (seedValid),
-  .i_seedS0           (seedS0),
-  .i_seedS1           (seedS1),
+    .i_seedValid        (seedValid),
+    .i_seedS0           (seedS0),
+    .i_seedS1           (seedS1),
 
-  .o_s0               (s0),
-  .o_s1               (s1),
-  .o_result           (prngResult)
-);
+    .o_s0               (s0),
+    .o_s1               (s1),
+    .o_result           (prngResult)
+  );
+end else if (ALGORITHM == 2) begin
+  prngXoshiro128pp u_prng (
+    .i_clk              (i_clk),
+    .i_rst              (i_rst),
+    .i_cg               (i_cg),
+
+    .i_seedValid        (seedValid),
+    .i_seedS0           (seedS0[31:0]),
+    .i_seedS1           (seedS0[63:32]),
+    .i_seedS2           (seedS1[31:0]),
+    .i_seedS3           (seedS1[63:32]),
+
+    .o_s0               (s0[31:0]),
+    .o_s1               (s0[63:32]),
+    .o_s2               (s1[31:0]),
+    .o_s3               (s1[63:32]),
+    .o_result           (prngResult[31:0])
+  );
+  // Repeat 32b outputs to make 64b results compatible with reading upper byte.
+  assign prngResult[63:32] = prngResult[31:0];
+end else if (ALGORITHM == 3) begin
+  prngXoshiro128p u_prng (
+    .i_clk              (i_clk),
+    .i_rst              (i_rst),
+    .i_cg               (i_cg),
+
+    .i_seedValid        (seedValid),
+    .i_seedS0           (seedS0[31:0]),
+    .i_seedS1           (seedS0[63:32]),
+    .i_seedS2           (seedS1[31:0]),
+    .i_seedS3           (seedS1[63:32]),
+
+    .o_s0               (s0[31:0]),
+    .o_s1               (s0[63:32]),
+    .o_s2               (s1[31:0]),
+    .o_s3               (s1[63:32]),
+    .o_result           (prngResult[31:0])
+  );
+  // Repeat 32b outputs to make 64b results compatible with reading upper byte.
+  assign prngResult[63:32] = prngResult[31:0];
+end else if (ALGORITHM == 4) begin
+  wire [63:0] s2, s3;
+  wire [127:0] s3s2_wr = {s3[55:0],  s2,  s1[63:56]};
+  wire [63:0] seedS2 = s3s2_wr[0 +: 64];
+  wire [63:0] seedS3 = s3s2_wr[64 +: 64];
+  prngXoshiro256p u_prng (
+    .i_clk              (i_clk),
+    .i_rst              (i_rst),
+    .i_cg               (i_cg),
+
+    .i_seedValid        (seedValid),
+    .i_seedS0           (seedS0),
+    .i_seedS1           (seedS1),
+    .i_seedS2           (seedS2),
+    .i_seedS3           (seedS3),
+
+    .o_s0               (s0),
+    .o_s1               (s1),
+    .o_s2               (s2),
+    .o_s3               (s3),
+    .o_result           (prngResult)
+  );
+end else if (ALGORITHM == 5) begin
+  prngXoroshiro64s u_prng (
+    .i_clk              (i_clk),
+    .i_rst              (i_rst),
+    .i_cg               (i_cg),
+
+    .i_seedValid        (seedValid),
+    .i_seedS0           (seedS0[31:0]),
+    .i_seedS1           (seedS1[31:0]),
+
+    .o_s0               (s0[31:0]),
+    .o_s1               (s1[31:0]),
+    .o_result           (prngResult[31:0])
+  );
+  // Repeat 32b outputs to make 64b results compatible with shifting to
+  // initialize seed, and reading upper byte.
+  assign s0[63:32] = s0[31:0];
+  assign s1[63:32] = s1[31:0];
+  assign prngResult[63:32] = prngResult[31:0];
+end else begin
+  // Dummy option for getting a baseline number for resource requirements.
+  assign s0 = 64'h1234567812345678;
+  assign s1 = 64'h8765432187654321;
+  assign prngResult = 64'h55aa55aa55aa55aa;
+end endgenerate
 wire [7:0] prngResultByte7 = prngResult[8*7 +: 8];
 wire [7:0] prngResultByte6 = prngResult[8*6 +: 8];
 wire [7:0] prngResultByte5 = prngResult[8*5 +: 8];
@@ -97,12 +197,6 @@ wire [7:0] prngResultByte3 = prngResult[8*3 +: 8];
 wire [7:0] prngResultByte2 = prngResult[8*2 +: 8];
 wire [7:0] prngResultByte1 = prngResult[8*1 +: 8];
 wire [7:0] prngResultByte0 = prngResult[8*0 +: 8];
-
-// The only writable thing is the 128b seed.
-wire seedValid = memory_updt && addr_q[0]; // @1
-wire [127:0] s1s0_wr = {s1[55:0],  s0,  i_bp_data};
-wire [63:0] seedS0 = s1s0_wr[0 +: 64];
-wire [63:0] seedS1 = s1s0_wr[64 +: 64];
 
 wire [127:0] s1s0_rd = {s1, s0};
 wire [7:0] stateByte = s1s0_rd[8*addr_q[3:0] +: 8]; // @16..31

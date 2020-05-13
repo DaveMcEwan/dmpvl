@@ -19,6 +19,10 @@ lint:
 	verilator $(VERILATOR_FLAGS) fxcs.v
 	verilator $(VERILATOR_FLAGS) mssbIdx.v
 	verilator $(VERILATOR_FLAGS) prngXoroshiro128p.v
+	verilator $(VERILATOR_FLAGS) prngXoshiro128pp.v
+	verilator $(VERILATOR_FLAGS) prngXoshiro128p.v
+	verilator $(VERILATOR_FLAGS) prngXoshiro256p.v
+	verilator $(VERILATOR_FLAGS) prngXoroshiro64s.v
 	verilator $(VERILATOR_FLAGS) axi4liteMonitor.v
 	verilator $(VERILATOR_FLAGS) axi4liteRandomSlave.v
 	verilator $(VERILATOR_FLAGS) axi4liteRandomMaster.v
@@ -47,6 +51,10 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) fxcs.v
 	iverilog $(IVERILOG_FLAGS) -i mssbIdx.v
 	iverilog $(IVERILOG_FLAGS) prngXoroshiro128p.v
+	iverilog $(IVERILOG_FLAGS) prngXoshiro128pp.v
+	iverilog $(IVERILOG_FLAGS) prngXoshiro128p.v
+	iverilog $(IVERILOG_FLAGS) prngXoshiro256p.v
+	iverilog $(IVERILOG_FLAGS) prngXoroshiro64s.v
 	iverilog $(IVERILOG_FLAGS) axi4liteMonitor.v
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomSlave.v
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomMaster.v
@@ -73,6 +81,10 @@ yosys:
 	yosys -q -p 'read_verilog -sv fxcs.v'
 	yosys -q -p 'read_verilog -sv mssbIdx.v'
 	yosys -q -p 'read_verilog -sv prngXoroshiro128p.v'
+	yosys -q -p 'read_verilog -sv prngXoshiro128pp.v'
+	yosys -q -p 'read_verilog -sv prngXoshiro128p.v'
+	yosys -q -p 'read_verilog -sv prngXoshiro256p.v'
+	yosys -q -p 'read_verilog -sv prngXoroshiro64s.v'
 	yosys -q -p 'read_verilog -sv axi4liteMonitor.v'
 	yosys -q -p 'read_verilog -sv axi4liteRandomSlave.v'
 	yosys -q -p 'read_verilog -sv axi4liteRandomMaster.v'

@@ -12,6 +12,10 @@ BUILD := ./build
 SRC := \
 	xoroshiro.v \
 	../../hdl/prngXoroshiro128p.v \
+	../../hdl/prngXoshiro128pp.v \
+	../../hdl/prngXoshiro128p.v \
+	../../hdl/prngXoshiro256p.v \
+	../../hdl/prngXoroshiro64s.v \
 	../../hdl/fxcs.v \
 	../../hdl/onehotIdx.v \
 	../../hdl/mssbIdx.v \
