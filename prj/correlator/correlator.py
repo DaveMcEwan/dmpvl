@@ -50,22 +50,20 @@ maxSampleRate_kHz:int = 48000
 # NOTE: Must match addresses in bpReg.v
 @enum.unique
 class HwReg(enum.Enum): # {{{
+    Pktfifo                 = 1
+
     # Static, RO
-    Precision               = 1
-    MetricA                 = 2
-    MetricB                 = 3
-    MaxNInputs              = 4
-    MaxWindowLengthExp      = 5
-    MaxSampleRateNegExp     = 6
-    MaxSampleJitterNegExp   = 7
+    Precision               = 2
+    MaxWindowLengthExp      = 3
+    MaxSampleRateNegExp     = 4
+    MaxSampleJitterNegExp   = 5
 
     # Dynamic, RW
-    NInputs                 = 8
-    WindowLengthExp         = 9
-    WindowShape             = 10
-    SampleRateNegExp        = 11
-    SampleMode              = 12
-    SampleJitterNegExp      = 13
+    WindowLengthExp         = 6
+    WindowShape             = 7
+    SampleRateNegExp        = 8
+    SampleMode              = 9
+    SampleJitterNegExp      = 10
 # }}} Enum HwReg
 mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
 
@@ -93,7 +91,6 @@ class GuiReg(enum.Enum): # {{{
     UpdateMode      = enum.auto()
 
     # Derived from hardware
-    NInputs         = enum.auto()
     WindowLength    = enum.auto()
     WindowShape     = enum.auto()
     SampleRate      = enum.auto()
@@ -119,10 +116,6 @@ mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
     # Controls no hardware register (GUI state only).
     GuiReg.UpdateMode: "∊ {%s}" % ", ".join(m.name for m in UpdateMode),
 
-    # Controls register "NInputs".
-    # Domain defined by HwReg.MaxNInputs
-    GuiReg.NInputs: "∊ ℤ ∩ [2, %d]",
-
     # Controls register "WindowLengthExp".
     # Domain defined by HwReg.MaxWindowLengthExp
     GuiReg.WindowLength: "(samples) = 2**w; w ∊ ℤ ∩ [1, %d]",
@@ -140,15 +133,6 @@ mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
     # Controls register "SampleJitterNegExp".
     # Domain defined by HwReg.MaxSampleJitterNegExp
     GuiReg.SampleJitter: "(samples) = windowLength/2**j; j ∊ ℤ ∩ [1, %d]",
-} # }}}
-
-mapMetricIntToStr:Dict[int, str] = { # {{{
-    1: "Ċls",
-    2: "Ċos",
-    3: "Ċov",
-    4: "Ḋep",
-    5: "Ḣam",
-    6: "Ṫmt",
 } # }}}
 
 def getBitfilePath(argBitfile) -> str: # {{{
@@ -246,7 +230,6 @@ def hwRegsToGuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[GuiReg, Any]: # {{{
     sampleRate = float(maxSampleRate_kHz) / 2**hwRegs[HwReg.SampleRateNegExp]
 
     ret = {
-        GuiReg.NInputs:      hwRegs[HwReg.NInputs],
         GuiReg.WindowLength: windowLength,
         GuiReg.WindowShape:  hwRegs[HwReg.WindowShape],
         GuiReg.SampleRate:   sampleRate,
@@ -268,12 +251,6 @@ def updateRegs(selectIdx:int,
         guiRegs_[GuiReg.UpdateMode] = UpdateMode.Interactive \
             if UpdateMode.Batch == guiRegs_[GuiReg.UpdateMode] else \
             UpdateMode.Batch
-
-    elif GuiReg.NInputs == gr:
-        n = hwRegs_[HwReg.NInputs]
-        m = (n-1) if decrNotIncr else (n+1)
-        lo, hi = 2, hwRegs_[HwReg.MaxNInputs]
-        hwRegs_[HwReg.NInputs] = max(lo, min(m, hi))
 
     elif GuiReg.WindowLength == gr:
         n = hwRegs_[HwReg.WindowLengthExp]
@@ -315,7 +292,7 @@ def updateRegs(selectIdx:int,
 def calc_bitsPerWindow(hwRegs:Dict[HwReg, Any]) -> int: # {{{
 
     precision:int = hwRegs[HwReg.Precision] # bits
-    nInputs:int = hwRegs[HwReg.NInputs] # unitless
+    nInputs:int = 2 # unitless
 
     ret:int = precision * (nInputs**2 - nInputs)
 
@@ -361,17 +338,15 @@ class FullWindow(CursesWindow): # {{{
         '''Draw the static title section.
         Intended to be called only once.
 
-        <appName> ... <precision> <metricA> <metricB> ... <devicePath>
+        <appName> ... <precision> ... <devicePath>
         '''
 
         appName:str = "Correlator"
         devicePath:str = deviceName
         precision:str = "%db" % hwRegs[HwReg.Precision]
-        metricA:str = mapMetricIntToStr[hwRegs[HwReg.MetricA]]
-        metricB:str = mapMetricIntToStr[hwRegs[HwReg.MetricB]]
 
         left:str = appName
-        mid:str = ' '.join((precision, metricA, metricB))
+        mid:str = ' '.join((precision))
         right:str = devicePath
 
         midBegin:int = (self.nChars // 2) - (len(mid) // 2)
@@ -667,18 +642,6 @@ argparser.add_argument("-d", "--device",
          " If None then try using environment variable `$CORRELATOR_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
 
-def argparseNInputs(s): # {{{
-    i = int(s)
-    if not (2 <= i <= 99):
-        msg = "Number of active inputs must be in [2, maxNInputs]"
-        raise argparse.ArgumentTypeError(msg)
-    return i
-# }}} def argparseNInputs
-argparser.add_argument("--init-nInputs",
-    type=argparseNInputs,
-    default=2,
-    help="Number of inputs to calculate correlation between.")
-
 def argparseWindowLengthExp(s): # {{{
     i = int(s)
     if not (0 <= i <= 99):
@@ -688,7 +651,7 @@ def argparseWindowLengthExp(s): # {{{
 # }}} def argparseWindowLengthExp
 argparser.add_argument("--init-windowLengthExp",
     type=argparseWindowLengthExp,
-    default=10,
+    default=16,
     help="windowLength = 2**windowLengthExp  (samples)")
 
 def argparseWindowShape(s): # {{{
@@ -813,9 +776,6 @@ def main(args) -> int: # {{{
 
         verb("Reading RO registers...", end='')
         hwRegsRO:Dict[HwReg, Any] = rd((HwReg.Precision,
-                     HwReg.MetricA,
-                     HwReg.MetricB,
-                     HwReg.MaxNInputs,
                      HwReg.MaxWindowLengthExp,
                      HwReg.MaxSampleRateNegExp,
                      HwReg.MaxSampleJitterNegExp))
@@ -823,8 +783,6 @@ def main(args) -> int: # {{{
 
         # Fill in missing values of parameter domains.
         mapGuiRegToDomain_.update({
-            GuiReg.NInputs: mapGuiRegToDomain_[GuiReg.NInputs] %
-                hwRegsRO[HwReg.MaxNInputs],
             GuiReg.WindowLength: mapGuiRegToDomain_[GuiReg.WindowLength] %
                 hwRegsRO[HwReg.MaxWindowLengthExp],
             GuiReg.SampleRate: mapGuiRegToDomain_[GuiReg.SampleRate] %
@@ -835,7 +793,6 @@ def main(args) -> int: # {{{
 
         verb("Initializing RW registers...", end='')
         initRegsRW:Dict[HwReg, Any] = {
-            HwReg.NInputs:              args.init_nInputs,
             HwReg.WindowLengthExp:      args.init_windowLengthExp,
             HwReg.WindowShape:          args.init_windowShape,
             HwReg.SampleRateNegExp:     args.init_sampleRateNegExp,
