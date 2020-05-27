@@ -343,7 +343,7 @@ class FullWindow(CursesWindow): # {{{
 
         appName:str = "Correlator"
         devicePath:str = deviceName
-        precision:str = "%db" % hwRegs[HwReg.Precision]
+        precision:str = ["%db" % hwRegs[HwReg.Precision]]
 
         left:str = appName
         mid:str = ' '.join((precision))
