@@ -7,5 +7,7 @@ set_io i_pin_clk_16MHz  B2 # bottom SMR clk
 set_io b_pin_usb_p      B4 # bottom SMR usb_p
 set_io b_pin_usb_n      A4 # bottom SMR usb_n
 set_io o_pin_pu         A3 # bottom SMR usb_pu
+set_io i_pin_x          A2 # top TH pin1
+set_io i_pin_y          A1 # top TH pin2
 set_io o_pin_led        B3 # bottom SMR led
 

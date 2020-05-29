@@ -20,6 +20,9 @@ SRC := \
 	../../hdl/usbfsEndpCtrlSerial.v \
 	../../hdl/usbfsSerial.v \
 	$(BUILD)/pll48.v \
+	correlator.v \
+	corrCountRect.v \
+	corrCountLogdrop.v \
 	bpReg.v \
 	$(PROJ).v
 
@@ -45,6 +48,7 @@ all: lint iverilog synth pnr pack rpt
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint:
+	verilator $(VERILATOR_FLAGS) correlator.v
 	verilator $(VERILATOR_FLAGS) bpReg.v
 	verilator $(VERILATOR_FLAGS) corrCountRect.v
 	verilator $(VERILATOR_FLAGS) corrCountLogdrop.v
@@ -53,6 +57,7 @@ lint:
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
+	iverilog $(IVERILOG_FLAGS) -i correlator.v
 	iverilog $(IVERILOG_FLAGS) bpReg.v
 	iverilog $(IVERILOG_FLAGS) corrCountRect.v
 	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.v

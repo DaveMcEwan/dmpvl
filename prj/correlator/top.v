@@ -6,6 +6,9 @@ module top (
   inout  b_pin_usb_n,     // USB d-
   output o_pin_pu,        // USB host-detect pull-up
 
+  input  i_pin_x,         // X-probe
+  input  i_pin_y,         // Y-probe
+
   output o_pin_led
 );
 
@@ -47,7 +50,7 @@ assign usbRx_p = usbOutputEnable ? 1'b1 : usb_p;
 assign usbRx_n = usbOutputEnable ? 1'b0 : usb_n;
 
 SB_IO #(
-  .PIN_TYPE (6'b101001), // PIN_OUTPUT_TRISTATE - PIN_INPUT
+  .PIN_TYPE (6'b101001), // [5:2]->PIN_OUTPUT_TRISTATE, [1:0]->PIN_INPUT
   .PULLUP   (1'b0)
 ) iobuf_usbp (
   .PACKAGE_PIN    (b_pin_usb_p),
@@ -57,7 +60,7 @@ SB_IO #(
 );
 
 SB_IO #(
-  .PIN_TYPE (6'b101001), // PIN_OUTPUT_TRISTATE - PIN_INPUT
+  .PIN_TYPE (6'b101001), // [5:2]->PIN_OUTPUT_TRISTATE, [1:0]->PIN_INPUT
   .PULLUP   (1'b0)
 ) iobuf_usbn (
   .PACKAGE_PIN    (b_pin_usb_n),
@@ -80,7 +83,7 @@ wire       hostToDev_ready;
 // convert all the memories to flops instead of using BRAMs.
 usbfsSerial #(
   .ACM_NOT_GENERIC  (1),
-  .MAX_PKT  (16) // in {8,16,32,64} TODO: Split RX/TX_MAX_PKT
+  .MAX_PKT  (16) // in {8,16,32,64}
 ) u_dev (
   .i_clk_48MHz        (clk_48MHz),
   .i_rst              (rst),
@@ -101,28 +104,21 @@ usbfsSerial #(
   .i_hostToDev_ready  (hostToDev_ready)
 );
 
-wire [7:0] pktfifo_data = 8'd55; // TODO
-wire       pktfifo_empty = 1'b0; // TODO
-wire       pktfifo_pop;
-
-bpReg #(
-  // TODO: parameters
-) u_bpReg (
+correlator u_correlator (
   .i_clk              (clk_48MHz),
   .i_rst              (rst),
   .i_cg               (1'b1),
 
-  .i_pktfifo_data   (pktfifo_data),
-  .i_pktfifo_empty  (pktfifo_empty),
-  .o_pktfifo_pop    (pktfifo_pop),
+  .i_x                (i_pin_x),
+  .i_y                (i_pin_y),
 
-  .i_bp_data   (hostToDev_data),
-  .i_bp_valid  (hostToDev_valid),
-  .o_bp_ready  (hostToDev_ready),
+  .i_bp_data          (hostToDev_data),
+  .i_bp_valid         (hostToDev_valid),
+  .o_bp_ready         (hostToDev_ready),
 
-  .o_bp_data   (devToHost_data),
-  .o_bp_valid  (devToHost_valid),
-  .i_bp_ready  (devToHost_ready)
+  .o_bp_data          (devToHost_data),
+  .o_bp_valid         (devToHost_valid),
+  .i_bp_ready         (devToHost_ready)
 );
 
 endmodule
