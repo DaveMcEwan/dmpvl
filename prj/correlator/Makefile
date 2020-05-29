@@ -46,12 +46,16 @@ VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint:
 	verilator $(VERILATOR_FLAGS) bpReg.v
+	verilator $(VERILATOR_FLAGS) corrCountRect.v
+	verilator $(VERILATOR_FLAGS) corrCountLogdrop.v
 
 # Run through iverilog (Icarus) to ensure files are compatible.
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
 	iverilog $(IVERILOG_FLAGS) bpReg.v
+	iverilog $(IVERILOG_FLAGS) corrCountRect.v
+	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.v
 
 $(BUILD)/pll48.v:
 	mkdir -p $(BUILD)

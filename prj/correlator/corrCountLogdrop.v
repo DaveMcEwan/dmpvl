@@ -21,7 +21,7 @@ module corrCountLogdrop #(
   output wire [TIME_W-1:0]  o_t
 );
 
-`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg, i_rst)
+`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg, i_rst, '0)
 always @* t_d = i_tUpdate ? i_tValue : t_q + 1;
 
 wire [DATA_W-1:0] incrValue;
@@ -35,16 +35,16 @@ logdropWindow #(
   .o_y  (incrValue)
 );
 
-`dff_cg_srst(reg [DATA_W-1:0], countX, i_clk, i_cg, i_rst || i_tUpdate)
+`dff_cg_srst(reg [DATA_W-1:0], countX, i_clk, i_cg, i_rst || i_tUpdate, '0)
 always @* countX_d = i_x ? countX_q + incrValue : countX_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countY, i_clk, i_cg, i_rst || i_tUpdate)
+`dff_cg_srst(reg [DATA_W-1:0], countY, i_clk, i_cg, i_rst || i_tUpdate, '0)
 always @* countY_d = i_y ? countY_q + incrValue : countY_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countIsect, i_clk, i_cg, i_rst || i_tUpdate)
+`dff_cg_srst(reg [DATA_W-1:0], countIsect, i_clk, i_cg, i_rst || i_tUpdate, '0)
 always @* countIsect_d = (i_x & i_y) ? countIsect_q + incrValue : countIsect_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countSymdiff, i_clk, i_cg, i_rst || i_tUpdate)
+`dff_cg_srst(reg [DATA_W-1:0], countSymdiff, i_clk, i_cg, i_rst || i_tUpdate, '0)
 always @* countSymdiff_d = (i_x ^ i_y) ? countSymdiff_q + incrValue : countSymdiff_q;
 
 assign o_countX       = countX_q;

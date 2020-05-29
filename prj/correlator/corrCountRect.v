@@ -20,7 +20,7 @@ module corrCountRect #(
   output wire [TIME_W-1:0]  o_t
 );
 
-`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg, i_rst)
+`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg, i_rst, '0)
 always @* t_d = i_tUpdate ? i_tValue : t_q + 1;
 
 wire incr_x = i_cg && i_x;
