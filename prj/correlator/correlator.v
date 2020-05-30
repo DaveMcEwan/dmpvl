@@ -77,7 +77,7 @@ fifo #(
   .WIDTH          (8),
   .DEPTH          (50),
   .FLOPS_NOT_MEM  (0)
-) u_fifo (
+) u_pktfifo (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
   .i_cg       (1'b1),
@@ -104,7 +104,11 @@ fifo #(
   .o_entries  (_unused_pktfifo_o_entries)
 );
 
-`dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, i_cg, i_rst, '0)
+`dff_upcounter(reg [MAX_SAMPLE_RATE_NEGEXP-1:0], sampleCntr, i_clk, i_cg, i_rst)
+wire [MAX_SAMPLE_RATE_NEGEXP:0] sampleTickVec = {sampleCntr_q, 1'b1};
+wire sampleTick = sampleTickVec[sampleRateNegExp];
+
+`dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, sampleTick, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP-1:0] tDoWrapVec;
@@ -131,7 +135,7 @@ corrCountRect #(
 ) u_winRect (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (1'b1),
+  .i_cg           (sampleTick),
 
   .i_x            (i_x),
   .i_y            (i_y),
@@ -163,7 +167,7 @@ corrCountLogdrop #(
 ) u_winLogdrop (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (1'b1),
+  .i_cg           (sampleTick),
 
   .i_x            (x_q),
   .i_y            (y_q),
