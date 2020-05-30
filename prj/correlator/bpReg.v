@@ -4,8 +4,8 @@
 Unpack the register map to wires.
 */
 module bpReg #(
-  parameter LOGDROP_PRECISION = 32, // >= MAX_WINDOW_LENGTH_EXP
-  parameter MAX_WINDOW_LENGTH_EXP = 32,
+  parameter LOGDROP_PRECISION = 20, // >= MAX_WINDOW_LENGTH_EXP
+  parameter MAX_WINDOW_LENGTH_EXP = 20,
   parameter MAX_SAMPLE_RATE_NEGEXP = 15,
   parameter MAX_SAMPLE_JITTER_NEGEXP = 14
 ) (

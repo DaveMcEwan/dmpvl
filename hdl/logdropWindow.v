@@ -137,19 +137,14 @@ mssbIdx #(
   .o_valid    (aOnehotVld)
 );
 
-// WINLEN=16 => muxIdx in 0..3
-// WINLEN=32 => muxIdx in 0..4
-// WINLEN=64 => muxIdx in 0..5
-wire [MUXIDX_W-1:0] muxIdx = aOnehotIdx + (aOnehotVld ? 1 : 0);
-
-(* mem2reg *) reg [DATA_W-1:0] muxSrc [WINLEN_W];
+(* mem2reg *) reg [DATA_W-1:0] muxSrc [WINLEN_W-1];
 genvar i;
-for (i = 0; i < WINLEN_W; i=i+1) begin : muxSrc_b
-  localparam SHIFT = BICNTR_W - i;
+for (i = 0; i < WINLEN_W-1; i=i+1) begin : muxSrc_b
+  localparam SHIFT = BICNTR_W - i - 1;
   always @* muxSrc[i] = i_x >> SHIFT;
 end : muxSrc_b
 
-assign o_y = muxSrc[muxIdx];
+assign o_y = aOnehotVld ? muxSrc[aOnehotIdx] : (i_x >> BICNTR_W);
 
 end endgenerate
 
