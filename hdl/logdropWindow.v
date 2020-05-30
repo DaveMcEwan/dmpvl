@@ -15,15 +15,26 @@ Formally:
 semantics are slightly different so it's not a completely 1-to-1 mapping.
 The main difference is that Q-format with 0 unit bits and k fraction bits
 represents the range [0, 1), whereas fx-format represents (0, 1].
-E.g.
 
-  Decimal   Q-format Bits   Q-format Range    fx-format Bits    fx-format Range
-  -------   -------------   --------------    --------------    ---------------
-  1.0       1.000           [0.9375, 1)       .1111             (0.9375, 1]
-  0.0       0.000           [0, 0.125)        .0000             (0, 0.125]
-  0.125     0.001           [0, 0.125)        .0000             (0, 0.125]
-  0.25      0.010           [0.1875, 0.25)    .0011             (0.1875, 0.25]
-  0.5       0.100           [0.4375, 0.25)    .0111             (0.4375, 0.25]
+  Bits  Q1.3-format Interval  Q0.4 Interval         fx4-format Interval
+  ----  -----------------     ------------------    ------------------
+  0000  [0,     0.125)        [0,       0.0625)     (0,       0.0625]
+  0001  [0.125, 0.25)         [0.0625,  0.125)      (0.0625,  0.125]
+  0010  [0.25,  0.375)        [0.125,   0.1875)     (0.125,   0.1875]
+  0011  [0.375, 0.5)          [0.1875,  0.25)       (0.1875,  0.25]
+  0100  [0.5,   0.625)        [0.25,    0.3125)     (0.25,    0.3125]
+  0101  [0.625, 0.75)         [0.3125,  0.375)      (0.3125,  0.375]
+  0110  [0.75,  0.875)        [0.375,   0.4375)     (0.375,   0.4375]
+  0111  [0.875, 1)            [0.4375,  0.5)        (0.4375,  0.5]
+  1000  [1,     1.125)        [0.5,     0.5625)     (0.5,     0.5625]
+  1001  [1.125, 1.25)         [0.5625,  0.625)      (0.5625,  0.625]
+  1010  [1.25,  1.375)        [0.625,   0.6875)     (0.625,   0.6875]
+  1011  [1.375, 1.5)          [0.6875,  0.75)       (0.6875,  0.75]
+  1100  [1.5,   1.625)        [0.75,    0.8125)     (0.75,    0.8125]
+  1101  [1.625, 1.75)         [0.8125,  0.875)      (0.8125,  0.875]
+  1110  [1.75,  1.875)        [0.875,   0.9375)     (0.875,   0.9375]
+  1111  [1.875, 2)            [0.9375,  1)          (0.9375,  1]
+
 
 Inputs may be in either Q-format or fx-format, meaning that '0 is the smallest
 representable number, and '1 is the largest representable number.
@@ -103,7 +114,7 @@ wire firstHalf = !i_t[WINLEN_W-1];
 wire centerHalf = ^i_t[WINLEN_W-1:WINLEN_W-2];
 wire lastHalf = i_t[WINLEN_W-1];
 
-// bi-directional counter derived from t counts from 0 thru 2**WINLEN-1, then down.
+// Bi-directional counter derived from t counts up 0..2**(WINLEN-1), then down.
 // a = min(t, n-t-1)
 // WINLEN=16 => a in 0..7
 // WINLEN=32 => a in 0..15
@@ -120,7 +131,7 @@ wire [MUXIDX_W-1:0] aOnehotIdx;
 wire aOnehotVld;
 mssbIdx #(
   .WIDTH  (BICNTR_W)
-) u_mssbIdx_7 (
+) u_mssbIdx (
   .i_vector   (a),
   .o_index    (aOnehotIdx),
   .o_valid    (aOnehotVld)
