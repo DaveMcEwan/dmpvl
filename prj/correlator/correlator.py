@@ -50,20 +50,24 @@ maxSampleRate_kHz:int = 48000
 # NOTE: Must match addresses in bpReg.v
 @enum.unique
 class HwReg(enum.Enum): # {{{
+    # Rfifo
     Pktfifo                 = 1
 
     # Static, RO
     LogdropPrecision        = 2
     MaxWindowLengthExp      = 3
     MaxSampleRateNegExp     = 4
-    MaxSampleJitterNegExp   = 5
+    MaxSampleJitterExp      = 5
 
     # Dynamic, RW
     WindowLengthExp         = 6
     WindowShape             = 7
     SampleRateNegExp        = 8
     SampleMode              = 9
-    SampleJitterNegExp      = 10
+    SampleJitterExp         = 10
+
+    # WO
+    JitterSeed              = 11
 # }}} Enum HwReg
 mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
 
@@ -130,9 +134,9 @@ mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
     # Controls register "SampleMode".
     GuiReg.SampleMode: "∊ {%s}" % ", ".join(m.name for m in SampleMode),
 
-    # Controls register "SampleJitterNegExp".
-    # Domain defined by HwReg.MaxSampleJitterNegExp
-    GuiReg.SampleJitter: "(samples) = windowLength/2**j; j ∊ ℤ ∩ [1, %d]",
+    # Controls register "SampleJitterExp".
+    # Domain defined by HwReg.MaxSampleJitterExp
+    GuiReg.SampleJitter: "(samples) = 2**j; j ∊ ℤ ∩ [0, %d]",
 } # }}}
 
 def getBitfilePath(argBitfile) -> str: # {{{
@@ -225,7 +229,7 @@ def hwRegsToGuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[GuiReg, Any]: # {{{
 
     sampleJitter:Optional[int] = None \
         if hwRegs[HwReg.SampleMode] == SampleMode.NonJitter else \
-        (windowLength // 2**hwRegs[HwReg.SampleJitterNegExp])
+        (windowLength // 2**hwRegs[HwReg.SampleJitterExp])
 
     sampleRate = float(maxSampleRate_kHz) / 2**hwRegs[HwReg.SampleRateNegExp]
 
@@ -276,10 +280,10 @@ def updateRegs(selectIdx:int,
 
     elif GuiReg.SampleJitter == gr and \
          guiRegs_[GuiReg.SampleMode] == SampleMode.NonPeriodic:
-        n = hwRegs_[HwReg.SampleJitterNegExp]
+        n = hwRegs_[HwReg.SampleJitterExp]
         m = (n+1) if decrNotIncr else (n-1)
-        lo, hi = 1, hwRegs_[HwReg.MaxSampleJitterNegExp]
-        hwRegs_[HwReg.SampleJitterNegExp] = max(lo, min(m, hi))
+        lo, hi = 1, hwRegs_[HwReg.MaxSampleJitterExp]
+        hwRegs_[HwReg.SampleJitterExp] = max(lo, min(m, hi))
 
     else:
         pass
@@ -698,17 +702,17 @@ argparser.add_argument("--init-sampleMode",
     default=SampleMode.NonJitter,
     help="Sample periodically or non-periodically (using pseudo-random jitter)")
 
-def argparseSampleJitterNegExp(s): # {{{
+def argparseSampleJitterExp(s): # {{{
     i = int(s)
     if not (1 <= i <= 99):
-        msg = "Sample rate divisor exponent must be in [1, maxSampleJitterNegExp]"
+        msg = "Sample rate divisor exponent must be in [1, maxSampleJitterExp]"
         raise argparse.ArgumentTypeError(msg)
     return i
-# }}} def argparseSampleJitterNegExp
-argparser.add_argument("--init-sampleJitterNegExp",
-    type=argparseSampleJitterNegExp,
+# }}} def argparseSampleJitterExp
+argparser.add_argument("--init-sampleJitterExp",
+    type=argparseSampleJitterExp,
     default=1,
-    help="sampleJitter = windowLength * 2**-sampleJitterNegExp  (samples)")
+    help="sampleJitter = windowLength * 2**-sampleJitterExp  (samples)")
 
 # }}} argparser
 
@@ -779,7 +783,7 @@ def main(args) -> int: # {{{
             HwReg.LogdropPrecision,
             HwReg.MaxWindowLengthExp,
             HwReg.MaxSampleRateNegExp,
-            HwReg.MaxSampleJitterNegExp,
+            HwReg.MaxSampleJitterExp,
         ))
         verb("Done")
 
@@ -790,7 +794,7 @@ def main(args) -> int: # {{{
             GuiReg.SampleRate: mapGuiRegToDomain_[GuiReg.SampleRate] %
                 hwRegsRO[HwReg.MaxSampleRateNegExp],
             GuiReg.SampleJitter: mapGuiRegToDomain_[GuiReg.SampleJitter] %
-                hwRegsRO[HwReg.MaxSampleJitterNegExp],
+                hwRegsRO[HwReg.MaxSampleJitterExp],
         })
 
         verb("Initializing RW registers...", end='')
@@ -799,13 +803,15 @@ def main(args) -> int: # {{{
             HwReg.WindowShape:          args.init_windowShape,
             HwReg.SampleRateNegExp:     args.init_sampleRateNegExp,
             HwReg.SampleMode:           args.init_sampleMode,
-            HwReg.SampleJitterNegExp:   args.init_sampleJitterNegExp,
+            HwReg.SampleJitterExp:      args.init_sampleJitterExp,
         }
         wr(initRegsRW)
         verb("Checking...", end='')
         hwRegsRW:Dict[HwReg, Any] = rd(initRegsRW.keys())
         assert all(initRegsRW[k] == v for k,v in hwRegsRW.items()), hwRegsRW
         verb("Done")
+
+        # TODO: Seed PRNG.
 
         try:
             verb("Starting GUI (curses)...")

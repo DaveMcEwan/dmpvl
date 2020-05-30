@@ -4,7 +4,7 @@ module correlator #(
   parameter LOGDROP_PRECISION = 20, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_WINDOW_LENGTH_EXP = 20,
   parameter MAX_SAMPLE_RATE_NEGEXP = 15,
-  parameter MAX_SAMPLE_JITTER_NEGEXP = 14
+  parameter MAX_SAMPLE_JITTER_EXP = 8
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -28,17 +28,18 @@ wire [7:0]        pktfifo_o_data;
 wire              pktfifo_o_empty;
 wire              pktfifo_i_pop;
 
-wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]     windowLengthExp;
-wire                                         windowShape;
-wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]    sampleRateNegExp;
-wire                                         sampleMode;
-wire [$clog2(MAX_SAMPLE_JITTER_NEGEXP)-1:0]  sampleJitterNegExp;
+wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]    windowLengthExp;
+wire                                        windowShape;
+wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]   sampleRateNegExp;
+wire                                        sampleMode;
+wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]    sampleJitterNegExp;
+wire [MAX_SAMPLE_JITTER_EXP-1:0]            prngJitterValue;
 
 bpReg #(
   .LOGDROP_PRECISION        (LOGDROP_PRECISION),
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .MAX_SAMPLE_RATE_NEGEXP   (MAX_SAMPLE_RATE_NEGEXP),
-  .MAX_SAMPLE_JITTER_NEGEXP (MAX_SAMPLE_JITTER_NEGEXP)
+  .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
 ) u_bpReg (
   .i_clk              (i_clk),
   .i_rst              (i_rst),
@@ -53,6 +54,8 @@ bpReg #(
   .o_reg_sampleRateNegExp   (sampleRateNegExp),
   .o_reg_sampleMode         (sampleMode),
   .o_reg_sampleJitterNegExp (sampleJitterNegExp),
+
+  .o_prngJitterValue        (prngJitterValue),
 
   .i_bp_data   (i_bp_data),
   .i_bp_valid  (i_bp_valid),
@@ -106,7 +109,8 @@ fifo #(
 
 `dff_upcounter(reg [MAX_SAMPLE_RATE_NEGEXP-1:0], sampleCntr, i_clk, i_cg, i_rst)
 wire [MAX_SAMPLE_RATE_NEGEXP:0] sampleTickVec = {sampleCntr_q, 1'b1};
-wire sampleTick = sampleTickVec[sampleRateNegExp];
+wire sampleTick = sampleTickVec[sampleRateNegExp] && (prngJitterValue == '0);
+// TODO: That isn't right at all!
 
 `dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, sampleTick, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;

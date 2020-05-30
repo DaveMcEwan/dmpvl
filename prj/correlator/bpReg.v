@@ -7,7 +7,7 @@ module bpReg #(
   parameter LOGDROP_PRECISION = 20, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_WINDOW_LENGTH_EXP = 20,
   parameter MAX_SAMPLE_RATE_NEGEXP = 15,
-  parameter MAX_SAMPLE_JITTER_NEGEXP = 14
+  parameter MAX_SAMPLE_JITTER_EXP = 8
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -17,7 +17,9 @@ module bpReg #(
   output wire                                         o_reg_windowShape,
   output wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]    o_reg_sampleRateNegExp,
   output wire                                         o_reg_sampleMode,
-  output wire [$clog2(MAX_SAMPLE_JITTER_NEGEXP)-1:0]  o_reg_sampleJitterNegExp,
+  output wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]     o_reg_sampleJitterNegExp,
+
+  output wire [MAX_SAMPLE_JITTER_EXP-1:0]             o_prngJitterValue,
 
   input  wire [7:0]   i_pktfifo_data,
   input  wire         i_pktfifo_empty, // !valid
@@ -46,6 +48,7 @@ localparam ADDR_WINDOW_SHAPE              = ADDR_REG_LO + 6; // RW
 localparam ADDR_SAMPLE_RATE_NEGEXP        = ADDR_REG_LO + 7; // RW
 localparam ADDR_SAMPLE_MODE               = ADDR_REG_LO + 8; // RW
 localparam ADDR_SAMPLE_JITTER_NEGEXP      = ADDR_REG_LO + 9; // RW
+localparam ADDR_PRNG_SEED                 = ADDR_REG_LO + 10; // RO
 
 localparam N_LOC = N_REG+1; // Registers plus burst@0.
 localparam ADDR_W = $clog2(N_LOC);
@@ -103,6 +106,33 @@ wire wr_windowShape         = doWriteReg && (addr_q == ADDR_WINDOW_SHAPE);
 wire wr_sampleRateNegExp    = doWriteReg && (addr_q == ADDR_SAMPLE_RATE_NEGEXP);
 wire wr_sampleMode          = doWriteReg && (addr_q == ADDR_SAMPLE_MODE);
 wire wr_sampleJitterNegExp  = doWriteReg && (addr_q == ADDR_SAMPLE_JITTER_NEGEXP);
+wire wr_prngSeed            = doWriteReg && (addr_q == ADDR_PRNG_SEED);
+
+
+// PRNG sits at this level of hierarchy just for the convenience of the
+// seed interface plumbing.
+wire [31:0] prngResult;
+wire [127:0] prngState;
+wire [127:0] prngSeed_wr = {prngState[127-8:0], i_bp_data};
+prngXoshiro128p u_prngJitter (
+  .i_clk              (i_clk),
+  .i_rst              (i_rst),
+  .i_cg               (i_cg),
+
+  .i_seedValid        (wr_prngSeed),
+  .i_seedS0           (prngSeed_wr[31:0]),
+  .i_seedS1           (prngSeed_wr[63:32]),
+  .i_seedS2           (prngSeed_wr[95:64]),
+  .i_seedS3           (prngSeed_wr[127:96]),
+
+  .o_s0               (prngState[31:0]),
+  .o_s1               (prngState[63:32]),
+  .o_s2               (prngState[95:64]),
+  .o_s3               (prngState[127:96]),
+  .o_result           (prngResult)
+);
+
+assign o_prngJitterValue = prngResult[32-MAX_SAMPLE_JITTER_EXP +: MAX_SAMPLE_JITTER_EXP];
 
 // Widths and value enumerations.
 localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP);
@@ -111,7 +141,7 @@ localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 localparam SAMPLE_RATE_NEGEXP_W     = $clog2(MAX_SAMPLE_RATE_NEGEXP);
 localparam SAMPLE_MODE_NONJITTER    = 1'd0;
 localparam SAMPLE_MODE_NONPERIODIC  = 1'd1;
-localparam SAMPLE_JITTER_NEGEXP_W   = $clog2(MAX_SAMPLE_JITTER_NEGEXP);
+localparam SAMPLE_JITTER_NEGEXP_W   = $clog2(MAX_SAMPLE_JITTER_EXP);
 
 `dff_cg_srst(reg [WINDOW_LENGTH_EXP_W-1:0],    windowLengthExp,    i_clk, wr_windowLengthExp,    i_rst, '0)
 `dff_cg_srst(reg,                              windowShape,        i_clk, wr_windowShape,        i_rst, '0)
@@ -140,7 +170,7 @@ always @*
       ADDR_LOGDROP_PRECISION:        rdData_d = LOGDROP_PRECISION;
       ADDR_MAX_WINDOW_LENGTH_EXP:    rdData_d = MAX_WINDOW_LENGTH_EXP;
       ADDR_MAX_SAMPLE_RATE_NEGEXP:   rdData_d = MAX_SAMPLE_RATE_NEGEXP;
-      ADDR_MAX_SAMPLE_JITTER_NEGEXP: rdData_d = MAX_SAMPLE_JITTER_NEGEXP;
+      ADDR_MAX_SAMPLE_JITTER_NEGEXP: rdData_d = MAX_SAMPLE_JITTER_EXP;
                                                   /* verilator lint_off WIDTH */
       // RW
       ADDR_WINDOW_LENGTH_EXP:        rdData_d = windowLengthExp_q;

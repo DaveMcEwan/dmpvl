@@ -16,6 +16,7 @@ SRC := \
 	../../hdl/logdropWindow.v \
 	../../hdl/mssbIdx.v \
 	../../hdl/onehotIdx.v \
+	../../hdl/prngXoshiro128p.v \
 	../../hdl/usbfsPktRx.v \
 	../../hdl/usbfsPktTx.v \
 	../../hdl/usbfsTxn.v \
@@ -61,7 +62,7 @@ lint:
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
-	iverilog $(IVERILOG_FLAGS) bpReg.v
+	iverilog $(IVERILOG_FLAGS) -i bpReg.v
 	iverilog $(IVERILOG_FLAGS) corrCountRect.v
 	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.v
 	iverilog $(IVERILOG_FLAGS) -i correlator.v
