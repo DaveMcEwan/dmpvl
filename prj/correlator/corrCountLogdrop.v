@@ -1,7 +1,11 @@
 `include "dff.vh"
 
 module corrCountLogdrop #(
+  // Should be larger than TIME_W by a "few" bits to get usable resolution.
+  // Must be at least twice TIME_W for full resolution.
   parameter DATA_W = 16,
+
+  // Defines precision of window function.
   parameter TIME_W = 8
 ) (
   input wire                i_clk,

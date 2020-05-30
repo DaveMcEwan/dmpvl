@@ -4,7 +4,8 @@
 Unpack the register map to wires.
 */
 module bpReg #(
-  parameter PRECISION = 20,
+  parameter LOGDROP_PRECISION = 32, // >= MAX_WINDOW_LENGTH_EXP
+  parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter MAX_SAMPLE_RATE_NEGEXP = 15,
   parameter MAX_SAMPLE_JITTER_NEGEXP = 14
 ) (
@@ -12,7 +13,7 @@ module bpReg #(
   input wire          i_rst,
   input wire          i_cg,
 
-  output wire [$clog2(PRECISION)-1:0]                 o_reg_windowLengthExp, // MAX_WINDOW_LENGTH_EXP
+  output wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]     o_reg_windowLengthExp,
   output wire                                         o_reg_windowShape,
   output wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]    o_reg_sampleRateNegExp,
   output wire                                         o_reg_sampleMode,
@@ -31,15 +32,12 @@ module bpReg #(
   input  wire         i_bp_ready
 );
 
-// maxWinLenExp is same as precision for accurate LogDrop window calculation.
-localparam MAX_WINDOW_LENGTH_EXP = PRECISION;
-
 // Address for all regs.
 localparam N_REG = 10;
 localparam ADDR_REG_LO = 1;
 localparam ADDR_REG_HI = ADDR_REG_LO + N_REG - 1;
 localparam ADDR_PKTFIFO                   = ADDR_REG_LO + 0; // Rfifo
-localparam ADDR_PRECISION                 = ADDR_REG_LO + 1; // RO
+localparam ADDR_LOGDROP_PRECISION         = ADDR_REG_LO + 1; // RO
 localparam ADDR_MAX_WINDOW_LENGTH_EXP     = ADDR_REG_LO + 2; // RO
 localparam ADDR_MAX_SAMPLE_RATE_NEGEXP    = ADDR_REG_LO + 3; // RO
 localparam ADDR_MAX_SAMPLE_JITTER_NEGEXP  = ADDR_REG_LO + 4; // RO
@@ -139,18 +137,18 @@ always @*
       ADDR_PKTFIFO:                  rdData_d = i_pktfifo_data;
 
       // RO static
-      ADDR_PRECISION:                rdData_d = PRECISION;
+      ADDR_LOGDROP_PRECISION:        rdData_d = LOGDROP_PRECISION;
       ADDR_MAX_WINDOW_LENGTH_EXP:    rdData_d = MAX_WINDOW_LENGTH_EXP;
       ADDR_MAX_SAMPLE_RATE_NEGEXP:   rdData_d = MAX_SAMPLE_RATE_NEGEXP;
       ADDR_MAX_SAMPLE_JITTER_NEGEXP: rdData_d = MAX_SAMPLE_JITTER_NEGEXP;
-                                                    /* verilator lint_off WIDTH */
+                                                  /* verilator lint_off WIDTH */
       // RW
       ADDR_WINDOW_LENGTH_EXP:        rdData_d = windowLengthExp_q;
       ADDR_WINDOW_SHAPE:             rdData_d = windowShape_q;
       ADDR_SAMPLE_RATE_NEGEXP:       rdData_d = sampleRateNegExp_q;
       ADDR_SAMPLE_MODE:              rdData_d = sampleMode_q;
       ADDR_SAMPLE_JITTER_NEGEXP:     rdData_d = sampleJitterNegExp_q;
-                                                    /* verilator lint_on  WIDTH */
+                                                  /* verilator lint_on  WIDTH */
       default:                       rdData_d = '0;
     endcase
   else

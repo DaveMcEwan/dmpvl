@@ -53,7 +53,7 @@ class HwReg(enum.Enum): # {{{
     Pktfifo                 = 1
 
     # Static, RO
-    Precision               = 2
+    LogdropPrecision        = 2
     MaxWindowLengthExp      = 3
     MaxSampleRateNegExp     = 4
     MaxSampleJitterNegExp   = 5
@@ -291,7 +291,7 @@ def updateRegs(selectIdx:int,
 
 def calc_bitsPerWindow(hwRegs:Dict[HwReg, Any]) -> int: # {{{
 
-    precision:int = hwRegs[HwReg.Precision] # bits
+    precision:int = hwRegs[HwReg.LogdropPrecision] # bits
     nInputs:int = 2 # unitless
 
     ret:int = precision * (nInputs**2 - nInputs)
@@ -343,7 +343,7 @@ class FullWindow(CursesWindow): # {{{
 
         appName:str = "Correlator"
         devicePath:str = deviceName
-        precision:str = ["%db" % hwRegs[HwReg.Precision]]
+        precision:str = ["%db" % hwRegs[HwReg.LogdropPrecision]]
 
         left:str = appName
         mid:str = ' '.join((precision))
@@ -775,10 +775,12 @@ def main(args) -> int: # {{{
         wr:Callable = functools.partial(hwWriteRegs, wrBytePipe)
 
         verb("Reading RO registers...", end='')
-        hwRegsRO:Dict[HwReg, Any] = rd((HwReg.Precision,
-                     HwReg.MaxWindowLengthExp,
-                     HwReg.MaxSampleRateNegExp,
-                     HwReg.MaxSampleJitterNegExp))
+        hwRegsRO:Dict[HwReg, Any] = rd((
+            HwReg.LogdropPrecision,
+            HwReg.MaxWindowLengthExp,
+            HwReg.MaxSampleRateNegExp,
+            HwReg.MaxSampleJitterNegExp,
+        ))
         verb("Done")
 
         # Fill in missing values of parameter domains.

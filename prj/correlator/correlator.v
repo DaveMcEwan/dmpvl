@@ -1,7 +1,8 @@
 `include "dff.vh"
 
 module correlator #(
-  parameter PRECISION = 20,
+  parameter LOGDROP_PRECISION = 16, // >= MAX_WINDOW_LENGTH_EXP
+  parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_RATE_NEGEXP = 15,
   parameter MAX_SAMPLE_JITTER_NEGEXP = 14
 ) (
@@ -21,23 +22,21 @@ module correlator #(
   input  wire         i_bp_ready
 );
 
-// maxWinLenExp is same as precision for accurate LogDrop window calculation.
-localparam MAX_WINDOW_LENGTH_EXP = PRECISION;
-
 genvar i;
 
 wire [7:0]        pktfifo_o_data;
 wire              pktfifo_o_empty;
 wire              pktfifo_i_pop;
 
-wire [$clog2(PRECISION)-1:0]                 windowLengthExp;
+wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]     windowLengthExp;
 wire                                         windowShape;
 wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]    sampleRateNegExp;
 wire                                         sampleMode;
 wire [$clog2(MAX_SAMPLE_JITTER_NEGEXP)-1:0]  sampleJitterNegExp;
 
 bpReg #(
-  .PRECISION                (PRECISION),
+  .LOGDROP_PRECISION        (LOGDROP_PRECISION),
+  .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .MAX_SAMPLE_RATE_NEGEXP   (MAX_SAMPLE_RATE_NEGEXP),
   .MAX_SAMPLE_JITTER_NEGEXP (MAX_SAMPLE_JITTER_NEGEXP)
 ) u_bpReg (
@@ -65,7 +64,7 @@ bpReg #(
 );
 
 reg [7:0] pktfifo_i_data;
-wire pktfifo_i_push = newWin || (pktIdx_q != 3'd0);
+wire pktfifo_i_push = tDoWrap || (pktIdx_q != 3'd0);
 wire              _unused_pktfifo_o_full;
 wire              _unused_pktfifo_o_pushed;
 wire              _unused_pktfifo_o_popped;
@@ -106,16 +105,22 @@ fifo #(
 );
 
 `dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, i_cg, i_rst, '0)
-always @* t_d = newWin ? '0 : t_q + 1;
+always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP-1:0] tDoWrapVec;
+wire [MAX_WINDOW_LENGTH_EXP-1:0] tScaledVec [MAX_WINDOW_LENGTH_EXP];
 generate for (i = 0; i < MAX_WINDOW_LENGTH_EXP; i=i+1) begin
-  if (i == 0)
+  if (i == 0) begin
     assign tDoWrapVec[0] = (windowLengthExp == 0);
-  else
+    assign tScaledVec[0] = '0;
+  end else begin
     assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
+    assign tScaledVec[i] = t_q << i;
+  end
 end endgenerate
-wire newWin = |tDoWrapVec;
+wire tDoWrap = |tDoWrapVec;
+`dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], tScaled, i_clk, i_cg, i_rst, '0)
+always @* tScaled_d = tScaledVec[windowLengthExp];
 
 wire [MAX_WINDOW_LENGTH_EXP-1:0] rect_countX;
 wire [MAX_WINDOW_LENGTH_EXP-1:0] rect_countY;
@@ -136,7 +141,7 @@ corrCountRect #(
   .o_countIsect   (rect_countIsect),
   .o_countSymdiff (rect_countSymdiff),
 
-  .i_zeroCounts   (newWin)
+  .i_zeroCounts   (tDoWrap)
 );
 
 // NOTE: Window coefficient is 1 sample out of of phase in order to meet timing.
@@ -147,12 +152,13 @@ corrCountRect #(
 always @* y_d = i_y;
 always @* x_d = i_x;
 
-wire [PRECISION+MAX_WINDOW_LENGTH_EXP-1:0] logdrop_countX;
-wire [PRECISION+MAX_WINDOW_LENGTH_EXP-1:0] logdrop_countY;
-wire [PRECISION+MAX_WINDOW_LENGTH_EXP-1:0] logdrop_countIsect;
-wire [PRECISION+MAX_WINDOW_LENGTH_EXP-1:0] logdrop_countSymdiff;
+localparam LOGDROP_DATA_W = LOGDROP_PRECISION + MAX_WINDOW_LENGTH_EXP;
+wire [LOGDROP_DATA_W-1:0] logdrop_countX;
+wire [LOGDROP_DATA_W-1:0] logdrop_countY;
+wire [LOGDROP_DATA_W-1:0] logdrop_countIsect;
+wire [LOGDROP_DATA_W-1:0] logdrop_countSymdiff;
 corrCountLogdrop #(
-  .DATA_W  (PRECISION+MAX_WINDOW_LENGTH_EXP),
+  .DATA_W  (LOGDROP_DATA_W),
   .TIME_W  (MAX_WINDOW_LENGTH_EXP)
 ) u_winLogdrop (
   .i_clk          (i_clk),
@@ -167,32 +173,33 @@ corrCountLogdrop #(
   .o_countIsect   (logdrop_countIsect),
   .o_countSymdiff (logdrop_countSymdiff),
 
-  .i_t            (t_q),
-  .i_zeroCounts   (newWin)
+  .i_t            (tScaled_q),
+  .i_zeroCounts   (tDoWrap)
 );
 
 // Wrapping window counter to be used only to check that packets have not been
 // dropped.
-`dff_upcounter(reg [7:0], winNum, i_clk, newWin, i_rst)
+`dff_upcounter(reg [7:0], winNum, i_clk, tDoWrap, i_rst)
 
 // Only the 8 most significant bits of the counters is reported
 wire [7:0] pkt_countX = windowShape ?
-  logdrop_countX[PRECISION+MAX_WINDOW_LENGTH_EXP-8 +: 8] :
+  logdrop_countX[LOGDROP_DATA_W-8 +: 8] :
   rect_countX[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
 wire [7:0] pkt_countY = windowShape ?
-  logdrop_countY[PRECISION+MAX_WINDOW_LENGTH_EXP-8 +: 8] :
+  logdrop_countY[LOGDROP_DATA_W-8 +: 8] :
   rect_countY[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
 wire [7:0] pkt_countIsect = windowShape ?
-  logdrop_countIsect[PRECISION+MAX_WINDOW_LENGTH_EXP-8 +: 8] :
+  logdrop_countIsect[LOGDROP_DATA_W-8 +: 8] :
   rect_countIsect[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
 wire [7:0] pkt_countSymdiff = windowShape ?
-  logdrop_countSymdiff[PRECISION+MAX_WINDOW_LENGTH_EXP-8 +: 8] :
+  logdrop_countSymdiff[LOGDROP_DATA_W-8 +: 8] :
   rect_countSymdiff[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
-`dff_upcounter(reg [2:0], pktIdx, i_clk, pktfifo_i_push, i_rst || (pktIdx_q == 3'd4))
+wire pktIdx_wrap = (pktIdx_q == 3'd4) && pktfifo_i_push;
+`dff_upcounter(reg [2:0], pktIdx, i_clk, pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
   case (pktIdx_q)
