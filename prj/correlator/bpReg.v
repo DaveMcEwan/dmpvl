@@ -4,6 +4,7 @@
 Unpack the register map to wires.
 */
 module bpReg #(
+  parameter PKTFIFO_DEPTH         = 10, // packets
   parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter LOGDROP_PRECISION     = 32, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
@@ -24,6 +25,7 @@ module bpReg #(
   input  wire [7:0]   i_pktfifo_data,
   input  wire         i_pktfifo_empty, // !valid
   output wire         o_pktfifo_pop, // ready
+  output wire         o_pktfifo_flush,
 
   input  wire [7:0]   i_bp_data,
   input  wire         i_bp_valid,
@@ -35,19 +37,21 @@ module bpReg #(
 );
 
 // Address for all regs.
-localparam N_REG = 10;
+localparam N_REG = 12;
 localparam ADDR_REG_LO = 1;
 localparam ADDR_REG_HI = ADDR_REG_LO + N_REG - 1;
-localparam ADDR_PKTFIFO                   = ADDR_REG_LO + 0; // Rfifo
-localparam ADDR_PRNG_SEED                 = ADDR_REG_LO + 1; // WO
-localparam ADDR_MAX_WINDOW_LENGTH_EXP     = ADDR_REG_LO + 2; // RO
-localparam ADDR_LOGDROP_PRECISION         = ADDR_REG_LO + 3; // RO
-localparam ADDR_MAX_SAMPLE_PERIOD_EXP     = ADDR_REG_LO + 4; // RO
-localparam ADDR_MAX_SAMPLE_JITTER_EXP     = ADDR_REG_LO + 5; // RO
-localparam ADDR_WINDOW_LENGTH_EXP         = ADDR_REG_LO + 6; // RW
-localparam ADDR_WINDOW_SHAPE              = ADDR_REG_LO + 7; // RW
-localparam ADDR_SAMPLE_PERIOD_EXP         = ADDR_REG_LO + 8; // RW
-localparam ADDR_SAMPLE_JITTER_EXP         = ADDR_REG_LO + 9; // RW
+localparam ADDR_PKTFIFO_RD                = ADDR_REG_LO + 0;  // Rfifo
+localparam ADDR_PKTFIFO_FLUSH             = ADDR_REG_LO + 1;  // WO
+localparam ADDR_PRNG_SEED                 = ADDR_REG_LO + 2;  // WO
+localparam ADDR_PKTFIFO_DEPTH             = ADDR_REG_LO + 3;  // RO
+localparam ADDR_MAX_WINDOW_LENGTH_EXP     = ADDR_REG_LO + 4;  // RO
+localparam ADDR_LOGDROP_PRECISION         = ADDR_REG_LO + 5;  // RO
+localparam ADDR_MAX_SAMPLE_PERIOD_EXP     = ADDR_REG_LO + 6;  // RO
+localparam ADDR_MAX_SAMPLE_JITTER_EXP     = ADDR_REG_LO + 7;  // RO
+localparam ADDR_WINDOW_LENGTH_EXP         = ADDR_REG_LO + 8;  // RW
+localparam ADDR_WINDOW_SHAPE              = ADDR_REG_LO + 9;  // RW
+localparam ADDR_SAMPLE_PERIOD_EXP         = ADDR_REG_LO + 10; // RW
+localparam ADDR_SAMPLE_JITTER_EXP         = ADDR_REG_LO + 11; // RW
 
 localparam N_LOC = N_REG+1; // Registers plus burst@0.
 localparam ADDR_W = $clog2(N_LOC);
@@ -133,7 +137,7 @@ assign o_reg_sampleJitterExp = sampleJitterExp_q;
 always @*
   if (addrInRange)
     case (addr_q)
-      ADDR_PKTFIFO:                  rdData_d = i_pktfifo_data;
+      ADDR_PKTFIFO_RD:              rdData_d = i_pktfifo_data;
 
       // RO static
       ADDR_MAX_WINDOW_LENGTH_EXP:   rdData_d = MAX_WINDOW_LENGTH_EXP;
@@ -147,12 +151,13 @@ always @*
       ADDR_SAMPLE_PERIOD_EXP:       rdData_d = samplePeriodExp_q;
       ADDR_SAMPLE_JITTER_EXP:       rdData_d = sampleJitterExp_q;
                                                   /* verilator lint_on  WIDTH */
-      default:                       rdData_d = '0;
+      default:                      rdData_d = '0;
     endcase
   else
     rdData_d = '0;
 
-assign o_pktfifo_pop = rd_q && (addr_q == ADDR_PKTFIFO);
+assign o_pktfifo_pop = rd_q && (addr_q == ADDR_PKTFIFO_RD);
+assign o_pktfifo_flush = doWriteReg && (addr_q == ADDR_PKTFIFO_FLUSH);
 
 // Read data is always ready, except if trying to read an empty fifo.
 wire rdReady = !(o_pktfifo_pop && i_pktfifo_empty);

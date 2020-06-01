@@ -27,6 +27,7 @@ genvar i;
 wire [7:0]        pktfifo_o_data;
 wire              pktfifo_o_empty;
 wire              pktfifo_i_pop;
+wire              pktfifo_i_flush;
 
 wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]    windowLengthExp;
 wire                                        windowShape;
@@ -49,6 +50,7 @@ bpReg #(
   .i_pktfifo_data   (pktfifo_o_data),
   .i_pktfifo_empty  (pktfifo_o_empty),
   .o_pktfifo_pop    (pktfifo_i_pop),
+  .o_pktfifo_flush  (pktfifo_i_flush),
 
   .o_reg_windowLengthExp  (windowLengthExp),
   .o_reg_windowShape      (windowShape),
@@ -109,7 +111,7 @@ fifo #(
   .i_rst      (i_rst),
   .i_cg       (i_cg),
 
-  .i_flush    (1'b0), // TODO: Flush register for recovery.
+  .i_flush    (pktfifo_i_flush),
   .i_push     (pktfifo_i_push),
   .i_pop      (pktfifo_i_pop),
 
@@ -225,7 +227,7 @@ wire [7:0] pkt_countSymdiff = windowShape ?
   logdrop_countSymdiff[LOGDROP_DATA_W-8 +: 8] :
   rect_countSymdiff[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
-wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || (1'b0/*TODO flush*/);
+wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
