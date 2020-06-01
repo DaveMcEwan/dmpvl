@@ -53,21 +53,21 @@ class HwReg(enum.Enum): # {{{
     # Rfifo
     Pktfifo                 = 1
 
+    # WO
+    PrngSeed                = 2
+
     # Static, RO
-    LogdropPrecision        = 2
     MaxWindowLengthExp      = 3
-    MaxSampleRateNegExp     = 4
-    MaxSampleJitterExp      = 5
+    LogdropPrecision        = 4
+    MaxSamplePeriodExp      = 5
+    MaxSampleJitterExp      = 6
 
     # Dynamic, RW
-    WindowLengthExp         = 6
-    WindowShape             = 7
-    SampleRateNegExp        = 8
-    SampleMode              = 9
+    WindowLengthExp         = 7
+    WindowShape             = 8
+    SamplePeriodExp         = 9
     SampleJitterExp         = 10
 
-    # WO
-    JitterSeed              = 11
 # }}} Enum HwReg
 mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
 
@@ -76,12 +76,6 @@ class WindowShape(enum.Enum): # {{{
     Rectangular = 0
     Logdrop     = 1
 # }}} class WindowShape
-
-@enum.unique
-class SampleMode(enum.Enum): # {{{
-    NonJitter   = 0
-    NonPeriodic = 1
-# }}} class SampleMode
 
 @enum.unique
 class UpdateMode(enum.Enum): # {{{
@@ -98,7 +92,6 @@ class GuiReg(enum.Enum): # {{{
     WindowLength    = enum.auto()
     WindowShape     = enum.auto()
     SampleRate      = enum.auto()
-    SampleMode      = enum.auto()
     SampleJitter    = enum.auto()
 # }}} Enum GuiReg
 
@@ -122,21 +115,18 @@ mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
 
     # Controls register "WindowLengthExp".
     # Domain defined by HwReg.MaxWindowLengthExp
-    GuiReg.WindowLength: "(samples) = 2**w; w ∊ ℤ ∩ [1, %d]",
+    GuiReg.WindowLength: "(samples) = 2**w; w ∊ ℤ ∩ [3, %d]",
 
     # Controls register "WindowShape".
     GuiReg.WindowShape: "∊ {%s}" % ", ".join(s.name for s in WindowShape),
 
-    # Controls register "SampleRateNegExp".
-    # Domain defined by HwReg.MaxSampleRateNegExp
+    # Controls register "SamplePeriodExp".
+    # Domain defined by HwReg.MaxSamplePeriodExp
     GuiReg.SampleRate: "(kHz) = %d/2**r; r ∊ ℤ ∩ [0, %%d]" % maxSampleRate_kHz,
-
-    # Controls register "SampleMode".
-    GuiReg.SampleMode: "∊ {%s}" % ", ".join(m.name for m in SampleMode),
 
     # Controls register "SampleJitterExp".
     # Domain defined by HwReg.MaxSampleJitterExp
-    GuiReg.SampleJitter: "(samples) = 2**j; j ∊ ℤ ∩ [0, %d]",
+    GuiReg.SampleJitter: "(samples) < 2**j; j ∊ ℤ ∩ [0, %d)",
 } # }}}
 
 def getBitfilePath(argBitfile) -> str: # {{{
@@ -192,11 +182,7 @@ def hwReadRegs(rd, keys:Iterable[int]) -> Dict[HwReg, Any]: # {{{
         assert isinstance(v, int), v
         assert a == k.value, (a, k.value)
 
-        if HwReg.SampleMode == k:
-            ret_[k] = SampleMode.NonJitter \
-                if 0 == v else \
-                SampleMode.NonPeriodic
-        elif HwReg.WindowShape == k:
+        if HwReg.WindowShape == k:
             ret_[k] = WindowShape.Rectangular \
                 if 0 == v else \
                 WindowShape.Logdrop
@@ -227,18 +213,15 @@ def hwRegsToGuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[GuiReg, Any]: # {{{
 
     windowLength:int = 2**hwRegs[HwReg.WindowLengthExp]
 
-    sampleJitter:Optional[int] = None \
-        if hwRegs[HwReg.SampleMode] == SampleMode.NonJitter else \
-        (windowLength // 2**hwRegs[HwReg.SampleJitterExp])
+    sampleRate = float(maxSampleRate_kHz) / 2**hwRegs[HwReg.SamplePeriodExp]
 
-    sampleRate = float(maxSampleRate_kHz) / 2**hwRegs[HwReg.SampleRateNegExp]
+    sampleJitter:Optional[int] = 2**hwRegs[HwReg.SampleJitterExp]
 
     ret = {
         GuiReg.WindowLength: windowLength,
         GuiReg.WindowShape:  hwRegs[HwReg.WindowShape],
         GuiReg.SampleRate:   sampleRate,
-        GuiReg.SampleMode:   hwRegs[HwReg.SampleMode],
-        GuiReg.SampleJitter: '-' if sampleJitter is None else sampleJitter,
+        GuiReg.SampleJitter: sampleJitter,
     }
     return ret
 # }}} def hwRegsToGuiRegs
@@ -259,7 +242,7 @@ def updateRegs(selectIdx:int,
     elif GuiReg.WindowLength == gr:
         n = hwRegs_[HwReg.WindowLengthExp]
         m = (n-1) if decrNotIncr else (n+1)
-        lo, hi = 1, hwRegs_[HwReg.MaxWindowLengthExp]
+        lo, hi = 3, hwRegs_[HwReg.MaxWindowLengthExp]
         hwRegs_[HwReg.WindowLengthExp] = max(lo, min(m, hi))
 
     elif GuiReg.WindowShape == gr:
@@ -268,21 +251,15 @@ def updateRegs(selectIdx:int,
             WindowShape.Logdrop
 
     elif GuiReg.SampleRate == gr:
-        n = hwRegs_[HwReg.SampleRateNegExp]
+        n = hwRegs_[HwReg.SamplePeriodExp]
         m = (n+1) if decrNotIncr else (n-1)
-        lo, hi = 0, hwRegs_[HwReg.MaxSampleRateNegExp]
-        hwRegs_[HwReg.SampleRateNegExp] = max(lo, min(m, hi))
+        lo, hi = 0, hwRegs_[HwReg.MaxSamplePeriodExp]
+        hwRegs_[HwReg.SamplePeriodExp] = max(lo, min(m, hi))
 
-    elif GuiReg.SampleMode == gr:
-        hwRegs_[HwReg.SampleMode] = SampleMode.NonPeriodic \
-            if SampleMode.NonJitter == hwRegs_[HwReg.SampleMode] else \
-            SampleMode.NonJitter
-
-    elif GuiReg.SampleJitter == gr and \
-         guiRegs_[GuiReg.SampleMode] == SampleMode.NonPeriodic:
+    elif GuiReg.SampleJitter == gr:
         n = hwRegs_[HwReg.SampleJitterExp]
-        m = (n+1) if decrNotIncr else (n-1)
-        lo, hi = 1, hwRegs_[HwReg.MaxSampleJitterExp]
+        m = (n-1) if decrNotIncr else (n+1)
+        lo, hi = 0, hwRegs_[HwReg.MaxSampleJitterExp]-1
         hwRegs_[HwReg.SampleJitterExp] = max(lo, min(m, hi))
 
     else:
@@ -674,45 +651,29 @@ argparser.add_argument("--init-windowShape",
     default=WindowShape.Rectangular,
     help="Shape of sampling window function.")
 
-def argparseSampleRateNegExp(s): # {{{
+def argparseSamplePeriodExp(s): # {{{
     i = int(s)
     if not (0 <= i <= 99):
-        msg = "Sample rate divisor exponent must be in [0, maxSampleRateNegExp]"
+        msg = "Sample rate divisor exponent must be in [0, maxSamplePeriodExp]"
         raise argparse.ArgumentTypeError(msg)
     return i
-# }}} def argparseSampleRateNegExp
-argparser.add_argument("--init-sampleRateNegExp",
-    type=argparseSampleRateNegExp,
+# }}} def argparseSamplePeriodExp
+argparser.add_argument("--init-samplePeriodExp",
+    type=argparseSamplePeriodExp,
     default=0,
-    help="sampleRate = maxSampleRate * 2**-sampleRateNegExp  (Hz)")
-
-def argparseSampleMode(s): # {{{
-    i = s.lower()
-    if "nonjitter" == i:
-        ret = SampleMode.NonJitter
-    elif "nonperiodic" == i:
-        ret = SampleMode.NonPeriodic
-    else:
-        msg = "Sample mode must be in {PERIODIC, NONPERIODIC}"
-        raise argparse.ArgumentTypeError(msg)
-    return ret
-# }}} def argparseSampleMode
-argparser.add_argument("--init-sampleMode",
-    type=argparseSampleMode,
-    default=SampleMode.NonJitter,
-    help="Sample periodically or non-periodically (using pseudo-random jitter)")
+    help="sampleRate = maxSampleRate * 2**-samplePeriodExp  (Hz)")
 
 def argparseSampleJitterExp(s): # {{{
     i = int(s)
-    if not (1 <= i <= 99):
-        msg = "Sample rate divisor exponent must be in [1, maxSampleJitterExp]"
+    if not (0 <= i <= 99):
+        msg = "Sample jitter exponent must be in [0, maxSampleJitterExp)"
         raise argparse.ArgumentTypeError(msg)
     return i
 # }}} def argparseSampleJitterExp
 argparser.add_argument("--init-sampleJitterExp",
     type=argparseSampleJitterExp,
-    default=1,
-    help="sampleJitter = windowLength * 2**-sampleJitterExp  (samples)")
+    default=0,
+    help="sampleJitter < 2**sampleJitterExp  (samples)")
 
 # }}} argparser
 
@@ -780,9 +741,9 @@ def main(args) -> int: # {{{
 
         verb("Reading RO registers...", end='')
         hwRegsRO:Dict[HwReg, Any] = rd((
-            HwReg.LogdropPrecision,
             HwReg.MaxWindowLengthExp,
-            HwReg.MaxSampleRateNegExp,
+            HwReg.LogdropPrecision,
+            HwReg.MaxSamplePeriodExp,
             HwReg.MaxSampleJitterExp,
         ))
         verb("Done")
@@ -792,7 +753,7 @@ def main(args) -> int: # {{{
             GuiReg.WindowLength: mapGuiRegToDomain_[GuiReg.WindowLength] %
                 hwRegsRO[HwReg.MaxWindowLengthExp],
             GuiReg.SampleRate: mapGuiRegToDomain_[GuiReg.SampleRate] %
-                hwRegsRO[HwReg.MaxSampleRateNegExp],
+                hwRegsRO[HwReg.MaxSamplePeriodExp],
             GuiReg.SampleJitter: mapGuiRegToDomain_[GuiReg.SampleJitter] %
                 hwRegsRO[HwReg.MaxSampleJitterExp],
         })
@@ -801,8 +762,7 @@ def main(args) -> int: # {{{
         initRegsRW:Dict[HwReg, Any] = {
             HwReg.WindowLengthExp:      args.init_windowLengthExp,
             HwReg.WindowShape:          args.init_windowShape,
-            HwReg.SampleRateNegExp:     args.init_sampleRateNegExp,
-            HwReg.SampleMode:           args.init_sampleMode,
+            HwReg.SamplePeriodExp:      args.init_samplePeriodExp,
             HwReg.SampleJitterExp:      args.init_sampleJitterExp,
         }
         wr(initRegsRW)

@@ -17,6 +17,7 @@ SRC := \
 	../../hdl/mssbIdx.v \
 	../../hdl/onehotIdx.v \
 	../../hdl/prngXoshiro128p.v \
+	../../hdl/strobe.v \
 	../../hdl/usbfsPktRx.v \
 	../../hdl/usbfsPktTx.v \
 	../../hdl/usbfsTxn.v \

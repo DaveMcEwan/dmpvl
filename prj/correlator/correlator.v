@@ -1,9 +1,9 @@
 `include "dff.vh"
 
 module correlator #(
-  parameter LOGDROP_PRECISION = 20, // >= MAX_WINDOW_LENGTH_EXP
-  parameter MAX_WINDOW_LENGTH_EXP = 20,
-  parameter MAX_SAMPLE_RATE_NEGEXP = 15,
+  parameter MAX_WINDOW_LENGTH_EXP = 16,
+  parameter LOGDROP_PRECISION     = 16, // >= MAX_WINDOW_LENGTH_EXP
+  parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8
 ) (
   input wire          i_clk,
@@ -30,32 +30,33 @@ wire              pktfifo_i_pop;
 
 wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]    windowLengthExp;
 wire                                        windowShape;
-wire [$clog2(MAX_SAMPLE_RATE_NEGEXP)-1:0]   sampleRateNegExp;
-wire                                        sampleMode;
-wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]    sampleJitterNegExp;
-wire [MAX_SAMPLE_JITTER_EXP-1:0]            prngJitterValue;
+wire [$clog2(MAX_SAMPLE_PERIOD_EXP)-1:0]    samplePeriodExp;
+wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]    sampleJitterExp;
+
+wire [7:0]                                  jitterSeedByte;
+wire                                        jitterSeedValid;
 
 bpReg #(
-  .LOGDROP_PRECISION        (LOGDROP_PRECISION),
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-  .MAX_SAMPLE_RATE_NEGEXP   (MAX_SAMPLE_RATE_NEGEXP),
+  .LOGDROP_PRECISION        (LOGDROP_PRECISION),
+  .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
   .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
 ) u_bpReg (
   .i_clk              (i_clk),
   .i_rst              (i_rst),
-  .i_cg               (1'b1),
+  .i_cg               (i_cg),
 
   .i_pktfifo_data   (pktfifo_o_data),
   .i_pktfifo_empty  (pktfifo_o_empty),
   .o_pktfifo_pop    (pktfifo_i_pop),
 
-  .o_reg_windowLengthExp    (windowLengthExp),
-  .o_reg_windowShape        (windowShape),
-  .o_reg_sampleRateNegExp   (sampleRateNegExp),
-  .o_reg_sampleMode         (sampleMode),
-  .o_reg_sampleJitterNegExp (sampleJitterNegExp),
+  .o_reg_windowLengthExp  (windowLengthExp),
+  .o_reg_windowShape      (windowShape),
+  .o_reg_samplePeriodExp  (samplePeriodExp),
+  .o_reg_sampleJitterExp  (sampleJitterExp),
 
-  .o_prngJitterValue        (prngJitterValue),
+  .o_jitterSeedByte       (jitterSeedByte),
+  .o_jitterSeedValid      (jitterSeedValid),
 
   .i_bp_data   (i_bp_data),
   .i_bp_valid  (i_bp_valid),
@@ -64,6 +65,29 @@ bpReg #(
   .o_bp_data   (o_bp_data),
   .o_bp_valid  (o_bp_valid),
   .i_bp_ready  (i_bp_ready)
+);
+wire [MAX_SAMPLE_PERIOD_EXP-1:0] samplePeriod = 1 << samplePeriodExp;
+wire [MAX_SAMPLE_JITTER_EXP-1:0] sampleJitter = 1 << sampleJitterExp;
+
+wire sampleStrobe;
+wire [31:0] _unused_sampleStrobe_xoshiro128p;
+strobe #(
+  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP),
+  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP),
+  .ENABLE_JITTER    (1)
+) u_sampleStrobe (
+  .i_clk              (i_clk),
+  .i_rst              (i_rst),
+  .i_cg               (i_cg),
+
+  .i_ctrlPeriod       (samplePeriod),
+  .i_ctrlJitter       (sampleJitter),
+
+  .i_jitterSeedByte   (jitterSeedByte),
+  .i_jitterSeedValid  (jitterSeedValid),
+  .o_jitterPrng       (_unused_sampleStrobe_xoshiro128p),
+
+  .o_strobe           (sampleStrobe)
 );
 
 reg [7:0] pktfifo_i_data;
@@ -83,7 +107,7 @@ fifo #(
 ) u_pktfifo (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
-  .i_cg       (1'b1),
+  .i_cg       (i_cg),
 
   .i_flush    (1'b0), // TODO: Flush register for recovery.
   .i_push     (pktfifo_i_push),
@@ -107,12 +131,7 @@ fifo #(
   .o_entries  (_unused_pktfifo_o_entries)
 );
 
-`dff_upcounter(reg [MAX_SAMPLE_RATE_NEGEXP-1:0], sampleCntr, i_clk, i_cg, i_rst)
-wire [MAX_SAMPLE_RATE_NEGEXP:0] sampleTickVec = {sampleCntr_q, 1'b1};
-wire sampleTick = sampleTickVec[sampleRateNegExp] && (prngJitterValue == '0);
-// TODO: That isn't right at all!
-
-`dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, sampleTick, i_rst, '0)
+`dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], t, i_clk, sampleStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP-1:0] tDoWrapVec;
@@ -126,7 +145,7 @@ generate for (i = 0; i < MAX_WINDOW_LENGTH_EXP; i=i+1) begin
     assign tScaledVec[i] = t_q << i;
   end
 end endgenerate
-wire tDoWrap = |tDoWrapVec;
+wire tDoWrap = |tDoWrapVec && sampleStrobe;
 `dff_cg_srst(reg [MAX_WINDOW_LENGTH_EXP-1:0], tScaled, i_clk, i_cg, i_rst, '0)
 always @* tScaled_d = tScaledVec[windowLengthExp];
 
@@ -139,7 +158,7 @@ corrCountRect #(
 ) u_winRect (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (sampleTick),
+  .i_cg           (sampleStrobe),
 
   .i_x            (i_x),
   .i_y            (i_y),
@@ -171,7 +190,7 @@ corrCountLogdrop #(
 ) u_winLogdrop (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (sampleTick),
+  .i_cg           (sampleStrobe),
 
   .i_x            (x_q),
   .i_y            (y_q),
@@ -206,7 +225,7 @@ wire [7:0] pkt_countSymdiff = windowShape ?
   logdrop_countSymdiff[LOGDROP_DATA_W-8 +: 8] :
   rect_countSymdiff[MAX_WINDOW_LENGTH_EXP-8 +: 8];
 
-wire pktIdx_wrap = (pktIdx_q == 3'd4) && pktfifo_i_push;
+wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || (1'b0/*TODO flush*/);
 `dff_upcounter(reg [2:0], pktIdx, i_clk, pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
