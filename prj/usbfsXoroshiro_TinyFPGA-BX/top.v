@@ -25,13 +25,20 @@ fpgaReset u_rst (
   .o_rst        (rst)
 );
 
-reg [22:0] ledCounter_q;
-always @(posedge clk_48MHz)
-  if (rst)
-    ledCounter_q <= 23'd0;
-  else
-    ledCounter_q <= ledCounter_q + 23'd1;
-assign o_pin_led = ledCounter_q[22];
+// Blinkenlight just shows device is out of reset, but for power measurements
+// will draw extra current.
+localparam BLINKEN = 1'b0;
+generate if (BLINKEN) begin
+  reg [22:0] ledCounter_q;
+  always @(posedge clk_48MHz)
+    if (rst)
+      ledCounter_q <= 23'd0;
+    else
+      ledCounter_q <= ledCounter_q + 23'd1;
+  assign o_pin_led = ledCounter_q[22];
+end else begin
+  assign o_pin_led = 1'b0;
+end endgenerate
 
 
 wire usb_p;
