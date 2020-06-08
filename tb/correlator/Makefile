@@ -17,6 +17,8 @@ V_SRC := \
 	../../prj/correlator/bpReg.v \
 	../../prj/correlator/correlator.v
 
+V_INCDIRS := ../../prj/correlator
+
 CC_SRC := \
 	../../verif/ptyBytePipe.c \
 	$(TB).cc
