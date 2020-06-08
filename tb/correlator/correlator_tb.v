@@ -41,7 +41,7 @@ always @(posedge i_clk) begin
   // ptyBytePipe_getByte() should return -1 if no data is available.
   bp0_upstream_valid = bp0_upstream_fromPty >= 0;
 
-  bp0_upstream_data = bp0_upstream_fromPty & 8'hff;
+  bp0_upstream_data = bp0_upstream_fromPty[7:0];
 end
 
 // Downstream (reply side, from BytePipe device to pty)
@@ -51,7 +51,7 @@ wire        bp0_dnstream_valid;
 wire        bp0_dnstream_ready = 1'b1;
 always @(posedge i_clk) if (!i_rst && common_cg) begin
   if (bp0_dnstream_valid && bp0_dnstream_ready)
-    ptyBytePipe_putByte(bp0_fd, bp0_dnstream_data);
+    ptyBytePipe_putByte(bp0_fd, {24'd0, bp0_dnstream_data});
 end
 
 // TODO: These should be the only two lines which setup bp0.
