@@ -7,13 +7,31 @@
 #include <stdlib.h>
 
 #include <errno.h>
+#include <error.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-int ptyBytePipe_init(char * ptySymlinkPath);
-int ptyBytePipe_getByte(int fd);
-int ptyBytePipe_putByte(int fd, int b);
+// Maximum number of pipes which can be instanced by tb.
+// May be changed to larger number which will only increase static memory usage.
+#define MAX_N_PTYBYTEPIPE 32
+
+// Maximum number of characters for a symlink path.
+#define MAX_SYMLINKPATH_LENGTH 256
+
+typedef struct ptyBytePipe_Entry
+{
+  int fd;
+  char symlinkPath[MAX_SYMLINKPATH_LENGTH];
+  bool valid;
+} ptyBytePipe_Entry;
+
+void  ptyBytePipe_verboseOn(void);
+void  ptyBytePipe_verboseOff(void);
+int   ptyBytePipe_init(char * ptySymlinkPath);
+int   ptyBytePipe_getByte(int fd);
+void  ptyBytePipe_putByte(int fd, int b);
 
 #endif // _PTYBYTEPIPE_H
