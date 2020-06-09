@@ -4,8 +4,11 @@
 
 #include "verilated.h"
 #include "verilated_vcd_c.h"
+
 #include "VerilatorTb.h"
+
 #include "Vcorrelator_tb.h"
+#include "Vcorrelator_tb__Dpi.h"
 
 #ifndef N_CYCLES
 const int N_CYCLES = 100;

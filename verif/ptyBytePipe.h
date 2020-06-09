@@ -2,13 +2,15 @@
 #ifndef _PTYBYTEPIPE_H
 #define _PTYBYTEPIPE_H
 
+// https://man7.org/linux/man-pages/man7/feature_test_macros.7.html
+#define _XOPEN_SOURCE 500
+#include <stdlib.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-
-#include "svdpi.h"
 
 int ptyBytePipe_init(char * ptySymlinkPath);
 int ptyBytePipe_getByte(int fd);

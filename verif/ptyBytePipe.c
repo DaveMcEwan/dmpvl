@@ -10,17 +10,16 @@ ptyBytePipe_init(char * ptySymlinkPath)
   char* ptsName;
 
   if ((fd = open("/dev/ptmx", O_RDWR | O_NOCTTY)) < 0) {
-    perror(errno);
+    perror(strerror(errno));
     exit(-1);
     return -1;
-  } else if ( (grantpt(fd) < 0)                 ||
-              (unlockpt(fd) < 0)                ||
-              ((ptsName = ptsname(fd)) == NULL) ||
-              (symlink(ptsName, ptySymlinkPath) < 0) ) {
-    perror(errno);
+  } else if ( (grantpt(fd) != 0)                    ||
+              (unlockpt(fd) != 0)                   ||
+              ((ptsName = ptsname(fd)) == NULL)     ||
+              (symlink(ptsName, ptySymlinkPath) != 0) ) {
+    perror(strerror(errno));
     close(fd);
-    exit(-1);
-    return -1;
+    exit(EXIT_FAILURE); return EXIT_FAILURE;
   } else {
     return fd;
   }
@@ -35,9 +34,8 @@ ptyBytePipe_getByte(int fd)
   char buf[1];
 
   if ((nRead = read(fd, buf, 1)) < 1) {
-    perror(errno);
-    exit(-1);
-    return -1;
+    perror(strerror(errno));
+    exit(EXIT_FAILURE); return EXIT_FAILURE;
   } else {
     return (int)buf[0];
   }
@@ -48,12 +46,11 @@ int
 ptyBytePipe_putByte(int fd, int b)
 {
   int nWritten;
-  char buf[1] = { b & 0xff };
+  char buf[1] = { (char)(b & 0xff) };
 
   if ((nWritten = write(fd, buf, 1)) < 1) {
-    perror(errno);
-    exit(-1);
-    return -1;
+    perror(strerror(errno));
+    exit(EXIT_FAILURE); return EXIT_FAILURE;
   } else {
     return nWritten;
   }

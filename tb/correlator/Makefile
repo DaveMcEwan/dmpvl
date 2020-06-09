@@ -1,8 +1,6 @@
 
 TB := correlator_tb
 
-N_CYCLES ?= 1000000
-
 V_SRC := \
 	$(TB).v \
 	../../hdl/fifo.v \
@@ -20,13 +18,11 @@ V_SRC := \
 V_INCDIRS := ../../prj/correlator
 
 CC_SRC := \
-	../../verif/ptyBytePipe.c \
 	$(TB).cc
-
-CC_H := \
-	../../verif/ptyBytePipe.h
 
 # NOTE: Verilator only - no support for Icarus yet.
 VCD_IVERILOG :=
+
+DPI_OBJS := ptyBytePipe.o
 
 include ../common.mk

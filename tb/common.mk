@@ -28,6 +28,14 @@ lint:
 		verilator $(LINT_FLAGS) $$f; \
 	done
 
+
+# External objects for DPI imports.
+$(BUILD)/ptyBytePipe.o: ../../verif/ptyBytePipe.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+VERILATOR_DPI_DEPS := $(addprefix $(BUILD)/,$(DPI_OBJS))
+VERILATOR_DPI_OBJS := $(addprefix -LDFLAGS ,$(notdir $(VERILATOR_DPI_DEPS)))
+
 # Verilator compile verilog into C++.
 VERILATOR_TOP ?= $(TB)
 VERILATOR_TRACE_DEPTH ?= 3
@@ -42,19 +50,21 @@ $(BUILD)/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 		-DN_CYCLES=$(N_CYCLES) \
 		-CFLAGS -DN_CYCLES=$(N_CYCLES) \
 		-CFLAGS -I../../../verif \
+		$(VERILATOR_DPI_OBJS) \
 		--clk common_clk \
 		--top-module $(VERILATOR_TOP) \
 		$(CC_SRC) \
 		$(VERILATOR_TOP).v
 
 # Compile verilated C++ into executable.
-$(BUILD)/V$(TB): $(BUILD)/V$(TB).mk
+$(BUILD)/V$(TB): $(BUILD)/V$(TB).mk $(VERILATOR_DPI_DEPS)
 	make -j -C $(BUILD) -f V$(TB).mk V$(TB)
 
 # Execute verilator object to dump VCD.
 $(VCD_VERILATOR): $(BUILD)/V$(TB)
 	time $(BUILD)/V$(TB) > $(BUILD)/$(TB).verilator.log
 	@! grep -q ERROR $(BUILD)/$(TB).verilator.log
+
 
 # Icarus (iverilog) compile verilog into executable VVP script.
 IVERILOG_TOP ?= $(TB)
