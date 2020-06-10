@@ -10,8 +10,6 @@
   } \
 }
 
-}
-
 static bool verbose = false;
 
 void ptyBytePipe_verboseOn(void) {
@@ -38,12 +36,12 @@ void ptyBytePipe_exit(void) {
 
     // NOTE: Called within error().
     // https://linux.die.net/man/2/close
-    VERB("Closing fd...");
+    VERB("Closing fd[%d] %d", i, entries[i].fd);
     if (0 != close(entries[i].fd)) {
       fprintf(stderr, "ERROR: %s", strerror(errno));
     }
 
-    VERB("Removing symlink...");
+    VERB("Removing symlink[%d] %s", i, entries[i].symlinkPath);
     remove(entries[i].symlinkPath);
 
   }
@@ -52,7 +50,7 @@ void ptyBytePipe_exit(void) {
 }
 
 void ptyBytePipe_firstInit(void) {
-  VERB("Registering with atexit...");
+  VERB("Registering with atexit");
   if (0 != atexit(ptyBytePipe_exit)) {
     error(EXIT_FAILURE, 0, "Cannot set exit function.");
   }
@@ -79,37 +77,39 @@ int ptyBytePipe_init(char* symlinkPath) {
     ptyBytePipe_firstInit();
   }
 
-  VERB("Opening /dev/ptmx...");
+  VERB("Opening /dev/ptmx");
   if (0 > (fd = open("/dev/ptmx", O_RDWR | O_NOCTTY | O_NONBLOCK))) {
     error(EXIT_FAILURE, errno, "Cannot open /dev/ptmx.");
   }
   entries[nEntries].fd = fd;
   entries[nEntries].valid = true;
+  VERB("fd: %d", fd);
 
-  VERB("Granting access to slave PTY...");
+  VERB("Granting access to slave PTY");
   // https://linux.die.net/man/3/grantpt
   if (0 != grantpt(fd)) {
     error(EXIT_FAILURE, errno, "Cannot grant access to slave PTY.");
   }
 
-  VERB("Unlocking PTY master/slave pair...");
+  VERB("Unlocking PTY master/slave pair");
   // https://linux.die.net/man/3/unlockpt
   if (0 != unlockpt(fd)) {
     error(EXIT_FAILURE, errno, "Cannot unlock PTY master/slave pair.");
   }
 
-  VERB("Getting name of PTY slave...");
+  VERB("Getting name of PTY slave");
   // https://linux.die.net/man/3/ptsname
   if (NULL == (ptsName = ptsname(fd))) {
     error(EXIT_FAILURE, errno, "Cannot get PTY slave name.");
   }
   strncpy(entries[nEntries].symlinkPath, symlinkPath, MAX_SYMLINKPATH_LENGTH);
+  VERB("PTY slave: %s", ptsName);
 
-  VERB("remove()...");
+  VERB("Removing any existing symlink");
   // https://linux.die.net/man/3/remove
   remove(symlinkPath);
 
-  VERB("symlink()...");
+  VERB("Creating symlink %s --> %s", symlinkPath, ptsName);
   // https://linux.die.net/man/7/symlink
   if (0 != symlink(ptsName, symlinkPath)) {
     error(EXIT_FAILURE, errno, "Cannot symlink PTY slave.");
