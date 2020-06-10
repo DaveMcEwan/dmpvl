@@ -2,6 +2,19 @@
 #include "ptyBytePipe.h"
 
 
+// Based on description of GNU error_at_line().
+#define ERROR(...) { \
+  int _errsv = errno; \
+  fflush(stdout); \
+  fprintf(stderr, "ERROR:%s:%d: ", __FILE__, __LINE__); \
+  if (0 != _errsv) { \
+    fprintf(stderr, "%d:%s: ", _errsv, strerror(_errsv)); \
+  } \
+  fprintf(stderr, __VA_ARGS__); \
+  fprintf(stderr, "\n"); \
+  exit(EXIT_FAILURE); \
+}
+
 #define VERB(...) { \
   if (verbose) { \
     printf("%s:%d: ", __FILE__, __LINE__); \
@@ -34,7 +47,7 @@ void ptyBytePipe_exit(void) {
 
   for (i = 0; i < nEntries; i++) if (entries[i].valid) {
 
-    // NOTE: Called within error().
+    // NOTE: Called within exit().
     // https://linux.die.net/man/2/close
     VERB("Closing fd[%d] %d", i, entries[i].fd);
     if (0 != close(entries[i].fd)) {
@@ -52,7 +65,7 @@ void ptyBytePipe_exit(void) {
 void ptyBytePipe_firstInit(void) {
   VERB("Registering with atexit");
   if (0 != atexit(ptyBytePipe_exit)) {
-    error(EXIT_FAILURE, 0, "Cannot set exit function.");
+    ERROR("Cannot register exit function.");
   }
 
   nEntries = 0;
@@ -71,7 +84,7 @@ int ptyBytePipe_init(char* symlinkPath) {
 
   // Check that there are free entries.
   if (nEntries >= MAX_N_PTYBYTEPIPE) {
-    error(EXIT_FAILURE, 0, "Too many entries in ptyBytePipe.");
+    ERROR("Too many entries in ptyBytePipe");
   }
   if (0 > nEntries) {
     ptyBytePipe_firstInit();
@@ -79,7 +92,7 @@ int ptyBytePipe_init(char* symlinkPath) {
 
   VERB("Opening /dev/ptmx");
   if (0 > (fd = open("/dev/ptmx", O_RDWR | O_NOCTTY | O_NONBLOCK))) {
-    error(EXIT_FAILURE, errno, "Cannot open /dev/ptmx.");
+    ERROR("Cannot open /dev/ptmx");
   }
   entries[nEntries].fd = fd;
   entries[nEntries].valid = true;
@@ -88,19 +101,19 @@ int ptyBytePipe_init(char* symlinkPath) {
   VERB("Granting access to slave PTY");
   // https://linux.die.net/man/3/grantpt
   if (0 != grantpt(fd)) {
-    error(EXIT_FAILURE, errno, "Cannot grant access to slave PTY.");
+    ERROR("Cannot grant access to slave PTY");
   }
 
   VERB("Unlocking PTY master/slave pair");
   // https://linux.die.net/man/3/unlockpt
   if (0 != unlockpt(fd)) {
-    error(EXIT_FAILURE, errno, "Cannot unlock PTY master/slave pair.");
+    ERROR("Cannot unlock PTY master/slave pair");
   }
 
   VERB("Getting name of PTY slave");
   // https://linux.die.net/man/3/ptsname
   if (NULL == (ptsName = ptsname(fd))) {
-    error(EXIT_FAILURE, errno, "Cannot get PTY slave name.");
+    ERROR("Cannot get PTY slave name");
   }
   strncpy(entries[nEntries].symlinkPath, symlinkPath, MAX_SYMLINKPATH_LENGTH);
   VERB("PTY slave: %s", ptsName);
@@ -112,7 +125,7 @@ int ptyBytePipe_init(char* symlinkPath) {
   VERB("Creating symlink %s --> %s", symlinkPath, ptsName);
   // https://linux.die.net/man/7/symlink
   if (0 != symlink(ptsName, symlinkPath)) {
-    error(EXIT_FAILURE, errno, "Cannot symlink PTY slave.");
+    ERROR("Cannot symlink PTY slave");
   }
 
   nEntries++;
@@ -125,12 +138,11 @@ int ptyBytePipe_getByte(int fd) {
   int nRead;
   char buf[1];
 
-  VERB("read()...");
+  VERB("read()");
   // https://linux.die.net/man/2/read
   if (0 > (nRead = read(fd, buf, 1))) {
-    int errsv = errno;
-    if ((EAGAIN != errsv) && (EWOULDBLOCK != errsv)) {
-      error(EXIT_FAILURE, errno, "Cannot get byte.");
+    if ((EAGAIN != errno) && (EWOULDBLOCK != errno)) {
+      ERROR("Cannot read byte");
     }
   }
 
@@ -142,13 +154,13 @@ void ptyBytePipe_putByte(int fd, int b) {
   int nWritten;
   char buf[1] = { (char)(b & 0xff) };
 
-  VERB("write()...");
+  VERB("write()");
   if (0 > (nWritten = write(fd, buf, 1))) {
-    error(EXIT_FAILURE, errno, "Cannot write byte.");
+    ERROR("Cannot write byte");
   }
 
   if (1 != nWritten) {
-    error(EXIT_FAILURE, errno, "nWritten=%d instead of 1", nWritten);
+    ERROR("nWritten=%d instead of 1", nWritten);
   }
 
   return;

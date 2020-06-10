@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <errno.h>
-#include <error.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
