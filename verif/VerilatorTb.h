@@ -1,5 +1,6 @@
 #ifndef _VERILATORTB_H
 
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef enum {ERROR, WARN, NOTE} TbPrintLevel;
@@ -9,12 +10,14 @@ public:
   VA*               m_dut;
   VerilatedVcdC*    m_trace;
   uint64_t          m_tickcount;
+  bool              m_dodump;
 
   VerilatorTb(void) : m_trace(NULL), m_tickcount(0l) {
     m_dut = new VA;
     Verilated::traceEverOn(true);
     m_dut->i_clk = 0;
     m_dut->i_rst = 1;
+    m_dodump = true;
     eval(); // Get our initial values set properly.
   }
 
@@ -53,13 +56,13 @@ public:
 
     m_dut->i_clk = 1;
     eval();
-    if (m_trace) {
+    if (m_dodump && m_trace) {
       m_trace->dump((uint64_t)(10*m_tickcount));
     }
 
     m_dut->i_clk = 0;
     eval();
-    if (m_trace) {
+    if (m_dodump && m_trace) {
       m_trace->dump((uint64_t)(10*m_tickcount+5));
       m_trace->flush();
     }
