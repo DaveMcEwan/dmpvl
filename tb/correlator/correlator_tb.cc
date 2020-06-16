@@ -1,10 +1,4 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "verilated.h"
-#include "verilated_vcd_c.h"
-
 #include "VerilatorTbCtrl.h"
 
 #include "Vcorrelator_tb.h"
@@ -19,6 +13,8 @@ const int N_CYCLES = 100;
 int main(int argc, char **argv, char **env) {
 
   Verilated::commandArgs(argc, argv);
+  verbose = true; // Uncomment to enable VERB macro printing in dmpvlCommon.h
+
   VerilatorTbCtrl<Vcorrelator_tb> *tb =
     new VerilatorTbCtrl<Vcorrelator_tb>("build/correlator_tb.verilator.vcd");
 

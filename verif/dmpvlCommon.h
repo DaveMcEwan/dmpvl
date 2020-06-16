@@ -11,7 +11,7 @@
 #define ERROR(...) { \
   int _errsv = errno; \
   fflush(stdout); \
-  fprintf(stderr, "ERROR:%s:%d: ", __FILE__, __LINE__); \
+  fprintf(stderr, "ERROR:%s:%d:%s: ", __FILE__, __LINE__, __func__); \
   if (0 != _errsv) { \
     fprintf(stderr, "%d:%s: ", _errsv, strerror(_errsv)); \
   } \
@@ -22,7 +22,7 @@
 
 #define VERB(...) { \
   if (verbose) { \
-    printf("%s:%d: ", __FILE__, __LINE__); \
+    printf("%s:%d:%s: ", __FILE__, __LINE__, __func__); \
     printf(__VA_ARGS__); \
     printf("\n"); \
   } \
