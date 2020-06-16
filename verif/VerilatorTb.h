@@ -1,4 +1,5 @@
 #ifndef _VERILATORTB_H
+#define _VERILATORTB_H
 
 #include <stdbool.h>
 #include <stdio.h>
