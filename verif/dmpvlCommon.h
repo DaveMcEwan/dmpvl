@@ -2,6 +2,11 @@
 #ifndef _DMPVL_COMMON_H
 #define _DMPVL_COMMON_H
 
+#include <assert.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 // Based on description of GNU error_at_line().
 #define ERROR(...) { \
   int _errsv = errno; \
