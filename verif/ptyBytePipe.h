@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "dmpvlCommon.h"
+
 // Maximum number of pipes which can be instanced by tb.
 // May be changed to larger number which will only increase static memory usage.
 #define MAX_N_PTYBYTEPIPE 32
