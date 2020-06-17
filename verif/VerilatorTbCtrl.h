@@ -33,7 +33,7 @@ public:
     m_dut->i_rst = 1;
     m_doDump = true;
     m_doStep = 0;
-    m_tickPeriod_us = 1000000; // 1Hz (maximum period)
+    m_tickPeriod_us = 100000; // 10Hz
     eval(); // Get our initial values set properly.
     opentrace(vcdname);
     openctrl();
@@ -50,7 +50,7 @@ public:
   }
 
   virtual void openctrl(void) {
-    VERB("Enter");
+    VERB("Enter path=%s", TBCTRL_FIFOPATH);
 
     // Delete any pre-existing named pipe.
     remove(TBCTRL_FIFOPATH);
@@ -59,7 +59,6 @@ public:
       ERROR("Cannot open control fifo.");
     }
 
-    VERB("  Control FIFO path=%s", TBCTRL_FIFOPATH);
     m_ctrlfifo = open(TBCTRL_FIFOPATH, O_RDONLY | O_NONBLOCK);
     VERB("  m_ctrlfifo: %d", m_ctrlfifo);
     VERB("  Exit");
@@ -158,6 +157,7 @@ public:
       if (0 > (nRead = read(m_ctrlfifo, &buf[i], 1))) {
         // Cannot get char either because there's no data in fifo, or an error.
         bool blocking = (EAGAIN == errno) || (EWOULDBLOCK == errno);
+        if (blocking) errno = 0;
         //VERB("%s errno=%d", __func__, errno);
         ret = blocking ? ret_notReady : ret_error;
         break;

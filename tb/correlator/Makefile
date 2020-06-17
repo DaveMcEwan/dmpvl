@@ -3,6 +3,7 @@ TB := correlator_tb
 
 V_SRC := \
 	$(TB).v \
+	../../verif/ptyBytePipe.v \
 	../../hdl/fifo.v \
 	../../hdl/fxcs.v \
 	../../hdl/logdropWindow.v \

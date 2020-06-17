@@ -39,18 +39,6 @@ void ptyBytePipe_exit(void) {
   return;
 }
 
-void ptyBytePipe_firstInit(void) {
-  VERB("Registering with atexit");
-  if (0 != atexit(ptyBytePipe_exit)) {
-    ERROR("Cannot register exit function.");
-  }
-
-  nEntries = 0;
-  memset(&entries, 0, sizeof(entries));
-
-  return;
-}
-
 
 // Open a pseudo terminal (pty) then symlink to it from known path.
 // Returns -1 on error, but will attempt to exit() first.
@@ -64,7 +52,13 @@ int ptyBytePipe_init(char* symlinkPath) {
     ERROR("Too many entries in ptyBytePipe");
   }
   if (0 > nEntries) {
-    ptyBytePipe_firstInit();
+    VERB("Registering with atexit");
+    if (0 != atexit(ptyBytePipe_exit)) {
+      ERROR("Cannot register exit function.");
+    }
+
+    nEntries = 0;
+    memset(&entries, 0, sizeof(entries));
   }
 
   VERB("Opening /dev/ptmx");
@@ -105,6 +99,20 @@ int ptyBytePipe_init(char* symlinkPath) {
     ERROR("Cannot symlink PTY slave");
   }
 
+  VERB("Setting non-canonical mode");
+  // https://linux.die.net/man/3/termios
+  // https://blog.nelhage.com/2009/12/a-brief-introduction-to-termios/
+  // https://blog.nelhage.com/2009/12/a-brief-introduction-to-termios-termios3-and-stty/
+  // https://www.cmrr.umn.edu/~strupp/serial.html
+  struct termios options;
+  if (0 != tcgetattr(fd, &options)) {
+    ERROR("Cannot get terminal attributes");
+  }
+  cfmakeraw(&options);
+  if (0 != tcsetattr(fd, TCSANOW, &options)) {
+    ERROR("Cannot set terminal attributes");
+  }
+
   nEntries++;
 
   return fd;
@@ -112,33 +120,47 @@ int ptyBytePipe_init(char* symlinkPath) {
 
 // Read and return a single byte from pty, or -1 if no data is available.
 int ptyBytePipe_getByte(int fd) {
-  int nRead;
+  int ret;
   char buf[1];
 
-  VERB("read()");
+  VERB("Enter fd=%d", fd);
+
   // https://linux.die.net/man/2/read
-  if (0 > (nRead = read(fd, buf, 1))) {
-    if ((EAGAIN != errno) && (EWOULDBLOCK != errno)) {
+  int nRead = read(fd, buf, 1);
+  if (0 > nRead) {
+    ret = -1;
+    VERB("  errno=%d", errno);
+
+    if ((EAGAIN == errno) || (EWOULDBLOCK == errno)) {
+      errno = 0;
+    } else if (EIO == errno) {
+      errno = 0;
+    } else {
       ERROR("Cannot read byte");
     }
+  } else {
+    VERB("  nRead=%d buf[0]=%c errno=%d", nRead, buf[0], errno);
+    ret = (1 == nRead) ? (int)buf[0] : -1;
   }
 
-  return (1 == nRead) ? (int)buf[0] : -1;
+
+  VERB("  Exit ret=%d", ret);
+  return ret;
 }
 
 // Write a single byte to pty.
-void ptyBytePipe_putByte(int fd, int b) {
+int ptyBytePipe_putByte(int fd, int b) {
   int nWritten;
   char buf[1] = { (char)(b & 0xff) };
 
-  VERB("write()");
-  if (0 > (nWritten = write(fd, buf, 1))) {
-    ERROR("Cannot write byte");
+  VERB("Enter fd=%d b=%d", fd, b);
+
+  nWritten = write(fd, buf, 1);
+
+  if (1 < nWritten) {
+    ERROR("nWritten=%d < 1", nWritten);
   }
 
-  if (1 != nWritten) {
-    ERROR("nWritten=%d instead of 1", nWritten);
-  }
-
-  return;
+  VERB("  Exit nWritten=%d", nWritten);
+  return nWritten;
 }

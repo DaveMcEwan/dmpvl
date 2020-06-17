@@ -3,12 +3,14 @@
 #define _PTYBYTEPIPE_H
 
 // https://man7.org/linux/man-pages/man7/feature_test_macros.7.html
+#define _DEFAULT_SOURCE
 #define _XOPEN_SOURCE 500
 #include <stdlib.h>
 
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <termios.h>
 
 #include "dmpvlCommon.h"
 
@@ -26,10 +28,10 @@ typedef struct ptyBytePipe_Entry
   bool valid;
 } ptyBytePipe_Entry;
 
-void  ptyBytePipe_verboseOn(void);
-void  ptyBytePipe_verboseOff(void);
-int   ptyBytePipe_init(char * ptySymlinkPath);
-int   ptyBytePipe_getByte(int fd);
-void  ptyBytePipe_putByte(int fd, int b);
+void ptyBytePipe_verboseOn(void);
+void ptyBytePipe_verboseOff(void);
+int ptyBytePipe_init(char * ptySymlinkPath);
+int ptyBytePipe_getByte(int fd);
+int ptyBytePipe_putByte(int fd, int b);
 
 #endif // _PTYBYTEPIPE_H
