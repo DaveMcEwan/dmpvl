@@ -26,4 +26,11 @@ VCD_IVERILOG :=
 
 DPI_OBJS := ptyBytePipe.o
 
+# Maximum runtime of 1 hour at 100Hz.
+N_CYCLES := 360000
+
+run: ./build/V$(TB)
+	./run.sh
+	@! grep -q ERROR ./build/run.log
+
 include ../common.mk
