@@ -19,10 +19,10 @@ module bpReg #(
   output wire         o_pktfifo_pop, // ready
   output wire         o_pktfifo_flush,
 
-  output wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]     o_reg_windowLengthExp,
+  output wire [$clog2(MAX_WINDOW_LENGTH_EXP+1)-1:0]   o_reg_windowLengthExp,
   output wire                                         o_reg_windowShape,
-  output wire [$clog2(MAX_SAMPLE_PERIOD_EXP)-1:0]     o_reg_samplePeriodExp,
-  output wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]     o_reg_sampleJitterExp,
+  output wire [$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]   o_reg_samplePeriodExp,
+  output wire [$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]   o_reg_sampleJitterExp,
 
   output wire [7:0]   o_jitterSeedByte,
   output wire         o_jitterSeedValid,
@@ -113,11 +113,11 @@ assign o_jitterSeedByte = i_bp_data;
 assign o_jitterSeedValid = doWriteReg && (addr_q == ADDR_PRNG_SEED);
 
 // Widths and value enumerations.
-localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP);
+localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
 localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
-localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP);
-localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP);
+localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
+localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 
 `dff_cg_srst(reg [WINDOW_LENGTH_EXP_W-1:0], windowLengthExp, i_clk, wr_windowLengthExp, i_rst, '0)
 `dff_cg_srst(reg,                           windowShape,     i_clk, wr_windowShape,     i_rst, '0)

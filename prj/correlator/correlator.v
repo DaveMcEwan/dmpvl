@@ -29,11 +29,11 @@ wire              pktfifo_o_empty;
 wire              pktfifo_i_pop;
 wire              pktfifo_i_flush;
 
-localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP);
+localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
 localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
-localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP);
-localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP);
+localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
+localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
 wire                              windowShape;
 wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
@@ -73,14 +73,14 @@ bpReg #(
   .o_bp_valid  (o_bp_valid),
   .i_bp_ready  (i_bp_ready)
 );
-wire [MAX_SAMPLE_PERIOD_EXP-1:0] samplePeriod = 1 << samplePeriodExp;
-wire [MAX_SAMPLE_JITTER_EXP-1:0] sampleJitter = 1 << sampleJitterExp;
+wire [MAX_SAMPLE_PERIOD_EXP:0] samplePeriod = 1 << samplePeriodExp;
+wire [MAX_SAMPLE_JITTER_EXP:0] sampleJitter = 1 << sampleJitterExp;
 
 wire sampleStrobe;
 wire [31:0] _unused_sampleStrobe_xoshiro128p;
 strobe #(
-  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP),
-  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP),
+  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP+1),
+  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP+1),
   .ENABLE_JITTER    (1)
 ) u_sampleStrobe (
   .i_clk              (i_clk),
@@ -142,15 +142,15 @@ localparam TIME_W = MAX_WINDOW_LENGTH_EXP;
 `dff_cg_srst(reg [TIME_W-1:0], t, i_clk, sampleStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
-wire [TIME_W-1:0] tDoWrapVec;
-wire [TIME_W-1:0] tScaledVec [TIME_W];
-generate for (i = 0; i < TIME_W; i=i+1) begin
+wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
+wire [TIME_W-1:0] tScaledVec [MAX_WINDOW_LENGTH_EXP+1];
+generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
   if (i == 0) begin
     assign tDoWrapVec[0] = (windowLengthExp == 0);
     assign tScaledVec[0] = '0;
   end else begin
     assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
-    assign tScaledVec[i] = t_q << i;
+    assign tScaledVec[i] = t_q << (TIME_W-i);
   end
 end endgenerate
 wire tDoWrap = |tDoWrapVec && sampleStrobe;
@@ -181,7 +181,7 @@ corrCountRect #(
 
 // NOTE: Window coefficient is 1 sample out of of phase in order to meet timing.
 // Therefore the X and Y inputs are also flopped.
-// As winNum is pushed into the fifo before any results this is okay.
+// Okay <-- winNum is pushed into the fifo before any results.
 `dff_cg_norst(reg, x, i_clk, i_cg)
 `dff_cg_norst(reg, y, i_clk, i_cg)
 always @* y_d = i_y;
