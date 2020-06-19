@@ -140,7 +140,7 @@ int ptyBytePipe_getByte(int fd) {
     }
   } else {
     VERB("  nRead=%d buf[0]=%c errno=%d", nRead, buf[0], errno);
-    ret = (1 == nRead) ? (int)buf[0] : -1;
+    ret = (1 == nRead) ? (int)buf[0] & 0xff : -1;
   }
 
 
