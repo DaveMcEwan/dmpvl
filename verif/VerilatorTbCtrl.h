@@ -101,7 +101,7 @@ public:
 
   // Call from loop {check, drive, tick}
   virtual void tick(void) {
-    VERB("Enter");
+    VERB("Enter tickcount=%d", m_tickcount);
 
     VERB("  posedge");
     m_dut->i_clk = 1;

@@ -16,7 +16,7 @@ echo "frequency_Hz 100" > tbCtrl
 echo "continue" > tbCtrl
 
 # Run the interactive application as a foreground process.
-../../prj/correlator/correlator.py --no-prog --device=ptyBytePipe_bp0
+../../prj/correlator/correlator.py --no-prog --device=ptyBytePipe_bp0 --verbose
 
 # Now that the application has finished, stop the tb.
 echo "quit" > tbCtrl
