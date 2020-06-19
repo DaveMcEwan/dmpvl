@@ -104,6 +104,12 @@ public:
   virtual void tick(void) {
     VERB("Enter tickcount=%d", m_tickcount);
 
+    struct timespec walltime;
+    if (0 != clock_gettime(CLOCK_REALTIME, &walltime)) {
+      ERROR("Cannot get walltime.");
+    }
+    VERB("  walltime={%lld %09ld}", walltime.tv_sec, walltime.tv_nsec);
+
     VERB("  posedge");
     m_dut->i_clk = 1;
     m_dut->eval();
