@@ -29,13 +29,18 @@ wire              pktfifo_o_empty;
 wire              pktfifo_i_pop;
 wire              pktfifo_i_flush;
 
-wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]    windowLengthExp;
-wire                                        windowShape;
-wire [$clog2(MAX_SAMPLE_PERIOD_EXP)-1:0]    samplePeriodExp;
-wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]    sampleJitterExp;
+localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP);
+localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
+localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
+localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP);
+localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP);
+wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
+wire                              windowShape;
+wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
+wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
 
-wire [7:0]                                  jitterSeedByte;
-wire                                        jitterSeedValid;
+wire [7:0]        jitterSeedByte;
+wire              jitterSeedValid;
 
 bpReg #(
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
@@ -57,8 +62,8 @@ bpReg #(
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
 
-  .o_jitterSeedByte       (jitterSeedByte),
-  .o_jitterSeedValid      (jitterSeedValid),
+  .o_jitterSeedByte   (jitterSeedByte),
+  .o_jitterSeedValid  (jitterSeedValid),
 
   .i_bp_data   (i_bp_data),
   .i_bp_valid  (i_bp_valid),

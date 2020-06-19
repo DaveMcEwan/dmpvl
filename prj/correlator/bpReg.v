@@ -14,18 +14,18 @@ module bpReg #(
   input wire          i_rst,
   input wire          i_cg,
 
+  input  wire [7:0]   i_pktfifo_data,
+  input  wire         i_pktfifo_empty, // !valid
+  output wire         o_pktfifo_pop, // ready
+  output wire         o_pktfifo_flush,
+
   output wire [$clog2(MAX_WINDOW_LENGTH_EXP)-1:0]     o_reg_windowLengthExp,
   output wire                                         o_reg_windowShape,
   output wire [$clog2(MAX_SAMPLE_PERIOD_EXP)-1:0]     o_reg_samplePeriodExp,
   output wire [$clog2(MAX_SAMPLE_JITTER_EXP)-1:0]     o_reg_sampleJitterExp,
 
-  output wire [7:0]                                   o_jitterSeedByte,
-  output wire                                         o_jitterSeedValid,
-
-  input  wire [7:0]   i_pktfifo_data,
-  input  wire         i_pktfifo_empty, // !valid
-  output wire         o_pktfifo_pop, // ready
-  output wire         o_pktfifo_flush,
+  output wire [7:0]   o_jitterSeedByte,
+  output wire         o_jitterSeedValid,
 
   input  wire [7:0]   i_bp_data,
   input  wire         i_bp_valid,
