@@ -23,7 +23,7 @@ public:
   int               m_ctrlfifo;
   bool              m_doDump;
   int               m_doStep;
-  uint64_t          m_tickPeriod_us;
+  struct timespec   m_tickRqtp;
 
   VerilatorTbCtrl(const char* vcdname) : m_trace(NULL), m_tickcount(0l) {
     VERB("Enter");
@@ -33,7 +33,8 @@ public:
     m_dut->i_rst = 1;
     m_doDump = true;
     m_doStep = 0;
-    m_tickPeriod_us = 100000; // 10Hz
+    m_tickRqtp.tv_sec = 0;
+    m_tickRqtp.tv_nsec = (long int)1E8; // 10Hz
     eval(); // Get our initial values set properly.
     opentrace(vcdname);
     openctrl();
@@ -147,8 +148,6 @@ public:
     char* ret_error     = (char*)(-1);
     char* ret_notReady  = (char*)(NULL);
 
-    //VERB("Enter");
-
     int nRead;
     char* ret;
 
@@ -158,7 +157,6 @@ public:
         // Cannot get char either because there's no data in fifo, or an error.
         bool blocking = (EAGAIN == errno) || (EWOULDBLOCK == errno);
         if (blocking) errno = 0;
-        //VERB("%s errno=%d", __func__, errno);
         ret = blocking ? ret_notReady : ret_error;
         break;
       }
@@ -167,7 +165,6 @@ public:
         ret = ret_notReady;
         break;
       }
-      //VERB("  nRead=%d buf[%d]=%c buf=%s", nRead, i, buf[i], buf);
 
       // Zero characters read, without causing an error.
       assert(1 == nRead);
@@ -177,7 +174,6 @@ public:
 
         buf[i] = '\0'; // Avoid comparisons with command separator.
         i = 0;
-        //VERB("  Got separator buf=%s", buf);
 
         ret = ret_line;
         break;
@@ -194,7 +190,6 @@ public:
       i++;
     }
 
-    //VERB("  Exit");
     return ret;
   }
 
@@ -206,33 +201,44 @@ public:
     return (0 == strncmp(cmp, str, TBCTRL_BUFLEN));
   }
 
+  virtual void setPeriodNsec(uint64_t period_ns) {
+    double frequency_Hz = 1E9/period_ns;
+
+    m_tickRqtp.tv_sec = (long int)period_ns / (uint64_t)1E9;
+    m_tickRqtp.tv_nsec = (long int)period_ns % (uint64_t)1E9;
+
+    VERB("  Frequency=%fHz Period=%dns", frequency_Hz, period_ns);
+  }
+
   virtual void run(int maxNCycles) {
     char* cmd;
 
     VERB("Enter");
 
     while (tickcount() < maxNCycles) {
-      // NOTE: Current implementation assumes tick() executes in zero time.
-      // TODO: Measure how many us have elapsed?
-      usleep(m_tickPeriod_us);
+      if (0 != clock_nanosleep(CLOCK_REALTIME, 0, &m_tickRqtp, NULL)) {
+        printf("errno=%d");
+        ERROR("sleep failed.");
+      }
 
       if (0 > (cmd = readCtrlLine())) {
-        ERROR("Reading from tbCtrl failed.");
+        ERROR("Reading from %s failed.", TBCTRL_FIFOPATH);
       } else if (cmd != NULL) {
-        //VERB("  cmd=%s", cmd);
+
+        // Value holders for sscanf.
+        double valueIEEE754;
+        unsigned int valueUInt;
 
         if        ( strEqualto("s", cmd) ||
                     strEqualto("step", cmd)) {
 
           m_doStep = 1;
 
-        } else if ( strStartswith("s ", cmd) ||
-                    strStartswith("step ", cmd) ) {
+        } else if ( (strStartswith("s ", cmd) ||
+                     strStartswith("step ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %d", &valueUInt))) {
 
-          unsigned int n;
-          assert(1 == sscanf(cmd, "%*s %d", &n));
-
-          m_doStep = (n > 1) ? n : 1;
+          m_doStep = (valueUInt > 1) ? valueUInt : 1;
 
         } else if ( strEqualto("c", cmd) ||
                     strEqualto("continue", cmd) ) {
@@ -252,36 +258,49 @@ public:
 
           m_doDump = false;
 
-        /*
-        } else if ( strStartswith("t ", cmd) ||
-                    strStartswith("timebase ", cmd) ) {
+        } else if ( (strStartswith("f ", cmd) ||
+                     strStartswith("f_Hz ", cmd) ||
+                     strStartswith("frequency_Hz ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %lf", &valueIEEE754)) ) {
 
-          // TODO: Get value in {Z, absolute, relative}
-        */
+          setPeriodNsec((uint64_t)(1E9 / valueIEEE754));
 
-        } else if ( strStartswith("f ", cmd) ||
-                    strStartswith("frequency_Hz ", cmd) ) {
+        } else if ( (strStartswith("f_kHz ", cmd) ||
+                     strStartswith("frequency_kHz ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %lf", &valueIEEE754)) ) {
 
-          // Get value as IEEE754 double-precision float Hertz.
-          double f;
-          assert(1 == sscanf(cmd, "%*s %lf", &f));
+          setPeriodNsec((uint64_t)(1E6 / valueIEEE754));
 
-          unsigned int p = (unsigned int)(1000000.0/f);
+        } else if ( (strStartswith("f_MHz ", cmd) ||
+                     strStartswith("frequency_MHz ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %lf", &valueIEEE754)) ) {
 
-          m_tickPeriod_us = p;
-          VERB("  Frequency=%fHz Period=%dus", f, p);
+          setPeriodNsec((uint64_t)(1E3 / valueIEEE754));
 
-        } else if ( strStartswith("p ", cmd) ||
-                  strStartswith("period_us ", cmd) ) {
+        } else if ( (strStartswith("p ", cmd) ||
+                     strStartswith("p_ns ", cmd) ||
+                     strStartswith("period_ns ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %d", &valueUInt))) {
 
-          // Get value as unsigned integer microseconds.
-          unsigned int p;
-          assert(1 == sscanf(cmd, "%*s %d", &p));
+          setPeriodNsec((uint64_t)(1E0 * valueUInt));
 
-          double f = 1000000.0/p;
+        } else if ( (strStartswith("p_us ", cmd) ||
+                     strStartswith("period_us ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %d", &valueUInt))) {
 
-          m_tickPeriod_us = p;
-          VERB("  Frequency=%fHz Period=%dus", f, p);
+          setPeriodNsec((uint64_t)(1E3 * valueUInt));
+
+        } else if ( (strStartswith("p_ms ", cmd) ||
+                     strStartswith("period_ms ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %d", &valueUInt))) {
+
+          setPeriodNsec((uint64_t)(1E6 * valueUInt));
+
+        } else if ( (strStartswith("p_s ", cmd) ||
+                     strStartswith("period_s ", cmd)) &&
+                    (1 == sscanf(cmd, "%*s %d", &valueUInt))) {
+
+          setPeriodNsec((uint64_t)(1E9 * valueUInt));
 
         } else if ( strEqualto("r", cmd) ||
                     strEqualto("reset", cmd) ) {
@@ -292,6 +311,43 @@ public:
                     strEqualto("quit", cmd) ) {
 
           break;
+
+        } else if ( strEqualto("h", cmd) ||
+                    strEqualto("help", cmd) ) {
+
+ VERB("+-HELP----------------------------------------------------------------");
+ VERB("| Each line is a command to the testbench.");
+ VERB("| Runloop periodically (using walltime) tries to read command from");
+ VERB("| %s then, evaluates one clock tick.", TBCTRL_FIFOPATH);
+ VERB("| Available commands:");
+ VERB("|    help/h");
+ VERB("|        Display this message.");
+ VERB("|    quit/q");
+ VERB("|        Break out of runloop to quit the testbench.");
+ VERB("|    frequency_Hz/f_Hz/f  <positive real>");
+ VERB("|    frequency_kHz/f_kHz  <positive real>");
+ VERB("|    frequency_MHz/f_MHz  <positive real>");
+ VERB("|    period_ns/p_ns/p     <non-negative integer>");
+ VERB("|    period_us/p_us       <non-negative integer>");
+ VERB("|    period_ms/p_ms       <non-negative integer>");
+ VERB("|    period_s/p_s         <non-negative integer>");
+ VERB("|        Set runloop period.");
+ VERB("|    step/s [positive integer]");
+ VERB("|        Evaluate a N clock ticks, where N defaults to 1.");
+ VERB("|    continue/c");
+ VERB("|        Evaluate clock ticks indefinitely.");
+ VERB("|    discontinue/d");
+ VERB("|        Stop evaluating clock ticks indefinitely.");
+ VERB("|    reset/r");
+ VERB("|        Perform reset sequence with i_clk,i_rst.");
+ VERB("|    dumpoff");
+ VERB("|        Disable VCD dumping.");
+ VERB("|    dumpon");
+ VERB("|        Re-enable VCD dumping.");
+ VERB("+---------------------------------------------------------------------");
+
+        } else {
+          VERB("  Unknown command \"%s\"", cmd);
         }
 
       }
