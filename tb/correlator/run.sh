@@ -2,7 +2,7 @@
 # Start the tb as a background process which creates the fifo "tbCtrl" then
 # listens to it for commands.
 ./build/Vcorrelator_tb > ./build/run.log &
-sleep 2
+sleep 1
 
 # Initialize the design to look like it has come out of reset for a few cycles.
 echo "reset" > tbCtrl
@@ -19,5 +19,6 @@ echo "continue" > tbCtrl
 ../../prj/correlator/correlator.py --no-prog --device=ptyBytePipe_bp0 --verbose
 
 # Now that the application has finished, stop the tb.
+echo "step 10" > tbCtrl
 echo "quit" > tbCtrl
 
