@@ -677,6 +677,16 @@ argparser.add_argument("--init-sampleJitterExp",
     default=0,
     help="sampleJitter < 2**sampleJitterExp  (samples)")
 
+argparser.add_argument("--prng-seed",
+    type=int,
+    default=123,
+    help="Seed for xoshiro128+ PRNG used for sampling jitter.")
+
+argparser.add_argument("-o", "--output",
+    type=str,
+    default="correlator.out",
+    help="Binary file to record data from pktfifo.")
+
 # }}} argparser
 
 def main(args) -> int: # {{{
@@ -773,7 +783,10 @@ def main(args) -> int: # {{{
         assert all(initRegsRW[k] == v for k,v in hwRegsRW.items()), hwRegsRW
         verb("Done")
 
-        # TODO: Seed PRNG.
+        seed:int = abs(args.prng_seed)
+        verb("Initializing PRNG (xoshiro128+ %s)..." % hex(seed), end='')
+        wr({HwReg.PrngSeed: seed})
+        verb("Done")
 
         try:
             verb("Starting GUI (curses)...")
