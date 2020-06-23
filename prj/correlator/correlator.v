@@ -76,7 +76,11 @@ bpReg #(
 
 wire [MAX_SAMPLE_PERIOD_EXP:0] ctrlPeriodM1_wide = (1 << samplePeriodExp) - 1;
 wire [MAX_SAMPLE_PERIOD_EXP-1:0] ctrlPeriodM1 = ctrlPeriodM1_wide[0 +: MAX_SAMPLE_PERIOD_EXP];
-wire [MAX_SAMPLE_JITTER_EXP-1:0] ctrlJitter = 1 << sampleJitterExp;
+
+wire [MAX_SAMPLE_JITTER_EXP-1:0] ctrlJitter;
+generate for (i = 0; i < MAX_SAMPLE_JITTER_EXP; i=i+1) begin
+  assign ctrlJitter[i] = (sampleJitterExp == (i+1));
+end endgenerate
 
 wire sampleStrobe;
 wire [31:0] _unused_sampleStrobe_xoshiro128p;

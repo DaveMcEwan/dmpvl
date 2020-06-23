@@ -50,16 +50,24 @@ end else begin
   assign jitterThisCycle = 1'b0;
 end endgenerate
 
-`dff_nocg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk)
+// -0 <-- Extended period
+// -1 <-- Exact period
+// -2 <-- Shortened period
+wire extendNotShorten = o_jitterPrng[31-CTRL_JITTER_W];
+wire jitterExtend = jitterThisCycle && extendNotShorten;
+wire jitterShorten = jitterThisCycle && !extendNotShorten;
+`dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, !jitterExtend)
 always @*
   if (downCounter_q == '0)
-    downCounter_d = jitterThisCycle ? '0 : i_ctrlPeriodM1;
+    downCounter_d = i_ctrlPeriodM1;
+  else if (jitterShorten && (downCounter_q != 'd1))
+    downCounter_d = downCounter_q - 'd2;
   else
     downCounter_d = downCounter_q - 'd1;
 
 // Pulse output high only when downcounter restarts.
 `dff_cg_srst(reg, strobe, i_clk, i_cg, i_rst, 1'b0)
-always @* strobe_d = (downCounter_q == '0) && !jitterThisCycle;
+always @* strobe_d = (downCounter_q == '0) && !jitterExtend;
 assign o_strobe = strobe_q;
 
 endmodule
