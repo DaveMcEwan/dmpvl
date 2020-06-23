@@ -576,16 +576,22 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
         else:
             pass
 
+        actionIsModify = keyAction in (KeyAction.ModifyDecrease,
+                                       KeyAction.ModifyIncrease)
+
+        isInteractive = (guiRegs_[GuiReg.UpdateMode] == UpdateMode.Interactive)
+        isBatch = (guiRegs_[GuiReg.UpdateMode] == UpdateMode.Batch)
+        assert isBatch or isInteractive
+
         # Send updates to hardware and readback to ensure display matches the
         # actual values reported from hardware.
-        if guiRegs_[GuiReg.UpdateMode] == UpdateMode.Interactive or \
+        if (isInteractive and actionIsModify) or \
            keyAction == KeyAction.SendUpdate:
             _ = wr(hwRegs_)
             hwRegs_:Dict[HwReg, Any] = rd(hwRegs_.keys())
             guiRegs_.update(hwRegsToGuiRegs(hwRegs_))
             outstanding_ = False
-        elif guiRegs_[GuiReg.UpdateMode] == UpdateMode.Batch and \
-           keyAction in (KeyAction.ModifyDecrease, KeyAction.ModifyIncrease):
+        elif isBatch and actionIsModify:
             outstanding_ = True
         else:
             pass
