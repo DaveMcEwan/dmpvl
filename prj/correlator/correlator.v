@@ -73,22 +73,24 @@ bpReg #(
   .o_bp_valid  (o_bp_valid),
   .i_bp_ready  (i_bp_ready)
 );
-wire [MAX_SAMPLE_PERIOD_EXP:0] samplePeriod = 1 << samplePeriodExp;
-wire [MAX_SAMPLE_JITTER_EXP:0] sampleJitter = 1 << sampleJitterExp;
+
+wire [MAX_SAMPLE_PERIOD_EXP:0] ctrlPeriodM1_wide = (1 << samplePeriodExp) - 1;
+wire [MAX_SAMPLE_PERIOD_EXP-1:0] ctrlPeriodM1 = ctrlPeriodM1_wide[0 +: MAX_SAMPLE_PERIOD_EXP];
+wire [MAX_SAMPLE_JITTER_EXP-1:0] ctrlJitter = 1 << sampleJitterExp;
 
 wire sampleStrobe;
 wire [31:0] _unused_sampleStrobe_xoshiro128p;
 strobe #(
-  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP+1),
-  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP+1),
+  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP),
+  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP),
   .ENABLE_JITTER    (1)
 ) u_sampleStrobe (
   .i_clk              (i_clk),
   .i_rst              (i_rst),
   .i_cg               (i_cg),
 
-  .i_ctrlPeriod       (samplePeriod),
-  .i_ctrlJitter       (sampleJitter),
+  .i_ctrlPeriodM1     (ctrlPeriodM1),
+  .i_ctrlJitter       (ctrlJitter),
 
   .i_jitterSeedByte   (jitterSeedByte),
   .i_jitterSeedValid  (jitterSeedValid),

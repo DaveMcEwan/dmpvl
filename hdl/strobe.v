@@ -11,7 +11,7 @@ module strobe #(
   input  wire                       i_rst,
   input  wire                       i_cg,
 
-  input  wire [CTRL_PERIOD_W-1:0]   i_ctrlPeriod,
+  input  wire [CTRL_PERIOD_W-1:0]   i_ctrlPeriodM1, // Period minus 1.
   input  wire [CTRL_JITTER_W-1:0]   i_ctrlJitter, // 0->NonJitter
 
   input  wire [7:0]                 i_jitterSeedByte,
@@ -53,13 +53,13 @@ end endgenerate
 `dff_nocg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk)
 always @*
   if (downCounter_q == '0)
-    downCounter_d = jitterThisCycle ? '0 : i_ctrlPeriod;
+    downCounter_d = jitterThisCycle ? '0 : i_ctrlPeriodM1;
   else
     downCounter_d = downCounter_q - 'd1;
 
 // Pulse output high only when downcounter restarts.
 `dff_cg_srst(reg, strobe, i_clk, i_cg, i_rst, 1'b0)
-always @* strobe_d = !strobe_q && (downCounter_q == '0) && !jitterThisCycle;
+always @* strobe_d = (downCounter_q == '0) && !jitterThisCycle;
 assign o_strobe = strobe_q;
 
 endmodule
