@@ -60,7 +60,6 @@ localparam ADDR_W = $clog2(N_LOC);
 `dff_cg_srst(reg, rd, i_clk, i_cg, i_rst, '0) // 1b FSM
 `dff_cg_norst(reg [6:0], addr, i_clk, i_cg)
 `dff_cg_srst(reg [7:0], burst, i_clk, i_cg, i_rst, '0) // 8b downcounter
-`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rd_d)
 
 // IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
@@ -103,7 +102,7 @@ always @*
   else                burst_d = burst_q;
 
 // Write-enable for RW regs.
-wire doWriteReg = i_cg && wrClr && addrInRange;
+wire doWriteReg = i_cg && doWrite;
 wire wr_windowLengthExp = doWriteReg && (addr_q == ADDR_WINDOW_LENGTH_EXP);
 wire wr_windowShape     = doWriteReg && (addr_q == ADDR_WINDOW_SHAPE);
 wire wr_samplePeriodExp = doWriteReg && (addr_q == ADDR_SAMPLE_PERIOD_EXP);
@@ -134,9 +133,10 @@ assign o_reg_windowShape     = windowShape_q;
 assign o_reg_samplePeriodExp = samplePeriodExp_q;
 assign o_reg_sampleJitterExp = sampleJitterExp_q;
 
+`dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rd_d)
 always @*
   if (addrInRange)
-    case (addr_q)
+    case (rdAddr)
       ADDR_PKTFIFO_RD:              rdData_d = i_pktfifo_data;
 
       // RO static

@@ -39,7 +39,8 @@ import serial
 
 from dmppl.base import run, verb, dbg
 from dmppl.bytePipe import BpAddrs, BpAddrValues, BpMem, \
-    bpReadSequential, bpWriteSequential, bpPrintMem, bpAddrValuesToMem
+    bpReadSequential, bpWriteSequential, bpPrintMem, bpAddrValuesToMem, \
+    bpWriteAddr
 from dmppl.color import CursesWindow, cursesInitPairs, \
     whiteBlue, whiteRed, greenBlack, yellowBlack
 
@@ -679,7 +680,7 @@ argparser.add_argument("--init-sampleJitterExp",
 
 argparser.add_argument("--prng-seed",
     type=int,
-    default=123,
+    default=0xacce55ed,
     help="Seed for xoshiro128+ PRNG used for sampling jitter.")
 
 argparser.add_argument("-o", "--output",
@@ -785,7 +786,13 @@ def main(args) -> int: # {{{
 
         seed:int = abs(args.prng_seed)
         verb("Initializing PRNG (xoshiro128+ %s)..." % hex(seed), end='')
-        wr({HwReg.PrngSeed: seed})
+        bpWriteAddr(device, HwReg.PrngSeed.value, 16, [0]*16)
+        bpWriteAddr(device, HwReg.PrngSeed.value, 4, [
+            (seed >> 3*8) & 0xff,
+            (seed >> 2*8) & 0xff,
+            (seed >> 1*8) & 0xff,
+            (seed >> 0*8) & 0xff,
+        ])
         verb("Done")
 
         try:
