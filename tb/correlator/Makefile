@@ -21,6 +21,9 @@ V_INCDIRS := ../../prj/correlator
 CC_SRC := \
 	$(TB).cc
 
+# correlator_tb.u_correlator.u_sampleStrobe.u_prngJitter
+VERILATOR_TRACE_DEPTH := 4
+
 # NOTE: Verilator only - no support for Icarus yet.
 VCD_IVERILOG :=
 
