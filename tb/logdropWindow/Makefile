@@ -4,6 +4,7 @@ TB := logdropWindow_tb
 V_SRC := \
 	../../hdl/fxcs.v \
 	../../hdl/onehotIdx.v \
+	../../hdl/mssbIdx.v \
 	../../hdl/logdropWindow.v \
 	$(TB).v
 

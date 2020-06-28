@@ -92,6 +92,8 @@ def plot(s, js, CMFs, PMFs): # {{{
     plt.figure(figsize=(8, 5))
     #plt.title("PMF of #cycles in sample period")
     #plt.title("j = i_ctrlJitter/2**CTRL_JITTER_W; i_ctrlPeriodM1 = %d" % (s-1))
+    plt.xlabel("#cycles")
+    plt.ylabel("Probability")
 
     for j, pmf in zip(js, PMFs):
         plt.plot(pmf, label="j=%0.1f" % j)
@@ -103,8 +105,10 @@ def plot(s, js, CMFs, PMFs): # {{{
     plt.close()
 
     # Gaussian approximation
-    mu = s
     plt.figure(figsize=(8, 5))
+    plt.xlabel("#cycles")
+    plt.ylabel("Probability")
+    mu = s
     for j in js:
         sigma = sqrt(s * j)
         N = [gaussianPDF(x, mu, sigma) for x in pltRange]

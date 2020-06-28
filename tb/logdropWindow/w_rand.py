@@ -14,7 +14,7 @@ from math import *
 n = 256 # WINLEN
 figsize = (16,10)
 
-# {{{ PDF
+# {{{ PMF
 p256 = np.empty(256)
 p256[0:2] = 9
 p256[2:4] = 7
@@ -85,15 +85,15 @@ def plotManual(ys, nm):
     plt.xlim(0, 255)
     plt.xlabel("Byte value as unsigned integer")
     plt.ylim(0, 1.05)
-    plt.yticks([0, 1])
-    plt.ylabel("Proportion", rotation="vertical")
+    plt.yticks([])
+    plt.ylabel("Probability")
     plt.legend()
     plt.savefig(nm + ".pdf", bbox_inches="tight")
     plt.close()
 
-plotManual(ys, "logdropWindow_PDF")
+plotManual(ys, "logdropWindow_PMF")
 
-# }}} PDF
+# }}} PMF
 
 
 def plot(y, nm):
