@@ -44,41 +44,13 @@ from dmppl.bytePipe import BpAddrs, BpAddrValues, BpMem, \
 from dmppl.color import CursesWindow, cursesInitPairs, \
     whiteBlue, whiteRed, greenBlack, yellowBlack
 
-__version__ = "0.1.0"
+from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
+    getBitfilePath, getDevicePath, uploadBitfile, \
+    HwReg, hwReadRegs, hwWriteRegs, \
+    calc_bitsPerWindow, \
+    argparse_WindowLengthExp, argparse_WindowShape, \
+    argparse_SamplePeriodExp, argparse_SampleJitterExp
 
-maxSampleRate_kHz:int = 48000
-
-# NOTE: Must match addresses in bpReg.v
-@enum.unique
-class HwReg(enum.Enum): # {{{
-    # Rfifo
-    PktfifoRd               = 1
-
-    # WO
-    PktfifoFlush            = 2
-    PrngSeed                = 3
-
-    # Static, RO
-    PktfifoDepth            = 4
-    MaxWindowLengthExp      = 5
-    LogdropPrecision        = 6
-    MaxSamplePeriodExp      = 7
-    MaxSampleJitterExp      = 8
-
-    # Dynamic, RW
-    WindowLengthExp         = 9
-    WindowShape             = 10
-    SamplePeriodExp         = 11
-    SampleJitterExp         = 12
-
-# }}} Enum HwReg
-mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
-
-@enum.unique
-class WindowShape(enum.Enum): # {{{
-    Rectangular = 0
-    Logdrop     = 1
-# }}} class WindowShape
 
 @enum.unique
 class UpdateMode(enum.Enum): # {{{
@@ -87,7 +59,7 @@ class UpdateMode(enum.Enum): # {{{
 # }}} class UpdateMode
 
 @enum.unique
-class GuiReg(enum.Enum): # {{{
+class TuiReg(enum.Enum): # {{{
     # Software-only
     UpdateMode      = enum.auto()
 
@@ -96,7 +68,7 @@ class GuiReg(enum.Enum): # {{{
     WindowShape     = enum.auto()
     SampleRate      = enum.auto()
     SampleJitter    = enum.auto()
-# }}} Enum GuiReg
+# }}} Enum TuiReg
 
 @enum.unique
 class KeyAction(enum.Enum): # {{{
@@ -108,111 +80,31 @@ class KeyAction(enum.Enum): # {{{
     Quit                = enum.auto()
 # }}} Enum KeyAction
 
-listGuiReg:List[GuiReg] = list(r for i,r in enumerate(GuiReg))
+listTuiReg:List[TuiReg] = list(r for i,r in enumerate(TuiReg))
 
 # NOTE: Some values are carefully updated with string substitution on the
 # initial read of the RO registers.
-mapGuiRegToDomain_:Dict[GuiReg, str] = { # {{{
-    # Controls no hardware register (GUI state only).
-    GuiReg.UpdateMode: "∊ {%s}" % ", ".join(m.name for m in UpdateMode),
+mapTuiRegToDomain_:Dict[TuiReg, str] = { # {{{
+    # Controls no hardware register (TUI state only).
+    TuiReg.UpdateMode: "∊ {%s}" % ", ".join(m.name for m in UpdateMode),
 
     # Controls register "WindowLengthExp".
     # Domain defined by HwReg.MaxWindowLengthExp
-    GuiReg.WindowLength: "(samples) = 2**w; w ∊ ℤ ∩ [3, %d]",
+    TuiReg.WindowLength: "(samples) = 2**w; w ∊ ℤ ∩ [3, %d]",
 
     # Controls register "WindowShape".
-    GuiReg.WindowShape: "∊ {%s}" % ", ".join(s.name for s in WindowShape),
+    TuiReg.WindowShape: "∊ {%s}" % ", ".join(s.name for s in WindowShape),
 
     # Controls register "SamplePeriodExp".
     # Domain defined by HwReg.MaxSamplePeriodExp
-    GuiReg.SampleRate: "(kHz) = %d/2**r; r ∊ ℤ ∩ [0, %%d]" % maxSampleRate_kHz,
+    TuiReg.SampleRate: "(kHz) = %d/2**r; r ∊ ℤ ∩ [0, %%d]" % maxSampleRate_kHz,
 
     # Controls register "SampleJitterExp".
     # Domain defined by HwReg.MaxSampleJitterExp
-    GuiReg.SampleJitter: "(samples) < 2**j; j ∊ ℤ ∩ [0, %d)",
+    TuiReg.SampleJitter: "(samples) < 2**j; j ∊ ℤ ∩ [0, %d)",
 } # }}}
 
-def getBitfilePath(argBitfile) -> str: # {{{
-
-    envBitfile = os.environ.get("CORRELATOR_BITFILE")
-    orderedBitfiles = sorted(glob.glob("correlator.*.bin"))
-
-    if argBitfile is not None:
-        ret = argBitfile
-    elif envBitfile is not None:
-        ret = envBitfile
-    elif len(orderedBitfiles) > 0:
-        ret = orderedBitfiles[-1]
-    else:
-        ret = os.sep.join((os.path.dirname(os.path.abspath(__file__)),
-                           "correlator.bin"))
-
-    return ret
-# }}} def getBitfilePath
-
-def getDevicePath(argDevice) -> str: # {{{
-
-    envDevice = os.environ.get("CORRELATOR_DEVICE")
-    orderedDevices = sorted(glob.glob("/dev/ttyACM*"))
-
-    if argDevice is not None:
-        ret = argDevice
-    elif envDevice is not None:
-        ret = envDevice
-    elif len(orderedDevices) > 0:
-        ret = orderedDevices[-1]
-    else:
-        raise OSError("Device not found. Use --help for details.")
-
-    return ret
-# }}} def getDevicePath
-
-def uploadBitfile(bitfile): # {{{
-
-    p = subprocess.run(("tinyprog", "-p", bitfile))
-
-    return p.returncode
-# }}} def uploadBitfile
-
-def hwReadRegs(rd, keys:Iterable[int]) -> Dict[HwReg, Any]: # {{{
-    values = rd([k.value for k in keys])
-    assert len(keys) == len(values)
-
-    ret_ = {}
-    for k,(a,v) in zip(keys, values):
-        assert isinstance(k, HwReg), k
-        assert isinstance(a, int), a
-        assert isinstance(v, int), v
-        assert a == k.value, (a, k.value)
-
-        if HwReg.WindowShape == k:
-            ret_[k] = WindowShape.Rectangular \
-                if 0 == v else \
-                WindowShape.Logdrop
-        else:
-            ret_[k] = v
-
-    return ret_
-# }}} def hwReadRegs
-
-def hwWriteRegs(wr, keyValues:Dict[HwReg, Any]): # {{{
-
-    addrValues_ = []
-    for k,v in keyValues.items():
-        addr = k.value
-
-        if isinstance(v, enum.Enum):
-            addrValues_.append((addr, v.value))
-        else:
-            assert isinstance(v, int), v
-            addrValues_.append((addr, v))
-
-    ret = wr(addrValues_)
-
-    return ret
-# }}} def hwWriteRegs
-
-def hwRegsToGuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[GuiReg, Any]: # {{{
+def hwRegsToTuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[TuiReg, Any]: # {{{
 
     windowLength:int = 2**hwRegs[HwReg.WindowLengthExp]
 
@@ -221,45 +113,45 @@ def hwRegsToGuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[GuiReg, Any]: # {{{
     sampleJitter:Optional[int] = 2**hwRegs[HwReg.SampleJitterExp]
 
     ret = {
-        GuiReg.WindowLength: windowLength,
-        GuiReg.WindowShape:  hwRegs[HwReg.WindowShape],
-        GuiReg.SampleRate:   sampleRate,
-        GuiReg.SampleJitter: sampleJitter,
+        TuiReg.WindowLength: windowLength,
+        TuiReg.WindowShape:  hwRegs[HwReg.WindowShape],
+        TuiReg.SampleRate:   sampleRate,
+        TuiReg.SampleJitter: sampleJitter,
     }
     return ret
-# }}} def hwRegsToGuiRegs
+# }}} def hwRegsToTuiRegs
 
 def updateRegs(selectIdx:int,
-               guiRegs_:Dict[GuiReg, Any],
+               tuiRegs_:Dict[TuiReg, Any],
                hwRegs_:Dict[HwReg, Any],
                decrNotIncr:bool) -> None: # {{{
-    '''Update state in guiRegs_ and hwRegs_ in response to keypress.
+    '''Update state in tuiRegs_ and hwRegs_ in response to keypress.
     '''
-    gr:GuiReg = listGuiReg[selectIdx]
+    gr:TuiReg = listTuiReg[selectIdx]
 
-    if GuiReg.UpdateMode == gr:
-        guiRegs_[GuiReg.UpdateMode] = UpdateMode.Interactive \
-            if UpdateMode.Batch == guiRegs_[GuiReg.UpdateMode] else \
+    if TuiReg.UpdateMode == gr:
+        tuiRegs_[TuiReg.UpdateMode] = UpdateMode.Interactive \
+            if UpdateMode.Batch == tuiRegs_[TuiReg.UpdateMode] else \
             UpdateMode.Batch
 
-    elif GuiReg.WindowLength == gr:
+    elif TuiReg.WindowLength == gr:
         n = hwRegs_[HwReg.WindowLengthExp]
         m = (n-1) if decrNotIncr else (n+1)
         lo, hi = 3, hwRegs_[HwReg.MaxWindowLengthExp]
         hwRegs_[HwReg.WindowLengthExp] = max(lo, min(m, hi))
 
-    elif GuiReg.WindowShape == gr:
+    elif TuiReg.WindowShape == gr:
         hwRegs_[HwReg.WindowShape] = WindowShape.Rectangular \
             if WindowShape.Logdrop == hwRegs_[HwReg.WindowShape] else \
             WindowShape.Logdrop
 
-    elif GuiReg.SampleRate == gr:
+    elif TuiReg.SampleRate == gr:
         n = hwRegs_[HwReg.SamplePeriodExp]
         m = (n+1) if decrNotIncr else (n-1)
         lo, hi = 0, hwRegs_[HwReg.MaxSamplePeriodExp]
         hwRegs_[HwReg.SamplePeriodExp] = max(lo, min(m, hi))
 
-    elif GuiReg.SampleJitter == gr:
+    elif TuiReg.SampleJitter == gr:
         n = hwRegs_[HwReg.SampleJitterExp]
         m = (n-1) if decrNotIncr else (n+1)
         lo, hi = 0, hwRegs_[HwReg.MaxSampleJitterExp]-1
@@ -268,35 +160,25 @@ def updateRegs(selectIdx:int,
     else:
         pass
 
-    guiRegs_.update(hwRegsToGuiRegs(hwRegs_))
+    tuiRegs_.update(hwRegsToTuiRegs(hwRegs_))
 
     return
 # }}} def updateRegs
 
-def calc_bitsPerWindow(hwRegs:Dict[HwReg, Any]) -> int: # {{{
+def calc_windowsPerSecond(tuiRegs:Dict[TuiReg, Any]) -> float: # {{{
 
-    precision:int = hwRegs[HwReg.LogdropPrecision] # bits
-    nInputs:int = 2 # unitless
-
-    ret:int = precision * (nInputs**2 - nInputs)
-
-    return ret
-# }}} def calc_bitsPerWindow
-
-def calc_windowsPerSecond(guiRegs:Dict[GuiReg, Any]) -> float: # {{{
-
-    sampleRate:float = guiRegs[GuiReg.SampleRate] # kHz
-    windowLength:int = guiRegs[GuiReg.WindowLength] # samples
+    sampleRate:float = tuiRegs[TuiReg.SampleRate] # kHz
+    windowLength:int = tuiRegs[TuiReg.WindowLength] # samples
 
     ret:float = 1000 * sampleRate / windowLength
 
     return ret
 # }}} def calc_windowsPerSecond
 
-def calc_bitRate(guiRegs:Dict[GuiReg, Any], hwRegs:Dict[HwReg, Any]) -> float: # {{{
+def calc_bitRate(tuiRegs:Dict[TuiReg, Any], hwRegs:Dict[HwReg, Any]) -> float: # {{{
 
     bitsPerWindow:int = calc_bitsPerWindow(hwRegs)
-    windowsPerSecond:float = calc_windowsPerSecond(guiRegs)
+    windowsPerSecond:float = calc_windowsPerSecond(tuiRegs)
 
     ret:float = bitsPerWindow * windowsPerSecond
 
@@ -384,7 +266,7 @@ class InputWindow(CursesWindow): # {{{
     |labelN     valueN     domainN|
     +----------- ... -------------+
     '''
-    def draw(self, guiRegs:Dict[GuiReg, Any],
+    def draw(self, tuiRegs:Dict[TuiReg, Any],
                    selectIdx:int=0,
                    outstanding:bool=False) -> None: # {{{
         '''Draw all the parameter lines.
@@ -392,17 +274,17 @@ class InputWindow(CursesWindow): # {{{
         <label> ... <value> ... <domain>
         '''
 
-        maxLenName:int = max(len(r.name) for r in GuiReg)
+        maxLenName:int = max(len(r.name) for r in TuiReg)
 
         self.win.clear()
 
-        for i,(r,d) in enumerate(mapGuiRegToDomain_.items()):
+        for i,(r,d) in enumerate(mapTuiRegToDomain_.items()):
             nm:str = r.name
 
             left:str = ' '*(maxLenName - len(nm)) + nm + " = "
             right:str = d
 
-            v = guiRegs[r]
+            v = tuiRegs[r]
             if isinstance(v, str):
               mid = v
             elif isinstance(v, bool):
@@ -446,7 +328,7 @@ class InfoWindow(CursesWindow): # {{{
     |labelN     valueN     domainN|
     +----------- ... -------------+
     '''
-    def draw(self, guiRegs:Dict[GuiReg, Any], hwRegs:Dict[HwReg, Any]) -> None: # {{{
+    def draw(self, tuiRegs:Dict[TuiReg, Any], hwRegs:Dict[HwReg, Any]) -> None: # {{{
         '''Draw all the parameter lines.
 
         <label> ... <value> ... <domain>
@@ -456,10 +338,10 @@ class InfoWindow(CursesWindow): # {{{
              calc_bitsPerWindow(hwRegs),
              "= precision * nInputs * (nInputs-1)"),
             ("windows/s",
-             calc_windowsPerSecond(guiRegs),
+             calc_windowsPerSecond(tuiRegs),
              "= sampleRate / windowLength"),
             ("bits/s",
-             calc_bitRate(guiRegs, hwRegs),
+             calc_bitRate(tuiRegs, hwRegs),
              "= bits/window * windows/s"),
         )
 
@@ -499,7 +381,7 @@ class InfoWindow(CursesWindow): # {{{
     # }}} def draw
 # }}} class InfoWindow
 
-def gui(scr, deviceName, rd, wr, hwRegs): # {{{
+def tui(scr, deviceName, rd, wr, hwRegs): # {{{
     '''
     Window objects:
     - scr: All available screen space.
@@ -510,9 +392,9 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     Each of the window objects is refreshed individually.
     '''
 
-    guiRegs_:Dict[GuiReg, Any] = hwRegsToGuiRegs(hwRegs)
-    guiRegs_.update({GuiReg.UpdateMode: UpdateMode.Batch})
-    assert all(k in guiRegs_.keys() for k in GuiReg)
+    tuiRegs_:Dict[TuiReg, Any] = hwRegsToTuiRegs(hwRegs)
+    tuiRegs_.update({TuiReg.UpdateMode: UpdateMode.Batch})
+    assert all(k in tuiRegs_.keys() for k in TuiReg)
     selectIdx_ = 0
     outstanding_ = False
     hwRegs_ = hwRegs
@@ -521,7 +403,7 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     cursesInitPairs() # Initialize colors
 
     full:CursesWindow = FullWindow(scr,
-        nLines=len(GuiReg)+10, nChars=80,
+        nLines=len(TuiReg)+10, nChars=80,
         colorPair=whiteBlue)
     full.win.box()
     full.drawTitle(deviceName, hwRegs)
@@ -529,18 +411,18 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
     full.win.refresh()
 
     inpt:CursesWindow = InputWindow(full.win,
-        nLines=len(GuiReg)+2, nChars=full.nChars-2,
+        nLines=len(TuiReg)+2, nChars=full.nChars-2,
         colorPair=greenBlack,
         beginY=full.lineTop+1, beginX=1)
-    inpt.draw(guiRegs_)
+    inpt.draw(tuiRegs_)
     inpt.win.keypad(True)
     inpt.win.refresh()
 
     info:CursesWindow = InfoWindow(full.win,
         nLines=3+2, nChars=full.nChars-2,
         colorPair=yellowBlack,
-        beginY=full.lineTop+len(GuiReg)+2, beginX=1)
-    info.draw(guiRegs_, hwRegs_)
+        beginY=full.lineTop+len(TuiReg)+2, beginX=1)
+    info.draw(tuiRegs_, hwRegs_)
     info.win.refresh()
 
     while 1:
@@ -549,7 +431,7 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
         # Map keypress/character to action.
         if curses.KEY_UP == c and 0 < selectIdx_:
             keyAction:KeyAction = KeyAction.NavigateUp
-        elif curses.KEY_DOWN == c and (len(GuiReg)-1) > selectIdx_:
+        elif curses.KEY_DOWN == c and (len(TuiReg)-1) > selectIdx_:
             keyAction:KeyAction = KeyAction.NavigateDown
         elif curses.KEY_LEFT == c:
             keyAction:KeyAction = KeyAction.ModifyDecrease
@@ -568,9 +450,9 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
         elif keyAction == KeyAction.NavigateDown:
             selectIdx_ += 1
         elif keyAction == KeyAction.ModifyDecrease:
-            updateRegs(selectIdx_, guiRegs_, hwRegs_, True)
+            updateRegs(selectIdx_, tuiRegs_, hwRegs_, True)
         elif keyAction == KeyAction.ModifyIncrease:
-            updateRegs(selectIdx_, guiRegs_, hwRegs_, False)
+            updateRegs(selectIdx_, tuiRegs_, hwRegs_, False)
         elif keyAction == KeyAction.Quit:
             break
         else:
@@ -579,8 +461,8 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
         actionIsModify = keyAction in (KeyAction.ModifyDecrease,
                                        KeyAction.ModifyIncrease)
 
-        isInteractive = (guiRegs_[GuiReg.UpdateMode] == UpdateMode.Interactive)
-        isBatch = (guiRegs_[GuiReg.UpdateMode] == UpdateMode.Batch)
+        isInteractive = (tuiRegs_[TuiReg.UpdateMode] == UpdateMode.Interactive)
+        isBatch = (tuiRegs_[TuiReg.UpdateMode] == UpdateMode.Batch)
         assert isBatch or isInteractive
 
         # Send updates to hardware and readback to ensure display matches the
@@ -589,7 +471,7 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
            keyAction == KeyAction.SendUpdate:
             _ = wr(hwRegs_)
             hwRegs_:Dict[HwReg, Any] = rd(hwRegs_.keys())
-            guiRegs_.update(hwRegsToGuiRegs(hwRegs_))
+            tuiRegs_.update(hwRegsToTuiRegs(hwRegs_))
             outstanding_ = False
         elif isBatch and actionIsModify:
             outstanding_ = True
@@ -597,14 +479,14 @@ def gui(scr, deviceName, rd, wr, hwRegs): # {{{
             pass
 
         # Update display.
-        inpt.draw(guiRegs_, selectIdx_, outstanding_)
+        inpt.draw(tuiRegs_, selectIdx_, outstanding_)
         inpt.win.refresh()
 
-        info.draw(guiRegs_, hwRegs_)
+        info.draw(tuiRegs_, hwRegs_)
         info.win.refresh()
 
     return # No return value
-# }}} def gui
+# }}} def tui
 
 # {{{ argparser
 
@@ -632,55 +514,23 @@ argparser.add_argument("-d", "--device",
          " If None then try using environment variable `$CORRELATOR_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
 
-def argparseWindowLengthExp(s): # {{{
-    i = int(s)
-    if not (0 <= i <= 99):
-        msg = "Window length exponent must be in [2, maxWindowLengthExp]"
-        raise argparse.ArgumentTypeError(msg)
-    return i
-# }}} def argparseWindowLengthExp
 argparser.add_argument("--init-windowLengthExp",
-    type=argparseWindowLengthExp,
+    type=argparse_WindowLengthExp,
     default=16,
     help="windowLength = 2**windowLengthExp  (samples)")
 
-def argparseWindowShape(s): # {{{
-    i = s.lower()
-    if "rectangular" == i:
-        ret = WindowShape.Rectangular
-    elif "logdrop" == i:
-        ret = WindowShape.Logdrop
-    else:
-        msg = "Window shape must be in {RECTANGULAR, LOGDROP}"
-        raise argparse.ArgumentTypeError(msg)
-    return ret
-# }}} def argparseWindowShape
 argparser.add_argument("--init-windowShape",
-    type=argparseWindowShape,
+    type=argparse_WindowShape,
     default=WindowShape.Rectangular,
     help="Shape of sampling window function.")
 
-def argparseSamplePeriodExp(s): # {{{
-    i = int(s)
-    if not (0 <= i <= 99):
-        msg = "Sample rate divisor exponent must be in [0, maxSamplePeriodExp]"
-        raise argparse.ArgumentTypeError(msg)
-    return i
-# }}} def argparseSamplePeriodExp
 argparser.add_argument("--init-samplePeriodExp",
-    type=argparseSamplePeriodExp,
+    type=argparse_SamplePeriodExp,
     default=0,
     help="sampleRate = maxSampleRate * 2**-samplePeriodExp  (Hz)")
 
-def argparseSampleJitterExp(s): # {{{
-    i = int(s)
-    if not (0 <= i <= 99):
-        msg = "Sample jitter exponent must be in [0, maxSampleJitterExp)"
-        raise argparse.ArgumentTypeError(msg)
-    return i
-# }}} def argparseSampleJitterExp
 argparser.add_argument("--init-sampleJitterExp",
-    type=argparseSampleJitterExp,
+    type=argparse_SampleJitterExp,
     default=0,
     help="sampleJitter < 2**sampleJitterExp  (samples)")
 
@@ -703,16 +553,16 @@ def main(args) -> int: # {{{
     3. Read config RO registers.
     4. Write config RW registers.
     5. Read/check config RW registers.
-    6. Initialize GUI
-    7. GUI output loop:
+    6. Initialize TUI
+    7. TUI output loop:
         1. Sleep for refresh period.
         2. Read results RO registers.
         2. Update results section.
-    8. GUI config loop:
+    8. TUI config loop:
         1. Wait for <Enter>
         2. Write config RW registers.
         3. Read config RW registers, check they're what was written.
-    9. GUI input loop:
+    9. TUI input loop:
         1. Wait for keypress.
         2. Handle keypress by moving highlighted line or changing value.
     '''
@@ -768,12 +618,12 @@ def main(args) -> int: # {{{
         verb("Done")
 
         # Fill in missing values of parameter domains.
-        mapGuiRegToDomain_.update({
-            GuiReg.WindowLength: mapGuiRegToDomain_[GuiReg.WindowLength] %
+        mapTuiRegToDomain_.update({
+            TuiReg.WindowLength: mapTuiRegToDomain_[TuiReg.WindowLength] %
                 hwRegsRO[HwReg.MaxWindowLengthExp],
-            GuiReg.SampleRate: mapGuiRegToDomain_[GuiReg.SampleRate] %
+            TuiReg.SampleRate: mapTuiRegToDomain_[TuiReg.SampleRate] %
                 hwRegsRO[HwReg.MaxSamplePeriodExp],
-            GuiReg.SampleJitter: mapGuiRegToDomain_[GuiReg.SampleJitter] %
+            TuiReg.SampleJitter: mapTuiRegToDomain_[TuiReg.SampleJitter] %
                 hwRegsRO[HwReg.MaxSampleJitterExp],
         })
 
@@ -802,9 +652,9 @@ def main(args) -> int: # {{{
         verb("Done")
 
         try:
-            verb("Starting GUI (curses)...")
-            curses.wrapper(gui, device.name, rd, wr, {**hwRegsRO, **hwRegsRW})
-            verb("GUI Done")
+            verb("Starting TUI (curses)...")
+            curses.wrapper(tui, device.name, rd, wr, {**hwRegsRO, **hwRegsRW})
+            verb("TUI Done")
         except KeyboardInterrupt:
             verb("KeyboardInterrupt. Exiting.")
 
