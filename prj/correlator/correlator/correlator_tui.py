@@ -96,7 +96,7 @@ mapTuiRegToDomain_:Dict[TuiReg, str] = { # {{{
 
     # Controls register "SampleJitterExp".
     # Domain defined by HwReg.MaxSampleJitterExp
-    TuiReg.SampleJitter: "(samples) < 2**j; j ∊ ℤ ∩ [0, %d)",
+    TuiReg.SampleJitter: "(cycles) < 2**j; j ∊ ℤ ∩ [0, %d)",
 } # }}}
 
 def hwRegsToTuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[TuiReg, Any]: # {{{
@@ -530,7 +530,7 @@ argparser.add_argument("--init-samplePeriodExp",
 argparser.add_argument("--init-sampleJitterExp",
     type=argparse_SampleJitterExp,
     default=0,
-    help="sampleJitter < 2**sampleJitterExp  (samples)")
+    help="sampleJitter < 2**sampleJitterExp  (cycles)")
 
 argparser.add_argument("--prng-seed",
     type=int,
