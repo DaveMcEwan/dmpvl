@@ -44,9 +44,71 @@ from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
     argparse_SamplePeriodExp, argparse_SampleJitterExp
 
 
-def record(output, deviceName:str, hwRegs:Dict[HwReg, Any]) -> None: # {{{
+def record(device, args, hwRegs:Dict[HwReg, Any]) -> None: # {{{
     '''TODO
+    - Display progress/status line.
+    - Read up to 50 packets in each burst.
+      - pktPerBurst = maxRdBurst // nBytesPerWindow
+      - 50 = 255B // 5B
+    - Update progress/status line after each burst.
+    - Append to output after each burst.
     '''
+
+    deviceName:str = device.name # TODO: Display as status. Report
+    rdBytePipe:Callable = functools.partial(bpReadSequential, device)
+    wrBytePipe:Callable = functools.partial(bpWriteSequential, device)
+    rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
+    wr:Callable = functools.partial(hwWriteRegs, wrBytePipe)
+
+    output = args.output
+    nWindows:int = args.nWindows
+
+    nBytesPerWindow:int = 5
+    maxRdBurst:int = 255
+
+    samplePeriod_cycles:int = 2**hwRegs[HwReg.SamplePeriodExp]
+    samplePeriod_ms:float =  samplePeriod_cycles / float(maxSampleRate_kHz)
+    sampleRate_kHz:float =  1.0 / samplePeriod_ms
+
+    windowLength_samples:int = 2**hwRegs[HwReg.WindowLengthExp]
+    windowPeriod_ms:float = windowLength_samples * samplePeriod_ms
+    windowRate_kHz:float = 1.0 / windowPeriod_ms
+
+    totalNSamples:int = nWindows * windowLength_samples
+    totalNBytes:int = nWindows * nBytesPerWindow # TODO: Display as status
+    totalTime_ms:int = nWindows * windowPeriod_ms # TODO: Display as status
+    totalBitrate_kbps:float = (8 * totalNBytes) / (1000 * totalTime_ms) # TODO: Display as status
+
+    nWindowPerBurst:int = maxRdBurst // nBytesPerWindow
+    burstTime_ms:float = nWindowPerBurst * windowPeriod_ms
+    nBytesPerBurst:int = nWindowPerBurst * nBytesPerWindow
+
+    # <winNum> <countX> <countY> <countIsect> <countSymdiff>
+    lineFmt = ' '.join(["%03d"]*5)
+
+    ## TODO: Open output file, or STDOUT.
+    ## TODO: wrLines() taking generator as input
+    #if output is None:
+    #    fd = sys.stdout
+    #else:
+    #    assert isinstance(output, str)
+    #    assert 0 < len(output)
+    #    fd = open(output, 'w')
+
+    # Flush the packet fifo.
+    wr({HwReg.PktfifoFlush: 1})
+
+    #nWindowsRemaining_ = nWindows
+    #while (0 < nWindowsRemaining_):
+    #    nBytesThisWindow = min(nWindowsRemaining_ * nBytesPerWindow,
+    #                           nBytesPerBurst)
+    #    bs = bpReadAddr(device, HwReg.PktfifoRd.value, nBytesThisWindow)
+    #    # TODO: Translate bs to output line.
+    #    nWindowsRemaining_ -= nWindows
+
+    #if fd != sys.stdout:
+    #    fd.close()
+
     return # No return value
 # }}} def record
 
@@ -176,7 +238,7 @@ def main(args) -> int: # {{{
 
         try:
             verb("Recording...")
-            record(args.output, device.name, {**hwRegsRO, **hwRegsRW})
+            record(device, args, {**hwRegsRO, **hwRegsRW})
             verb("Recording Done")
         except KeyboardInterrupt:
             verb("KeyboardInterrupt. Exiting.")
