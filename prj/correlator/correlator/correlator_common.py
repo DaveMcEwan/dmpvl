@@ -89,7 +89,13 @@ def uploadBitfile(bitfile): # {{{
     return p.returncode
 # }}} def uploadBitfile
 
-def hwReadRegs(rd, keys:Iterable[int]) -> Dict[HwReg, Any]: # {{{
+def hwReadRegs(rd, keys:Iterable[HwReg]) -> Dict[HwReg, Any]: # {{{
+    '''Wrapper for reader function including checks and type conversion.
+
+    Reader function must take an iterable of integers representing address,
+    and return an iterable of (addr, value) pairs.
+    rd :: [int] -> [(int, int)]
+    '''
     values = rd([k.value for k in keys])
     assert len(keys) == len(values)
 
@@ -110,7 +116,13 @@ def hwReadRegs(rd, keys:Iterable[int]) -> Dict[HwReg, Any]: # {{{
     return ret_
 # }}} def hwReadRegs
 
-def hwWriteRegs(wr, keyValues:Dict[HwReg, Any]): # {{{
+def hwWriteRegs(wr, keyValues:Dict[HwReg, Any]) -> Dict[HwReg, Any]: # {{{
+    '''Wrapper for writer function including checks and type conversion.
+
+    Writer function must take an iterable of (addr, value) pairs,
+    and return an iterable of (addr, value) pairs.
+    wr :: [(int, int)] -> [(int, int)]
+    '''
 
     addrValues_ = []
     for k,v in keyValues.items():
@@ -172,4 +184,20 @@ def argparse_SampleJitterExp(s): # {{{
         raise argparse.ArgumentTypeError(msg)
     return i
 # }}} def argparse_SampleJitterExp
+
+def argparse_positiveInteger(nm, s): # {{{
+    i = int(s)
+    if not (1 <= i):
+        msg = "%s must be positive integer" % nm
+        raise argparse.ArgumentTypeError(msg)
+    return i
+# }}} def argparse_positiveInteger
+
+def argparse_nonNegativeInteger(nm, s): # {{{
+    i = int(s)
+    if not (0 <= i):
+        msg = "%s must be non-negative integer" % nm
+        raise argparse.ArgumentTypeError(msg)
+    return i
+# }}} def argparse_nonNegativeInteger
 

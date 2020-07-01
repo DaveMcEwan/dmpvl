@@ -18,6 +18,9 @@ echo "continue" > tbCtrl
 # Run the interactive application as a foreground process.
 ../../prj/correlator/correlator/correlator_tui.py -v --device=ptyBytePipe_bp0
 
+# Run recording application as a (short-lived) foreground process.
+#../../prj/correlator/correlator/correlator_record.py -v --device=ptyBytePipe_bp0
+
 # Now that the application has finished, stop the tb.
 echo "step 10" > tbCtrl
 echo "quit" > tbCtrl
