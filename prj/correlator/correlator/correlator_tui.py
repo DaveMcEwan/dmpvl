@@ -26,10 +26,7 @@ import argparse
 import curses
 import enum
 import functools
-import glob
 import locale
-import os
-import subprocess
 import sys
 import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
@@ -38,9 +35,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 import serial
 
 from dmppl.base import run, verb, dbg
-from dmppl.bytePipe import BpAddrs, BpAddrValues, BpMem, \
-    bpReadSequential, bpWriteSequential, bpPrintMem, bpAddrValuesToMem, \
-    bpWriteAddr
+from dmppl.bytePipe import bpReadSequential, bpWriteSequential, bpWriteAddr
 from dmppl.color import CursesWindow, cursesInitPairs, \
     whiteBlue, whiteRed, greenBlack, yellowBlack
 
@@ -494,23 +489,26 @@ argparser = argparse.ArgumentParser(
     formatter_class = argparse.ArgumentDefaultsHelpFormatter
 )
 
+argparser.add_argument("--prog",
+    action="store_true",
+    help="Attempt to program a bitfile before starting TUI.")
+
 argparser.add_argument("-b", "--bitfile",
     type=str,
     default=None,
-    help="Bitfile for FPGA implementing correlator hardware."
+    help="Bitfile for FPGA implementing correlator hardware, used with --prog."
          " If None then try using environment variable `$CORRELATOR_BITFILE`;"
          " Then try using the last item of `./correlator.*.bin`;"
          " Then try using the bundled bitfile.")
 
-argparser.add_argument("--no-prog",
+argparser.add_argument("--no-init",
     action="store_true",
-    help="Don't attempt to program a bitfile."
-         " Assume there's already a programmed device available.")
+    help="Do not perform any writes on startup.")
 
 argparser.add_argument("-d", "--device",
     type=str,
     default=None,
-    help="Serial device to connect to (immediately after progrmming)."
+    help="Serial device to connect to (immediately after programming)."
          " If None then try using environment variable `$CORRELATOR_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
 
@@ -539,11 +537,6 @@ argparser.add_argument("--prng-seed",
     default=0xacce55ed,
     help="Seed for xoshiro128+ PRNG used for sampling jitter.")
 
-argparser.add_argument("-o", "--output",
-    type=str,
-    default="correlator.out",
-    help="Binary file to record data from pktfifo.")
-
 # }}} argparser
 
 def main(args) -> int: # {{{
@@ -569,9 +562,7 @@ def main(args) -> int: # {{{
 
     locale.setlocale(locale.LC_ALL, '')
 
-    if args.no_prog:
-        devicePath = getDevicePath(args.device)
-    else:
+    if args.prog:
         bitfile = getBitfilePath(args.bitfile)
         verb("Uploading bitfile %s ..." % bitfile, end='')
         assert 0 == uploadBitfile(bitfile)
@@ -597,6 +588,8 @@ def main(args) -> int: # {{{
             devicePath = maybeDevicePath_
 
         verb("Done")
+    else:
+        devicePath = getDevicePath(args.device)
 
 
     # Keep lock on device to prevent other processes from accidentally messing
@@ -627,29 +620,37 @@ def main(args) -> int: # {{{
                 hwRegsRO[HwReg.MaxSampleJitterExp],
         })
 
-        verb("Initializing RW registers...", end='')
+
+        # Gather registers required for TUI.
         initRegsRW:Dict[HwReg, Any] = {
             HwReg.WindowLengthExp:      args.init_windowLengthExp,
             HwReg.WindowShape:          args.init_windowShape,
             HwReg.SamplePeriodExp:      args.init_samplePeriodExp,
             HwReg.SampleJitterExp:      args.init_sampleJitterExp,
         }
-        wr(initRegsRW)
-        verb("Checking...", end='')
-        hwRegsRW:Dict[HwReg, Any] = rd(initRegsRW.keys())
-        assert all(initRegsRW[k] == v for k,v in hwRegsRW.items()), hwRegsRW
-        verb("Done")
 
-        seed:int = abs(args.prng_seed)
-        verb("Initializing PRNG (xoshiro128+ %s)..." % hex(seed), end='')
-        bpWriteAddr(device, HwReg.PrngSeed.value, 16, [0]*16)
-        bpWriteAddr(device, HwReg.PrngSeed.value, 4, [
-            (seed >> 3*8) & 0xff,
-            (seed >> 2*8) & 0xff,
-            (seed >> 1*8) & 0xff,
-            (seed >> 0*8) & 0xff,
-        ])
-        verb("Done")
+        if args.no_init:
+            verb("Reading RW registers...", end='')
+            hwRegsRW:Dict[HwReg, Any] = rd(initRegsRW.keys())
+            verb("Done")
+        else:
+            verb("Initializing RW registers...", end='')
+            wr(initRegsRW)
+            verb("Checking...", end='')
+            hwRegsRW:Dict[HwReg, Any] = rd(initRegsRW.keys())
+            assert all(initRegsRW[k] == v for k,v in hwRegsRW.items()), hwRegsRW
+            verb("Done")
+
+            seed:int = abs(args.prng_seed)
+            verb("Initializing PRNG (xoshiro128+ %s)..." % hex(seed), end='')
+            bpWriteAddr(device, HwReg.PrngSeed.value, 16, [0]*16)
+            bpWriteAddr(device, HwReg.PrngSeed.value, 4, [
+                (seed >> 3*8) & 0xff,
+                (seed >> 2*8) & 0xff,
+                (seed >> 1*8) & 0xff,
+                (seed >> 0*8) & 0xff,
+            ])
+            verb("Done")
 
         try:
             verb("Starting TUI (curses)...")
