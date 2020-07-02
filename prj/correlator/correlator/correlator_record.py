@@ -31,7 +31,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 # PyPI
 import serial
 
-from dmppl.base import run, verb, dbg
+from dmppl.base import run, verb, dbg, wrLines, grouper
 from dmppl.bytePipe import bpReadSequential, bpWriteSequential, \
     bpReadAddr, bpWriteAddr
 
@@ -39,13 +39,13 @@ from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
     getDevicePath, \
     HwReg, hwReadRegs, hwWriteRegs, \
     calc_bitsPerWindow, \
-    argparse_positiveInteger, \
+    argparse_positiveInteger, argparse_nonNegativeReal, \
     argparse_WindowLengthExp, argparse_WindowShape, \
     argparse_SamplePeriodExp, argparse_SampleJitterExp
 
 
-def record(device, args, hwRegs:Dict[HwReg, Any]) -> None: # {{{
-    '''TODO
+def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
+    '''Generator yielding lines to be written to output.
     - Display progress/status line.
     - Read up to 50 packets in each burst.
       - pktPerBurst = maxRdBurst // nBytesPerWindow
@@ -60,54 +60,101 @@ def record(device, args, hwRegs:Dict[HwReg, Any]) -> None: # {{{
     rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
     wr:Callable = functools.partial(hwWriteRegs, wrBytePipe)
 
-    output = args.output
-    nWindows:int = args.nWindows
-
     nBytesPerWindow:int = 5
     maxRdBurst:int = 255
 
     samplePeriod_cycles:int = 2**hwRegs[HwReg.SamplePeriodExp]
     samplePeriod_ms:float =  samplePeriod_cycles / float(maxSampleRate_kHz)
     sampleRate_kHz:float =  1.0 / samplePeriod_ms
+    rpt_sample = ' '.join((
+        '#',
+        "HwReg.SamplePeriodExp=%d" % hwRegs[HwReg.SamplePeriodExp],
+        "samplePeriod_cycles=%d" % samplePeriod_cycles,
+        "samplePeriod_ms=%0.06fms" % samplePeriod_ms,
+        "sampleRate_kHz=%0.06fkHz" % sampleRate_kHz,
+        "HwReg.SampleJitterExp=%d" % hwRegs[HwReg.SampleJitterExp],
+    ))
+    yield rpt_sample
 
     windowLength_samples:int = 2**hwRegs[HwReg.WindowLengthExp]
     windowPeriod_ms:float = windowLength_samples * samplePeriod_ms
     windowRate_kHz:float = 1.0 / windowPeriod_ms
+    rpt_window = ' '.join((
+        '#',
+        "HwReg.WindowLengthExp=%d" % hwRegs[HwReg.WindowLengthExp],
+        "windowLength_samples=%d" % windowLength_samples,
+        "windowPeriod_ms=%0.06fms" % windowPeriod_ms,
+        "windowRate_kHz=%0.06fkHz" % windowRate_kHz,
+    ))
+    yield rpt_window
 
     totalNSamples:int = nWindows * windowLength_samples
     totalNBytes:int = nWindows * nBytesPerWindow # TODO: Display as status
-    totalTime_ms:int = nWindows * windowPeriod_ms # TODO: Display as status
+    totalTime_ms:float = nWindows * windowPeriod_ms # TODO: Display as status
     totalBitrate_kbps:float = (8 * totalNBytes) / (1000 * totalTime_ms) # TODO: Display as status
+    rpt_total = ' '.join((
+        '#',
+        "nWindows=%d" % nWindows,
+        "totalNSamples=%d" % totalNSamples,
+        "totalNBytes=%d" % totalNBytes,
+        "totalTime_ms=%0.06fms" % totalTime_ms,
+        "totalBitrate_kbps=%0.06fkbps" % totalBitrate_kbps,
+    ))
+    yield rpt_total
 
     nWindowPerBurst:int = maxRdBurst // nBytesPerWindow
     burstTime_ms:float = nWindowPerBurst * windowPeriod_ms
     nBytesPerBurst:int = nWindowPerBurst * nBytesPerWindow
 
-    # <winNum> <countX> <countY> <countIsect> <countSymdiff>
-    lineFmt = ' '.join(["%03d"]*5)
-
-    ## TODO: Open output file, or STDOUT.
-    ## TODO: wrLines() taking generator as input
-    #if output is None:
-    #    fd = sys.stdout
-    #else:
-    #    assert isinstance(output, str)
-    #    assert 0 < len(output)
-    #    fd = open(output, 'w')
+    yield "winNum countX countY countIsect countSymdiff"
+    lineFmt:str = ' '.join(["%03d"]*5)
 
     # Flush the packet fifo.
+    # The cycle this arrives ac u_correlator.u_bpMem is the beginning of time
+    # for this dataset.
+    verb("Flushing to begin dataset...", end='')
     wr({HwReg.PktfifoFlush: 1})
+    verb("Done")
 
-    #nWindowsRemaining_ = nWindows
-    #while (0 < nWindowsRemaining_):
-    #    nBytesThisWindow = min(nWindowsRemaining_ * nBytesPerWindow,
-    #                           nBytesPerBurst)
-    #    bs = bpReadAddr(device, HwReg.PktfifoRd.value, nBytesThisWindow)
-    #    # TODO: Translate bs to output line.
-    #    nWindowsRemaining_ -= nWindows
+    nWindowsRemaining_ = nWindows
+    burstNum_ = 0
+    while (0 < nWindowsRemaining_):
+        nBytesRemaining:int = nWindowsRemaining_ * nBytesPerWindow
+        nBytesThisBurst:int = min(nBytesRemaining, nBytesPerBurst)
 
-    #if fd != sys.stdout:
-    #    fd.close()
+        assert ((nBytesThisBurst // nBytesPerWindow) == \
+                int(nBytesThisBurst / nBytesPerWindow)), \
+               (nBytesThisBurst, nBytesPerWindow)
+
+        # Read burst from packet fifo.
+        verb("Reading burst %d..." % burstNum_, end='')
+        bs = bpReadAddr(device, HwReg.PktfifoRd.value, nBytesThisBurst)
+        verb("Done")
+        assert len(bs) == nBytesThisBurst, (len(bs), nBytesThisBurst)
+        assert all(isinstance(b, int) for b in bs), bs
+        assert all((0 <= b <= 255) for b in bs), bs
+
+        # Translate bs to output line.
+        for pkt in grouper(bs, nBytesPerWindow):
+            assert len(pkt) == nBytesPerWindow, (len(pkt), nBytesPerWindow)
+            assert all(isinstance(b, int) for b in pkt), pkt
+            line = lineFmt % tuple(pkt)
+            yield line
+
+        nWindowsRemaining_ -= nWindowPerBurst
+        burstNum_ += 1
+
+# }}} def pktLines
+
+def record(device, args, hwRegs:Dict[HwReg, Any]) -> None: # {{{
+    '''
+    '''
+
+    output:Optional[str] = args.output
+    nWindows:int = args.nWindows
+
+    nLinesWritten, wrSuccess = \
+        wrLines(output, pktLines(device, nWindows, hwRegs))
 
     return # No return value
 # }}} def record
@@ -124,6 +171,12 @@ argparser.add_argument("-d", "--device",
     help="Serial device to connect to (immediately after programming)."
          " If None then try using environment variable `$CORRELATOR_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
+
+argparser.add_argument("--timeout",
+    type=functools.partial(argparse_nonNegativeReal, "timeout"),
+    default=1.0,
+    help="Maximum expected time (seconds) required to read a burst of 256B."
+         " Passed directly to pySerial.")
 
 argparser.add_argument("--init-windowLengthExp",
     type=argparse_WindowLengthExp,
@@ -152,8 +205,8 @@ argparser.add_argument("--prng-seed",
 
 argparser.add_argument("-o", "--output",
     type=str,
-    default="correlator.out",
-    help="File to record data.")
+    default=None,
+    help="File to record data, or STDOUT if not given.")
 
 argparser.add_argument("-n", "--nWindows",
     type=functools.partial(argparse_positiveInteger, "nWindows"),
@@ -178,7 +231,9 @@ def main(args) -> int: # {{{
     # Keep lock on device to prevent other processes from accidentally messing
     # with the state machine.
     verb("Connecting to device %s" % devicePath)
-    with serial.Serial(devicePath, timeout=1.0, write_timeout=1.0) as device:
+    with serial.Serial(devicePath,
+                       timeout=args.timeout,
+                       write_timeout=args.timeout) as device:
         rdBytePipe:Callable = functools.partial(bpReadSequential, device)
         wrBytePipe:Callable = functools.partial(bpWriteSequential, device)
         rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
