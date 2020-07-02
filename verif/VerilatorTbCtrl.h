@@ -219,7 +219,7 @@ public:
   virtual void run(int maxNCycles) {
     char* cmd;
 
-    VERB("Enter");
+    VERB("Enter maxNCycles=%d", maxNCycles);
 
     while (tickcount() < maxNCycles) {
       if (0 != clock_nanosleep(CLOCK_REALTIME, 0, &m_tickRqtp, NULL)) {

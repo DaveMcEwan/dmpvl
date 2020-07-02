@@ -1,6 +1,8 @@
 /** correlator_tb.v - Testbench for fifo
  * Expose BytePipe as a PTY for external script to use.
  */
+`include "dff.vh"
+
 module correlator_tb (
 
   output reg            common_x,
@@ -18,6 +20,7 @@ always @(posedge i_clk) begin
   common_x      <= ($random % 5) == 0; // Pulse i_push high 1/5.
   common_y      <= ($random % 6) == 0; // Pulse i_pop high 1/6.
 end
+`dff_upcounter(reg [31:0], nCycles, i_clk, 1'b1, i_rst)
 
 wire [7:0]  bp0_upstream_data;
 wire        bp0_upstream_valid;
