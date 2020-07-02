@@ -22,6 +22,8 @@ echo "continue" > tbCtrl
 #../../prj/correlator/correlator/correlator_record.py -v --device=ptyBytePipe_bp0
 
 # Now that the application has finished, stop the tb.
+echo "discontinue" > tbCtrl
 echo "step 10" > tbCtrl
+sleep 1
 echo "quit" > tbCtrl
 

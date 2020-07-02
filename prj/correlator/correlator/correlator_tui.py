@@ -43,6 +43,7 @@ from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
     getBitfilePath, getDevicePath, uploadBitfile, \
     HwReg, hwReadRegs, hwWriteRegs, \
     calc_bitsPerWindow, \
+    argparse_nonNegativeReal, \
     argparse_WindowLengthExp, argparse_WindowShape, \
     argparse_SamplePeriodExp, argparse_SampleJitterExp
 
@@ -512,6 +513,12 @@ argparser.add_argument("-d", "--device",
          " If None then try using environment variable `$CORRELATOR_DEVICE`;"
          " Then try using the last item of `/dev/ttyACM*`.")
 
+argparser.add_argument("--timeout",
+    type=functools.partial(argparse_nonNegativeReal, "timeout"),
+    default=1.0,
+    help="Maximum expected time (seconds) required to read a burst of 256B."
+         " Passed directly to pySerial.")
+
 argparser.add_argument("--init-windowLengthExp",
     type=argparse_WindowLengthExp,
     default=16,
@@ -595,7 +602,9 @@ def main(args) -> int: # {{{
     # Keep lock on device to prevent other processes from accidentally messing
     # with the state machine.
     verb("Connecting to device %s" % devicePath)
-    with serial.Serial(devicePath, timeout=1.0, write_timeout=1.0) as device:
+    with serial.Serial(devicePath,
+                       timeout=args.timeout,
+                       write_timeout=args.timeout) as device:
         rdBytePipe:Callable = functools.partial(bpReadSequential, device)
         wrBytePipe:Callable = functools.partial(bpWriteSequential, device)
         rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
