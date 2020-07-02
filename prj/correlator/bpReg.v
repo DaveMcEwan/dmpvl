@@ -160,13 +160,14 @@ assign o_pktfifo_pop = rd_q && (addr_q == ADDR_PKTFIFO_RD);
 assign o_pktfifo_flush = doWriteReg && (addr_q == ADDR_PKTFIFO_FLUSH);
 
 // Read data is always ready, except if trying to read an empty fifo.
-wire rdReady = !(o_pktfifo_pop && i_pktfifo_empty);
+`dff_cg_srst(reg, pktfifoRdReady, i_clk, i_cg, i_rst, 1'b0)
+always @* pktfifoRdReady_d = !(o_pktfifo_pop && i_pktfifo_empty);
 
 // Backpressure goes straight through so destination controls all flow, so the
 // sink must keep accepting data.
-assign o_bp_ready = i_bp_ready && !inBurstRd && rdReady;
+assign o_bp_ready = i_bp_ready && !inBurstRd && pktfifoRdReady_d;
 
 assign o_bp_data = rdData_q;
-assign o_bp_valid = rd_q && rdReady;
+assign o_bp_valid = rd_q && pktfifoRdReady_q;
 
 endmodule
