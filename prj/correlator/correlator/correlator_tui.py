@@ -205,7 +205,7 @@ class FullWindow(CursesWindow): # {{{
 
         appName:str = "Correlator"
         devicePath:str = deviceName
-        precision:str = ["%db" % hwRegs[HwReg.LogdropPrecision]]
+        precision:str = ["%db" % hwRegs[HwReg.WindowPrecision]]
 
         left:str = appName
         mid:str = ' '.join((precision))
@@ -613,7 +613,7 @@ def main(args) -> int: # {{{
         verb("Reading RO registers...", end='')
         hwRegsRO:Dict[HwReg, Any] = rd((
             HwReg.MaxWindowLengthExp,
-            HwReg.LogdropPrecision,
+            HwReg.WindowPrecision,
             HwReg.MaxSamplePeriodExp,
             HwReg.MaxSampleJitterExp,
         ))

@@ -63,7 +63,7 @@ def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
         "HwRegRO",
         "PktfifoDepth=%d"       % hwRegs[HwReg.PktfifoDepth],
         "MaxWindowLengthExp=%d" % hwRegs[HwReg.MaxWindowLengthExp],
-        "LogdropPrecision=%d"   % hwRegs[HwReg.LogdropPrecision],
+        "WindowPrecision=%d"    % hwRegs[HwReg.WindowPrecision],
         "MaxSamplePeriodExp=%d" % hwRegs[HwReg.MaxSamplePeriodExp],
         "MaxSampleJitterExp=%d" % hwRegs[HwReg.MaxSampleJitterExp],
     ))
@@ -268,7 +268,7 @@ def main(args) -> int: # {{{
         hwRegsRO:Dict[HwReg, Any] = rd((
             HwReg.PktfifoDepth,
             HwReg.MaxWindowLengthExp,
-            HwReg.LogdropPrecision,
+            HwReg.WindowPrecision,
             HwReg.MaxSamplePeriodExp,
             HwReg.MaxSampleJitterExp,
         ))

@@ -4,11 +4,11 @@
 Unpack the register map to wires.
 */
 module bpReg #(
-  parameter PKTFIFO_DEPTH         = 10, // Bytes, not packets.
   parameter MAX_WINDOW_LENGTH_EXP = 32,
-  parameter LOGDROP_PRECISION     = 32, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
-  parameter MAX_SAMPLE_JITTER_EXP = 32
+  parameter MAX_SAMPLE_JITTER_EXP = 32,
+  parameter WINDOW_PRECISION      = 32, // >= MAX_WINDOW_LENGTH_EXP
+  parameter PKTFIFO_DEPTH         = 10  // Bytes, not packets.
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -142,7 +142,7 @@ always @*
       // RO static
       ADDR_PKTFIFO_DEPTH:           rdData_d = PKTFIFO_DEPTH;
       ADDR_MAX_WINDOW_LENGTH_EXP:   rdData_d = MAX_WINDOW_LENGTH_EXP;
-      ADDR_LOGDROP_PRECISION:       rdData_d = LOGDROP_PRECISION;
+      ADDR_LOGDROP_PRECISION:       rdData_d = WINDOW_PRECISION;
       ADDR_MAX_SAMPLE_PERIOD_EXP:   rdData_d = MAX_SAMPLE_PERIOD_EXP;
       ADDR_MAX_SAMPLE_JITTER_EXP:   rdData_d = MAX_SAMPLE_JITTER_EXP;
                                                   /* verilator lint_off WIDTH */

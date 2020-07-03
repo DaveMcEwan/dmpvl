@@ -28,7 +28,7 @@ class HwReg(enum.Enum): # {{{
     # Static, RO
     PktfifoDepth            = 4
     MaxWindowLengthExp      = 5
-    LogdropPrecision        = 6
+    WindowPrecision         = 6
     MaxSamplePeriodExp      = 7
     MaxSampleJitterExp      = 8
 
@@ -141,7 +141,7 @@ def hwWriteRegs(wr, keyValues:Dict[HwReg, Any]) -> Dict[HwReg, Any]: # {{{
 
 def calc_bitsPerWindow(hwRegs:Dict[HwReg, Any]) -> int: # {{{
 
-    precision:int = hwRegs[HwReg.LogdropPrecision] # bits
+    precision:int = hwRegs[HwReg.WindowPrecision] # bits
     nInputs:int = 2 # unitless
 
     ret:int = precision * (nInputs**2 - nInputs)

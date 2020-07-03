@@ -1,11 +1,11 @@
 `include "dff.vh"
 
 module correlator #(
-  parameter PKTFIFO_DEPTH         = 50,
   parameter MAX_WINDOW_LENGTH_EXP = 16,
-  parameter LOGDROP_PRECISION     = 16, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
-  parameter MAX_SAMPLE_JITTER_EXP = 8
+  parameter MAX_SAMPLE_JITTER_EXP = 8,
+  parameter WINDOW_PRECISION      = 16, // >= MAX_WINDOW_LENGTH_EXP
+  parameter PKTFIFO_DEPTH         = 50
 ) (
   input wire          i_clk,
   input wire          i_rst,
@@ -46,7 +46,7 @@ wire              jitterSeedValid;
 bpReg #(
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-  .LOGDROP_PRECISION        (LOGDROP_PRECISION),
+  .WINDOW_PRECISION        (WINDOW_PRECISION),
   .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
   .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
 ) u_bpReg (
@@ -160,7 +160,7 @@ generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
 end endgenerate
 wire tDoWrap = |tDoWrapVec && sampleStrobe;
 
-localparam WINDOW_DATA_W = LOGDROP_PRECISION + TIME_W; // TODO: rename LOGDROP_PRECISION
+localparam WINDOW_DATA_W = WINDOW_PRECISION + TIME_W;
 
 wire [WINDOW_DATA_W-1:0] rect_countX;
 wire [WINDOW_DATA_W-1:0] rect_countY;
