@@ -4,7 +4,7 @@
 Unpack the register map to wires.
 */
 module bpReg #(
-  parameter PKTFIFO_DEPTH         = 10, // packets
+  parameter PKTFIFO_DEPTH         = 10, // Bytes, not packets.
   parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter LOGDROP_PRECISION     = 32, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
@@ -140,6 +140,7 @@ always @*
       ADDR_PKTFIFO_RD:              rdData_d = i_pktfifo_data;
 
       // RO static
+      ADDR_PKTFIFO_DEPTH:           rdData_d = PKTFIFO_DEPTH;
       ADDR_MAX_WINDOW_LENGTH_EXP:   rdData_d = MAX_WINDOW_LENGTH_EXP;
       ADDR_LOGDROP_PRECISION:       rdData_d = LOGDROP_PRECISION;
       ADDR_MAX_SAMPLE_PERIOD_EXP:   rdData_d = MAX_SAMPLE_PERIOD_EXP;

@@ -1,6 +1,7 @@
 `include "dff.vh"
 
 module correlator #(
+  parameter PKTFIFO_DEPTH         = 50,
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter LOGDROP_PRECISION     = 16, // >= MAX_WINDOW_LENGTH_EXP
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
@@ -43,6 +44,7 @@ wire [7:0]        jitterSeedByte;
 wire              jitterSeedValid;
 
 bpReg #(
+  .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .LOGDROP_PRECISION        (LOGDROP_PRECISION),
   .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
@@ -105,17 +107,17 @@ strobe #(
 
 reg [7:0] pktfifo_i_data;
 wire pktfifo_i_push = tDoWrap || (pktIdx_q != 3'd0);
-wire              _unused_pktfifo_o_full;
-wire              _unused_pktfifo_o_pushed;
-wire              _unused_pktfifo_o_popped;
-wire [5:0]        _unused_pktfifo_o_wrptr;
-wire [5:0]        _unused_pktfifo_o_rdptr;
-wire [49:0]       _unused_pktfifo_o_valid;
-wire [5:0]        _unused_pktfifo_o_nEntries;
-wire [8*50-1:0]   _unused_pktfifo_o_entries;
+wire                                  _unused_pktfifo_o_full;
+wire                                  _unused_pktfifo_o_pushed;
+wire                                  _unused_pktfifo_o_popped;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wrptr;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rdptr;
+wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_valid;
+wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
+wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
 fifo #(
   .WIDTH          (8),
-  .DEPTH          (50),
+  .DEPTH          (PKTFIFO_DEPTH),
   .FLOPS_NOT_MEM  (0)
 ) u_pktfifo (
   .i_clk      (i_clk),
