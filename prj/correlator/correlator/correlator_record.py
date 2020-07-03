@@ -53,54 +53,79 @@ def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
     - Update progress/status line after each burst.
     - Append to output after each burst.
     '''
+    rpt_ = ' '.join((
+        '#',
+        "device=%s" % device.name,
+    ))
+    yield rpt_
+    rpt_ = ' '.join((
+        '#',
+        "HwRegRO",
+        "PktfifoDepth=%d"       % hwRegs[HwReg.PktfifoDepth],
+        "MaxWindowLengthExp=%d" % hwRegs[HwReg.MaxWindowLengthExp],
+        "LogdropPrecision=%d"   % hwRegs[HwReg.LogdropPrecision],
+        "MaxSamplePeriodExp=%d" % hwRegs[HwReg.MaxSamplePeriodExp],
+        "MaxSampleJitterExp=%d" % hwRegs[HwReg.MaxSampleJitterExp],
+    ))
+    yield rpt_
+    rpt_ = ' '.join((
+        '#',
+        "HwRegRW",
+        "WindowLengthExp=%d" % hwRegs[HwReg.WindowLengthExp],
+        "SamplePeriodExp=%d" % hwRegs[HwReg.SamplePeriodExp],
+        "SampleJitterExp=%d" % hwRegs[HwReg.SampleJitterExp],
+    ))
+    yield rpt_
 
-    deviceName:str = device.name # TODO: Display as status. Report
-    rdBytePipe:Callable = functools.partial(bpReadSequential, device)
+    #rdBytePipe:Callable = functools.partial(bpReadSequential, device)
     wrBytePipe:Callable = functools.partial(bpWriteSequential, device)
-    rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
+    #rd:Callable = functools.partial(hwReadRegs, rdBytePipe)
     wr:Callable = functools.partial(hwWriteRegs, wrBytePipe)
 
     nBytesPerWindow:int = 5
     maxRdBurst:int = 255
 
+    # NOTE: The term "rate" is used instead of "frequency" to reinforce that the
+    # duty cycle is unbalanced so Fourier analysis will have high power in the
+    # upper frequencies.
     samplePeriod_cycles:int = 2**hwRegs[HwReg.SamplePeriodExp]
-    samplePeriod_ms:float =  samplePeriod_cycles / float(maxSampleRate_kHz)
-    sampleRate_kHz:float =  1.0 / samplePeriod_ms
-    rpt_sample = ' '.join((
+    samplePeriod_ms:float = samplePeriod_cycles / float(maxSampleRate_kHz)
+    sampleRate_kHz:float = 1.0 / samplePeriod_ms
+    rpt_ = ' '.join((
         '#',
-        "HwReg.SamplePeriodExp=%d" % hwRegs[HwReg.SamplePeriodExp],
-        "samplePeriod_cycles=%d" % samplePeriod_cycles,
-        "samplePeriod_ms=%0.06fms" % samplePeriod_ms,
-        "sampleRate_kHz=%0.06fkHz" % sampleRate_kHz,
-        "HwReg.SampleJitterExp=%d" % hwRegs[HwReg.SampleJitterExp],
+        "sampleStrobe",
+        "averageRegularity=%d_cycles"    % samplePeriod_cycles,
+        "averagePeriod=%0.06f_ms"        % samplePeriod_ms,
+        "approximateRate=%0.06f_kHz"     % sampleRate_kHz,
     ))
-    yield rpt_sample
+    yield rpt_
 
     windowLength_samples:int = 2**hwRegs[HwReg.WindowLengthExp]
     windowPeriod_ms:float = windowLength_samples * samplePeriod_ms
     windowRate_kHz:float = 1.0 / windowPeriod_ms
-    rpt_window = ' '.join((
+    rpt_ = ' '.join((
         '#',
-        "HwReg.WindowLengthExp=%d" % hwRegs[HwReg.WindowLengthExp],
-        "windowLength_samples=%d" % windowLength_samples,
-        "windowPeriod_ms=%0.06fms" % windowPeriod_ms,
-        "windowRate_kHz=%0.06fkHz" % windowRate_kHz,
+        'window',
+        "length=%d_samples"     % windowLength_samples,
+        "period_ms=%0.06f_ms"   % windowPeriod_ms,
+        "rate=%0.06f_kHz"       % windowRate_kHz,
     ))
-    yield rpt_window
+    yield rpt_
 
     totalNSamples:int = nWindows * windowLength_samples
-    totalNBytes:int = nWindows * nBytesPerWindow # TODO: Display as status
-    totalTime_ms:float = nWindows * windowPeriod_ms # TODO: Display as status
-    totalBitrate_kbps:float = (8 * totalNBytes) / (1000 * totalTime_ms) # TODO: Display as status
-    rpt_total = ' '.join((
+    totalNBytes:int = nWindows * nBytesPerWindow
+    totalTime_ms:float = nWindows * windowPeriod_ms
+    totalBitrate_kbps:float = (8 * totalNBytes) / (1000 * totalTime_ms)
+    rpt_ = ' '.join((
         '#',
+        'dataset',
         "nWindows=%d" % nWindows,
-        "totalNSamples=%d" % totalNSamples,
-        "totalNBytes=%d" % totalNBytes,
-        "totalTime_ms=%0.06fms" % totalTime_ms,
-        "totalBitrate_kbps=%0.06fkbps" % totalBitrate_kbps,
+        "time=%0.06f_ms" % totalTime_ms,
+        "nSamples=%d" % totalNSamples,
+        "pktfifoNBytes=%d" % totalNBytes,
+        "pktfifoBitrate=%0.06f_kbps" % totalBitrate_kbps,
     ))
-    yield rpt_total
+    yield rpt_
 
     nWindowPerBurst:int = maxRdBurst // nBytesPerWindow
     burstTime_ms:float = nWindowPerBurst * windowPeriod_ms
@@ -241,6 +266,7 @@ def main(args) -> int: # {{{
 
         verb("Reading RO registers...", end='')
         hwRegsRO:Dict[HwReg, Any] = rd((
+            HwReg.PktfifoDepth,
             HwReg.MaxWindowLengthExp,
             HwReg.LogdropPrecision,
             HwReg.MaxSamplePeriodExp,
