@@ -56,7 +56,7 @@ end endgenerate
 wire extendNotShorten = o_jitterPrng[31-CTRL_JITTER_W];
 wire jitterExtend = jitterThisCycle && extendNotShorten;
 wire jitterShorten = jitterThisCycle && !extendNotShorten;
-`dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, !jitterExtend)
+`dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, i_cg && !jitterExtend)
 always @*
   if (downCounter_q == '0)
     downCounter_d = i_ctrlPeriodM1;

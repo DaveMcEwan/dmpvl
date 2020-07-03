@@ -145,7 +145,7 @@ fifo #(
 );
 
 localparam TIME_W = MAX_WINDOW_LENGTH_EXP;
-`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, sampleStrobe, i_rst, '0)
+`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
@@ -220,7 +220,7 @@ corrCountLogdrop #(
 
 // Wrapping window counter to be used only to check that packets have not been
 // dropped.
-`dff_upcounter(reg [7:0], winNum, i_clk, tDoWrap, i_rst)
+`dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
 
 // Only the 8 most significant bits of the counters is reported
 wire [7:0] pkt_countX = windowShape ?
@@ -240,7 +240,7 @@ wire [7:0] pkt_countSymdiff = windowShape ?
   rect_countSymdiff[TIME_W-8 +: 8];
 
 wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
-`dff_upcounter(reg [2:0], pktIdx, i_clk, pktfifo_i_push, i_rst || pktIdx_wrap)
+`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
   case (pktIdx_q)
