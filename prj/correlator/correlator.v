@@ -151,25 +151,23 @@ localparam TIME_W = MAX_WINDOW_LENGTH_EXP;
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
-wire [TIME_W-1:0] tScaledVec [MAX_WINDOW_LENGTH_EXP+1];
 generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
   if (i == 0) begin
     assign tDoWrapVec[0] = (windowLengthExp == 0);
-    assign tScaledVec[0] = '0;
   end else begin
     assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
-    assign tScaledVec[i] = t_q << (TIME_W-i);
   end
 end endgenerate
 wire tDoWrap = |tDoWrapVec && sampleStrobe;
-`dff_cg_srst(reg [TIME_W-1:0], tScaled, i_clk, i_cg, i_rst, '0)
-always @* tScaled_d = tScaledVec[windowLengthExp];
 
-wire [TIME_W-1:0] rect_countX;
-wire [TIME_W-1:0] rect_countY;
-wire [TIME_W-1:0] rect_countIsect;
-wire [TIME_W-1:0] rect_countSymdiff;
+localparam WINDOW_DATA_W = LOGDROP_PRECISION + TIME_W; // TODO: rename LOGDROP_PRECISION
+
+wire [WINDOW_DATA_W-1:0] rect_countX;
+wire [WINDOW_DATA_W-1:0] rect_countY;
+wire [WINDOW_DATA_W-1:0] rect_countIsect;
+wire [WINDOW_DATA_W-1:0] rect_countSymdiff;
 corrCountRect #(
+  .DATA_W  (WINDOW_DATA_W),
   .TIME_W  (TIME_W)
 ) u_winRect (
   .i_clk          (i_clk),
@@ -184,6 +182,8 @@ corrCountRect #(
   .o_countIsect   (rect_countIsect),
   .o_countSymdiff (rect_countSymdiff),
 
+  .i_windowLengthExp (windowLengthExp),
+
   .i_zeroCounts   (tDoWrap)
 );
 
@@ -195,13 +195,12 @@ corrCountRect #(
 always @* y_d = i_y;
 always @* x_d = i_x;
 
-localparam LOGDROP_DATA_W = LOGDROP_PRECISION + TIME_W;
-wire [LOGDROP_DATA_W-1:0] logdrop_countX;
-wire [LOGDROP_DATA_W-1:0] logdrop_countY;
-wire [LOGDROP_DATA_W-1:0] logdrop_countIsect;
-wire [LOGDROP_DATA_W-1:0] logdrop_countSymdiff;
+wire [WINDOW_DATA_W-1:0] logdrop_countX;
+wire [WINDOW_DATA_W-1:0] logdrop_countY;
+wire [WINDOW_DATA_W-1:0] logdrop_countIsect;
+wire [WINDOW_DATA_W-1:0] logdrop_countSymdiff;
 corrCountLogdrop #(
-  .DATA_W  (LOGDROP_DATA_W),
+  .DATA_W  (WINDOW_DATA_W),
   .TIME_W  (TIME_W)
 ) u_winLogdrop (
   .i_clk          (i_clk),
@@ -216,7 +215,9 @@ corrCountLogdrop #(
   .o_countIsect   (logdrop_countIsect),
   .o_countSymdiff (logdrop_countSymdiff),
 
-  .i_t            (tScaled_q),
+  .i_windowLengthExp (windowLengthExp),
+
+  .i_t            (t_q),
   .i_zeroCounts   (tDoWrap)
 );
 
@@ -226,20 +227,20 @@ corrCountLogdrop #(
 
 // Only the 8 most significant bits of the counters is reported
 wire [7:0] pkt_countX = windowShape ?
-  logdrop_countX[LOGDROP_DATA_W-8 +: 8] :
-  rect_countX[TIME_W-8 +: 8];
+  logdrop_countX[WINDOW_DATA_W-8 +: 8] :
+  rect_countX[WINDOW_DATA_W-8 +: 8];
 
 wire [7:0] pkt_countY = windowShape ?
-  logdrop_countY[LOGDROP_DATA_W-8 +: 8] :
-  rect_countY[TIME_W-8 +: 8];
+  logdrop_countY[WINDOW_DATA_W-8 +: 8] :
+  rect_countY[WINDOW_DATA_W-8 +: 8];
 
 wire [7:0] pkt_countIsect = windowShape ?
-  logdrop_countIsect[LOGDROP_DATA_W-8 +: 8] :
-  rect_countIsect[TIME_W-8 +: 8];
+  logdrop_countIsect[WINDOW_DATA_W-8 +: 8] :
+  rect_countIsect[WINDOW_DATA_W-8 +: 8];
 
 wire [7:0] pkt_countSymdiff = windowShape ?
-  logdrop_countSymdiff[LOGDROP_DATA_W-8 +: 8] :
-  rect_countSymdiff[TIME_W-8 +: 8];
+  logdrop_countSymdiff[WINDOW_DATA_W-8 +: 8] :
+  rect_countSymdiff[WINDOW_DATA_W-8 +: 8];
 
 wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)

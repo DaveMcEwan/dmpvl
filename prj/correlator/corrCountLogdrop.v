@@ -20,18 +20,33 @@ module corrCountLogdrop #(
   output wire [DATA_W-1:0]  o_countIsect,   // x AND y
   output wire [DATA_W-1:0]  o_countSymdiff, // x XOR y
 
+  input  wire [$clog2(TIME_W+1)-1:0]  i_windowLengthExp,
+
   input  wire [TIME_W-1:0]  i_t,
   input  wire               i_zeroCounts // 1->Beginning of new window.
 );
 
+wire [TIME_W-1:0] tScaledVec [TIME_W+1];
+genvar i;
+generate for (i = 0; i <= TIME_W; i=i+1) begin
+  if (i == 0) begin
+    assign tScaledVec[0] = '0;
+  end else begin
+    assign tScaledVec[i] = i_t << (TIME_W-i);
+  end
+end endgenerate
+`dff_cg_srst(reg [TIME_W-1:0], tScaled, i_clk, i_cg, i_rst, '0)
+always @* tScaled_d = tScaledVec[i_windowLengthExp];
+
+wire [DATA_W-TIME_W-1:0] maxIncr = {DATA_W-TIME_W{1'b1}};
 `dff_cg_norst(reg [DATA_W-TIME_W-1:0], incrValueNarrow, i_clk, i_cg)
 logdropWindow #(
   .DATA_W         (DATA_W-TIME_W),
   .WINLEN         (1 << TIME_W),
   .ABSTRACT_MODEL (0)
 ) u_win (
-  .i_t  (i_t),
-  .i_x  ({DATA_W-TIME_W{1'b1}}),
+  .i_t  (tScaled_q),
+  .i_x  (maxIncr),
   .o_y  (incrValueNarrow_d)
 );
 
