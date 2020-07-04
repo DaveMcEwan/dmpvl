@@ -4,7 +4,7 @@ module correlator #(
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
-  parameter WINDOW_PRECISION      = 16, // >= MAX_WINDOW_LENGTH_EXP
+  parameter WINDOW_PRECISION      = 8, // 1 < p <= MAX_WINDOW_LENGTH_EXP
   parameter PKTFIFO_DEPTH         = 50
 ) (
   input wire          i_clk,
@@ -46,7 +46,7 @@ wire              jitterSeedValid;
 bpReg #(
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-  .WINDOW_PRECISION        (WINDOW_PRECISION),
+  .WINDOW_PRECISION         (WINDOW_PRECISION),
   .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
   .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
 ) u_bpReg (
@@ -160,8 +160,6 @@ generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
 end endgenerate
 wire tDoWrap = |tDoWrapVec && sampleStrobe;
 
-localparam WINDOW_DATA_W = WINDOW_PRECISION + TIME_W;
-
 wire [TIME_W-1:0] rect_countX;
 wire [TIME_W-1:0] rect_countY;
 wire [TIME_W-1:0] rect_countIsect;
@@ -194,12 +192,14 @@ corrCountRect #(
 always @* y_d = i_y;
 always @* x_d = i_x;
 
-wire [WINDOW_DATA_W-1:0] logdrop_countX;
-wire [WINDOW_DATA_W-1:0] logdrop_countY;
-wire [WINDOW_DATA_W-1:0] logdrop_countIsect;
-wire [WINDOW_DATA_W-1:0] logdrop_countSymdiff;
+
+localparam WINDOW_TIME_W = WINDOW_PRECISION + TIME_W - 1;
+wire [WINDOW_TIME_W-1:0] logdrop_countX;
+wire [WINDOW_TIME_W-1:0] logdrop_countY;
+wire [WINDOW_TIME_W-1:0] logdrop_countIsect;
+wire [WINDOW_TIME_W-1:0] logdrop_countSymdiff;
 corrCountLogdrop #(
-  .DATA_W  (WINDOW_DATA_W),
+  .INCR_W  (WINDOW_PRECISION),
   .TIME_W  (TIME_W)
 ) u_winLogdrop (
   .i_clk          (i_clk),
@@ -227,10 +227,10 @@ corrCountLogdrop #(
 
 // Only the 8 most significant bits of the counters is reported
 always @* pkt_d = windowShape ?
-  {logdrop_countSymdiff[WINDOW_DATA_W-8 +: 8],
-   logdrop_countIsect[WINDOW_DATA_W-8 +: 8],
-   logdrop_countY[WINDOW_DATA_W-8 +: 8],
-   logdrop_countX[WINDOW_DATA_W-8 +: 8]} :
+  {logdrop_countSymdiff[WINDOW_TIME_W-8 +: 8],
+   logdrop_countIsect[WINDOW_TIME_W-8 +: 8],
+   logdrop_countY[WINDOW_TIME_W-8 +: 8],
+   logdrop_countX[WINDOW_TIME_W-8 +: 8]} :
   {rect_countSymdiff[TIME_W-8 +: 8],
    rect_countIsect[TIME_W-8 +: 8],
    rect_countY[TIME_W-8 +: 8],

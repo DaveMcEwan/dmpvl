@@ -1,9 +1,9 @@
+`include "asrt.vh"
 `include "dff.vh"
 
 module corrCountLogdrop #(
-  // Should be larger than TIME_W by a "few" bits to get usable resolution.
-  // Must be at least twice TIME_W for full resolution.
-  parameter DATA_W = 16,
+  // Width of increment must be > 1 and <= TIME_W.
+  parameter INCR_W = 16,
 
   // Defines precision of window function.
   parameter TIME_W = 8
@@ -15,10 +15,10 @@ module corrCountLogdrop #(
   input  wire               i_x,
   input  wire               i_y,
 
-  output wire [DATA_W-1:0]  o_countX,
-  output wire [DATA_W-1:0]  o_countY,
-  output wire [DATA_W-1:0]  o_countIsect,   // x AND y
-  output wire [DATA_W-1:0]  o_countSymdiff, // x XOR y
+  output wire [TIME_W+INCR_W-2:0]  o_countX,
+  output wire [TIME_W+INCR_W-2:0]  o_countY,
+  output wire [TIME_W+INCR_W-2:0]  o_countIsect,   // x AND y
+  output wire [TIME_W+INCR_W-2:0]  o_countSymdiff, // x XOR y
 
   input  wire [$clog2(TIME_W+1)-1:0]  i_windowLengthExp,
 
@@ -26,47 +26,62 @@ module corrCountLogdrop #(
   input  wire               i_zeroCounts // 1->Beginning of new window.
 );
 
+localparam COUNTER_W = TIME_W + INCR_W - 1;
+
 wire [TIME_W-1:0] tScaledVec [TIME_W+1];
+wire [INCR_W-1:0] incrVec [TIME_W+1];
+wire [COUNTER_W-1:0] incrValueVec [TIME_W+1];
 genvar i;
 generate for (i = 0; i <= TIME_W; i=i+1) begin
   if (i == 0) begin
     assign tScaledVec[0] = '0;
+    assign incrVec[0] = '0;
+    assign incrValueVec[0] = '0;
   end else begin
     assign tScaledVec[i] = i_t << (TIME_W-i);
+
+    logdropWindow #(
+      .DATA_W         (INCR_W),
+      .WINLEN         (1 << TIME_W),
+      .ABSTRACT_MODEL (0)
+    ) u_win (
+      .i_t  (tScaledVec[i]),
+      .i_x  ({ 1'b1, {INCR_W-1{1'b0}} }),
+      .o_y  (incrVec[i])
+    );
+
+    assign incrValueVec[i] = { // (incrVec[i] << (TIME_W-i))
+      {COUNTER_W-INCR_W-TIME_W+i{1'b0}},
+      incrVec[i],
+      {TIME_W-i{1'b0}}
+    };
   end
 end endgenerate
-`dff_cg_srst(reg [TIME_W-1:0], tScaled, i_clk, i_cg, i_rst, '0)
-always @* tScaled_d = tScaledVec[i_windowLengthExp];
 
-wire [DATA_W-TIME_W-1:0] maxIncr = {DATA_W-TIME_W{1'b1}};
-`dff_cg_norst(reg [DATA_W-TIME_W-1:0], incrValueNarrow, i_clk, i_cg)
-logdropWindow #(
-  .DATA_W         (DATA_W-TIME_W),
-  .WINLEN         (1 << TIME_W),
-  .ABSTRACT_MODEL (0)
-) u_win (
-  .i_t  (tScaled_q),
-  .i_x  (maxIncr),
-  .o_y  (incrValueNarrow_d)
-);
+`dff_cg_norst(reg [COUNTER_W-1:0], incrValue, i_clk, i_cg)
+always @* incrValue_d = incrValueVec[i_windowLengthExp];
+`asrt(incrValue, i_clk, !i_rst && i_cg, $onehot0(incrValue_d))
 
-reg [DATA_W-1:0] incrValue;
-always @* begin
-  incrValue = '0;
-  incrValue[DATA_W-TIME_W-1:0] = incrValue[DATA_W-TIME_W-1:0] | incrValueNarrow_q;
-end
 
-`dff_cg_srst(reg [DATA_W-1:0], countX, i_clk, i_cg, i_rst || i_zeroCounts, '0)
-always @* countX_d = i_x ? countX_q + incrValue : countX_q;
+`dff_cg_srst(reg [COUNTER_W-1:0], countX, i_clk, i_cg, i_rst || i_zeroCounts, '0)
+always @* countX_d = i_x ?
+  countX_q + incrValue_q :
+  countX_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countY, i_clk, i_cg, i_rst || i_zeroCounts, '0)
-always @* countY_d = i_y ? countY_q + incrValue : countY_q;
+`dff_cg_srst(reg [COUNTER_W-1:0], countY, i_clk, i_cg, i_rst || i_zeroCounts, '0)
+always @* countY_d = i_y ?
+  countY_q + incrValue_q :
+  countY_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countIsect, i_clk, i_cg, i_rst || i_zeroCounts, '0)
-always @* countIsect_d = (i_x & i_y) ? countIsect_q + incrValue : countIsect_q;
+`dff_cg_srst(reg [COUNTER_W-1:0], countIsect, i_clk, i_cg, i_rst || i_zeroCounts, '0)
+always @* countIsect_d = (i_x & i_y) ?
+  countIsect_q + incrValue_q :
+  countIsect_q;
 
-`dff_cg_srst(reg [DATA_W-1:0], countSymdiff, i_clk, i_cg, i_rst || i_zeroCounts, '0)
-always @* countSymdiff_d = (i_x ^ i_y) ? countSymdiff_q + incrValue : countSymdiff_q;
+`dff_cg_srst(reg [COUNTER_W-1:0], countSymdiff, i_clk, i_cg, i_rst || i_zeroCounts, '0)
+always @* countSymdiff_d = (i_x ^ i_y) ?
+  countSymdiff_q + incrValue_q :
+  countSymdiff_q;
 
 assign o_countX       = countX_q;
 assign o_countY       = countY_q;
