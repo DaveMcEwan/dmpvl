@@ -162,12 +162,11 @@ wire tDoWrap = |tDoWrapVec && sampleStrobe;
 
 localparam WINDOW_DATA_W = WINDOW_PRECISION + TIME_W;
 
-wire [WINDOW_DATA_W-1:0] rect_countX;
-wire [WINDOW_DATA_W-1:0] rect_countY;
-wire [WINDOW_DATA_W-1:0] rect_countIsect;
-wire [WINDOW_DATA_W-1:0] rect_countSymdiff;
+wire [TIME_W-1:0] rect_countX;
+wire [TIME_W-1:0] rect_countY;
+wire [TIME_W-1:0] rect_countIsect;
+wire [TIME_W-1:0] rect_countSymdiff;
 corrCountRect #(
-  .DATA_W  (WINDOW_DATA_W),
   .TIME_W  (TIME_W)
 ) u_winRect (
   .i_clk          (i_clk),
@@ -232,10 +231,10 @@ always @* pkt_d = windowShape ?
    logdrop_countIsect[WINDOW_DATA_W-8 +: 8],
    logdrop_countY[WINDOW_DATA_W-8 +: 8],
    logdrop_countX[WINDOW_DATA_W-8 +: 8]} :
-  {rect_countSymdiff[WINDOW_DATA_W-8 +: 8],
-   rect_countIsect[WINDOW_DATA_W-8 +: 8],
-   rect_countY[WINDOW_DATA_W-8 +: 8],
-   rect_countX[WINDOW_DATA_W-8 +: 8]};
+  {rect_countSymdiff[TIME_W-8 +: 8],
+   rect_countIsect[TIME_W-8 +: 8],
+   rect_countY[TIME_W-8 +: 8],
+   rect_countX[TIME_W-8 +: 8]};
 
 wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
