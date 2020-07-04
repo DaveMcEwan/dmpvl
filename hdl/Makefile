@@ -18,6 +18,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) fxcs.v
 	verilator $(VERILATOR_FLAGS) mssbIdx.v
 	verilator $(VERILATOR_FLAGS) strobe.v
+	verilator $(VERILATOR_FLAGS) pwm.v
 	verilator $(VERILATOR_FLAGS) prngXoroshiro128p.v
 	verilator $(VERILATOR_FLAGS) prngXoshiro128pp.v
 	verilator $(VERILATOR_FLAGS) prngXoshiro128p.v
@@ -50,6 +51,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) fxcs.v
 	iverilog $(IVERILOG_FLAGS) -i mssbIdx.v
 	iverilog $(IVERILOG_FLAGS) -i strobe.v
+	iverilog $(IVERILOG_FLAGS) pwm.v
 	iverilog $(IVERILOG_FLAGS) prngXoroshiro128p.v
 	iverilog $(IVERILOG_FLAGS) prngXoshiro128pp.v
 	iverilog $(IVERILOG_FLAGS) prngXoshiro128p.v
@@ -80,6 +82,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv fxcs.v'
 	yosys -q -p 'read_verilog -sv mssbIdx.v'
 	yosys -q -p 'read_verilog -sv strobe.v'
+	yosys -q -p 'read_verilog -sv pwm.v'
 	yosys -q -p 'read_verilog -sv prngXoroshiro128p.v'
 	yosys -q -p 'read_verilog -sv prngXoshiro128pp.v'
 	yosys -q -p 'read_verilog -sv prngXoshiro128p.v'
