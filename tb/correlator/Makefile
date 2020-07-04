@@ -11,6 +11,7 @@ V_SRC := \
 	../../hdl/onehotIdx.v \
 	../../hdl/prngXoshiro128p.v \
 	../../hdl/strobe.v \
+	../../hdl/pwm.v \
 	../../prj/correlator/corrCountRect.v \
 	../../prj/correlator/corrCountLogdrop.v \
 	../../prj/correlator/bpReg.v \

@@ -47,6 +47,7 @@ ptyBytePipe #(
   .o_bpDnstream_ready (bp0_dnstream_ready)
 ); // }}}
 
+wire ledPwm;
 correlator u_correlator (
   .i_clk      (i_clk),
   .i_rst      (i_rst),
@@ -54,6 +55,8 @@ correlator u_correlator (
 
   .i_x        (common_x),
   .i_y        (common_y),
+
+  .o_ledPwm   (ledPwm),
 
   .i_bp_data  (bp0_upstream_data),
   .i_bp_valid (bp0_upstream_valid),

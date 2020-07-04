@@ -14,6 +14,8 @@ module correlator #(
   input  wire         i_x,
   input  wire         i_y,
 
+  output wire         o_ledPwm,
+
   input  wire [7:0]   i_bp_data,
   input  wire         i_bp_valid,
   output wire         o_bp_ready,
@@ -247,5 +249,35 @@ always @*
     3'd4:     pktfifo_i_data = pkt_q[8*3 +: 8];
     default:  pktfifo_i_data = winNum_q;
   endcase
+
+wire [2:0] ledSelect = 'd0; // TODO: from bpReg
+
+reg [7:0] ledCtrl;
+always @*
+  case (ledSelect)
+    1:        ledCtrl = pkt_q[8*0 +: 8]; // X
+    2:        ledCtrl = pkt_q[8*1 +: 8]; // Y
+    3:        ledCtrl = pkt_q[8*2 +: 8]; // X ∩ Y
+    4:        ledCtrl = pkt_q[8*3 +: 8]; // X ⊕ Y
+    // TODO:
+    // 5:        ledCtrl = Cov; // Cov
+    // 6:        ledCtrl = Dep; // Dep
+    // 7:        ledCtrl = Ham; // Ham
+    default:  ledCtrl = winNum_q;
+  endcase
+
+wire [7:0] _unused_ledPwm_o_acc;
+pwm #(
+  .WIDTH  (8),
+  .ARCH   (1) // ΔΣ for DC offset
+) u_ledPwm (
+  .i_clk    (i_clk),
+  .i_rst    (i_rst),
+  .i_cg     (i_cg),
+
+  .i_x      (ledCtrl),
+  .o_acc    (_unused_ledPwm_o_acc),
+  .o_y      (o_ledPwm)
+);
 
 endmodule

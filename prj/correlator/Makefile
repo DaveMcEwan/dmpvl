@@ -10,14 +10,7 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/fifo.v \
 	../../hdl/fpgaReset.v \
-	../../hdl/fxcs.v \
-	../../hdl/logdropWindow.v \
-	../../hdl/mssbIdx.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/prngXoshiro128p.v \
-	../../hdl/strobe.v \
 	../../hdl/usbfsPktRx.v \
 	../../hdl/usbfsPktTx.v \
 	../../hdl/usbfsTxn.v \
@@ -26,6 +19,14 @@ SRC := \
 	../../hdl/usbfsEndpCtrlSerial.v \
 	../../hdl/usbfsSerial.v \
 	$(BUILD)/pll48.v \
+	../../hdl/fifo.v \
+	../../hdl/fxcs.v \
+	../../hdl/logdropWindow.v \
+	../../hdl/mssbIdx.v \
+	../../hdl/onehotIdx.v \
+	../../hdl/prngXoshiro128p.v \
+	../../hdl/strobe.v \
+	../../hdl/pwm.v \
 	correlator.v \
 	corrCountRect.v \
 	corrCountLogdrop.v \
