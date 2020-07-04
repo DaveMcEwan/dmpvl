@@ -12,14 +12,19 @@ echo "step 10" > tbCtrl
 # This sets the period between clock ticks to a fixed number of microseconds,
 # and execution time for evaluating each tick is ignored, so actual frequency
 # will be slightly (or a lot) less.
-echo "frequency_Hz 100" > tbCtrl
+echo "frequency_Hz 2000" > tbCtrl
 echo "continue" > tbCtrl
 
 # Run the interactive application as a foreground process.
-../../prj/correlator/correlator/correlator_tui.py -v --device=ptyBytePipe_bp0
+#../../prj/correlator/correlator/correlator_tui.py -v --device=ptyBytePipe_bp0
 
 # Run recording application as a (short-lived) foreground process.
-#../../prj/correlator/correlator/correlator_record.py -v --device=ptyBytePipe_bp0
+../../prj/correlator/correlator/correlator_record.py -v --device=ptyBytePipe_bp0 \
+  --init-windowLengthExp=5 -n=200 \
+  --timeout=10.0 -o ./build/data.txt
+
+# Plot recorded data.
+plotCsv --skiprows=1 -o ./build/plot ./build/data.txt
 
 # Now that the application has finished, stop the tb.
 echo "discontinue" > tbCtrl

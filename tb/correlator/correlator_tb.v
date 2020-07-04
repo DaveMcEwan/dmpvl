@@ -17,8 +17,8 @@ module correlator_tb (
 
 always @(posedge i_clk) begin
   common_cg     <= ($random % 100) != 0; // Drop i_cg 1/100.
-  common_x      <= ($random % 5) == 0; // Pulse i_push high 1/5.
-  common_y      <= ($random % 6) == 0; // Pulse i_pop high 1/6.
+  common_x      <= ($random % 5) == 0; // Pulse X high 1/5.
+  common_y      <= ($random % 6) == 0; // Pulse Y high 1/6.
 end
 `dff_upcounter(reg [31:0], nCycles, i_clk, 1'b1, i_rst)
 

@@ -131,8 +131,8 @@ def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
     burstTime_ms:float = nWindowPerBurst * windowPeriod_ms
     nBytesPerBurst:int = nWindowPerBurst * nBytesPerWindow
 
-    yield "winNum countX countY countIsect countSymdiff"
-    lineFmt:str = ' '.join(["%03d"]*5)
+    yield "winNum,countX,countY,countIsect,countSymdiff"
+    lineFmt:str = ','.join(["%03d"]*5)
 
     # Flush the packet fifo.
     # The cycle this arrives ac u_correlator.u_bpMem is the beginning of time
