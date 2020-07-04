@@ -224,33 +224,28 @@ corrCountLogdrop #(
 // Wrapping window counter to be used only to check that packets have not been
 // dropped.
 `dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
+`dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
 
 // Only the 8 most significant bits of the counters is reported
-wire [7:0] pkt_countX = windowShape ?
-  logdrop_countX[WINDOW_DATA_W-8 +: 8] :
-  rect_countX[WINDOW_DATA_W-8 +: 8];
-
-wire [7:0] pkt_countY = windowShape ?
-  logdrop_countY[WINDOW_DATA_W-8 +: 8] :
-  rect_countY[WINDOW_DATA_W-8 +: 8];
-
-wire [7:0] pkt_countIsect = windowShape ?
-  logdrop_countIsect[WINDOW_DATA_W-8 +: 8] :
-  rect_countIsect[WINDOW_DATA_W-8 +: 8];
-
-wire [7:0] pkt_countSymdiff = windowShape ?
-  logdrop_countSymdiff[WINDOW_DATA_W-8 +: 8] :
-  rect_countSymdiff[WINDOW_DATA_W-8 +: 8];
+always @* pkt_d = windowShape ?
+  {logdrop_countSymdiff[WINDOW_DATA_W-8 +: 8],
+   logdrop_countIsect[WINDOW_DATA_W-8 +: 8],
+   logdrop_countY[WINDOW_DATA_W-8 +: 8],
+   logdrop_countX[WINDOW_DATA_W-8 +: 8]} :
+  {rect_countSymdiff[WINDOW_DATA_W-8 +: 8],
+   rect_countIsect[WINDOW_DATA_W-8 +: 8],
+   rect_countY[WINDOW_DATA_W-8 +: 8],
+   rect_countX[WINDOW_DATA_W-8 +: 8]};
 
 wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
   case (pktIdx_q)
-    3'd1:     pktfifo_i_data = pkt_countX;
-    3'd2:     pktfifo_i_data = pkt_countY;
-    3'd3:     pktfifo_i_data = pkt_countIsect;
-    3'd4:     pktfifo_i_data = pkt_countSymdiff;
+    3'd1:     pktfifo_i_data = pkt_q[8*0 +: 8];
+    3'd2:     pktfifo_i_data = pkt_q[8*1 +: 8];
+    3'd3:     pktfifo_i_data = pkt_q[8*2 +: 8];
+    3'd4:     pktfifo_i_data = pkt_q[8*3 +: 8];
     default:  pktfifo_i_data = winNum_q;
   endcase
 
