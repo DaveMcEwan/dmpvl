@@ -37,6 +37,7 @@ class HwReg(enum.Enum): # {{{
     WindowShape             = 10
     SamplePeriodExp         = 11
     SampleJitterExp         = 12
+    LedSource               = 13
 
 # }}} Enum HwReg
 mapHwAddrToHwReg:Dict[int, HwReg] = {e.value: e for e in HwReg}
@@ -46,6 +47,24 @@ class WindowShape(enum.Enum): # {{{
     Rectangular = 0
     Logdrop     = 1
 # }}} class WindowShape
+
+@enum.unique
+class LedSource(enum.Enum): # {{{
+    WinNum          = 0
+    X               = 1
+    Y               = 2
+    Isect           = 3
+    Symdiff         = 4
+    # NOTE: No unicode in enum names.
+    Cov             = 5
+    Dep             = 6
+    Ham             = 7
+# }}} class LedSource
+
+mapHwRegToEnum = {
+    HwReg.WindowShape:  WindowShape,
+    HwReg.LedSource:    LedSource,
+}
 
 def getBitfilePath(argBitfile) -> str: # {{{
 
@@ -106,10 +125,8 @@ def hwReadRegs(rd, keys:Iterable[HwReg]) -> Dict[HwReg, Any]: # {{{
         assert isinstance(v, int), v
         assert a == k.value, (a, k.value)
 
-        if HwReg.WindowShape == k:
-            ret_[k] = WindowShape.Rectangular \
-                if 0 == v else \
-                WindowShape.Logdrop
+        if k in mapHwRegToEnum.keys():
+            ret_[k] = mapHwRegToEnum[k](v)
         else:
             ret_[k] = v
 
@@ -184,6 +201,29 @@ def argparse_SampleJitterExp(s): # {{{
         raise argparse.ArgumentTypeError(msg)
     return i
 # }}} def argparse_SampleJitterExp
+
+def argparse_LedSource(s): # {{{
+
+    sClean = s.encode("ascii", "ignore").decode("ascii").casefold()
+
+    try:
+        i = int(sClean)
+        if not (0 <= i <= 7):
+            msg = "LED source must be in [0, 7]"
+            raise argparse.ArgumentTypeError(msg)
+
+    except ValueError:
+        mapNameToInt = {e.name.casefold(): e.value for e in LedSource}
+
+        if sClean not in mapNameToInt.keys():
+            allowedNames = ','.join(e.name for e in LedSource)
+            msg = "LED source must be in {%s}" % allowedNames
+            raise argparse.ArgumentTypeError(msg)
+
+        i = mapNameToInt[sClean]
+
+    return LedSource(i)
+# }}} def argparse_LedSource
 
 def argparse_positiveInteger(nm, s): # {{{
     i = int(s)

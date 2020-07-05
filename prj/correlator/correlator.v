@@ -37,10 +37,12 @@ localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
 localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
+localparam LED_SOURCE_W             = 3;
 wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
 wire                              windowShape;
 wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
 wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
+wire [LED_SOURCE_W-1:0]           ledSource;
 
 wire [7:0]        jitterSeedByte;
 wire              jitterSeedValid;
@@ -65,6 +67,7 @@ bpReg #(
   .o_reg_windowShape      (windowShape),
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
+  .o_reg_ledSource        (ledSource),
 
   .o_jitterSeedByte   (jitterSeedByte),
   .o_jitterSeedValid  (jitterSeedValid),
@@ -250,11 +253,9 @@ always @*
     default:  pktfifo_i_data = winNum_q;
   endcase
 
-wire [2:0] ledSelect = 'd0; // TODO: from bpReg
-
 reg [7:0] ledCtrl;
 always @*
-  case (ledSelect)
+  case (ledSource)
     1:        ledCtrl = pkt_q[8*0 +: 8]; // X
     2:        ledCtrl = pkt_q[8*1 +: 8]; // Y
     3:        ledCtrl = pkt_q[8*2 +: 8]; // X ∩ Y

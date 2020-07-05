@@ -39,13 +39,15 @@ from dmppl.bytePipe import bpReadSequential, bpWriteSequential, bpWriteAddr
 from dmppl.color import CursesWindow, cursesInitPairs, \
     whiteBlue, whiteRed, greenBlack, yellowBlack
 
-from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
+from correlator_common import __version__, maxSampleRate_kHz, \
+    WindowShape, LedSource, \
     getBitfilePath, getDevicePath, uploadBitfile, \
     HwReg, hwReadRegs, hwWriteRegs, \
     calc_bitsPerWindow, \
     argparse_nonNegativeReal, \
     argparse_WindowLengthExp, argparse_WindowShape, \
-    argparse_SamplePeriodExp, argparse_SampleJitterExp
+    argparse_SamplePeriodExp, argparse_SampleJitterExp, \
+    argparse_LedSource
 
 
 @enum.unique
@@ -64,6 +66,7 @@ class TuiReg(enum.Enum): # {{{
     WindowShape     = enum.auto()
     SampleRate      = enum.auto()
     SampleJitter    = enum.auto()
+    LedSource       = enum.auto()
 # }}} Enum TuiReg
 
 @enum.unique
@@ -98,6 +101,9 @@ mapTuiRegToDomain_:Dict[TuiReg, str] = { # {{{
     # Controls register "SampleJitterExp".
     # Domain defined by HwReg.MaxSampleJitterExp
     TuiReg.SampleJitter: "(cycles) < 2**j; j ∊ ℤ ∩ [0, %d)",
+
+    # Controls register "LedSource".
+    TuiReg.LedSource: "∊ {%s}" % ", ".join(s.name for s in LedSource),
 } # }}}
 
 def hwRegsToTuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[TuiReg, Any]: # {{{
@@ -113,6 +119,7 @@ def hwRegsToTuiRegs(hwRegs:Dict[HwReg, Any]) -> Dict[TuiReg, Any]: # {{{
         TuiReg.WindowShape:  hwRegs[HwReg.WindowShape],
         TuiReg.SampleRate:   sampleRate,
         TuiReg.SampleJitter: sampleJitter,
+        TuiReg.LedSource:    hwRegs[HwReg.LedSource],
     }
     return ret
 # }}} def hwRegsToTuiRegs
@@ -152,6 +159,12 @@ def updateRegs(selectIdx:int,
         m = (n-1) if decrNotIncr else (n+1)
         lo, hi = 0, hwRegs_[HwReg.MaxSampleJitterExp]-1
         hwRegs_[HwReg.SampleJitterExp] = max(lo, min(m, hi))
+
+    elif TuiReg.LedSource == gr:
+        n = hwRegs_[HwReg.LedSource].value
+        m = (n-1) if decrNotIncr else (n+1)
+        lo, hi = 0, 7
+        hwRegs_[HwReg.LedSource] = LedSource(max(lo, min(m, hi)))
 
     else:
         pass
@@ -539,6 +552,11 @@ argparser.add_argument("--init-sampleJitterExp",
     default=0,
     help="sampleJitter < 2**sampleJitterExp  (cycles)")
 
+argparser.add_argument("--init-ledSource",
+    type=argparse_LedSource,
+    default=LedSource.WinNum,
+    help="Data source for LED brightness, either string like 'Cov' or integer.")
+
 argparser.add_argument("--prng-seed",
     type=int,
     default=0xacce55ed,
@@ -636,6 +654,7 @@ def main(args) -> int: # {{{
             HwReg.WindowShape:          args.init_windowShape,
             HwReg.SamplePeriodExp:      args.init_samplePeriodExp,
             HwReg.SampleJitterExp:      args.init_sampleJitterExp,
+            HwReg.LedSource:            args.init_ledSource,
         }
 
         if args.no_init:

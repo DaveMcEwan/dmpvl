@@ -35,13 +35,15 @@ from dmppl.base import run, verb, dbg, wrLines, grouper
 from dmppl.bytePipe import bpReadSequential, bpWriteSequential, \
     bpReadAddr, bpWriteAddr
 
-from correlator_common import __version__, maxSampleRate_kHz, WindowShape, \
+from correlator_common import __version__, maxSampleRate_kHz, \
+    WindowShape, \
     getDevicePath, \
     HwReg, hwReadRegs, hwWriteRegs, \
     calc_bitsPerWindow, \
     argparse_positiveInteger, argparse_nonNegativeReal, \
     argparse_WindowLengthExp, argparse_WindowShape, \
-    argparse_SamplePeriodExp, argparse_SampleJitterExp
+    argparse_SamplePeriodExp, argparse_SampleJitterExp, \
+    argparse_LedSource
 
 
 def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
@@ -171,19 +173,6 @@ def pktLines(device, nWindows:int, hwRegs:Dict[HwReg, Any]) -> None: # {{{
 
 # }}} def pktLines
 
-def record(device, args, hwRegs:Dict[HwReg, Any]) -> None: # {{{
-    '''
-    '''
-
-    output:Optional[str] = args.output
-    nWindows:int = args.nWindows
-
-    nLinesWritten, wrSuccess = \
-        wrLines(output, pktLines(device, nWindows, hwRegs))
-
-    return # No return value
-# }}} def record
-
 # {{{ argparser
 
 argparser = argparse.ArgumentParser(
@@ -222,6 +211,11 @@ argparser.add_argument("--init-sampleJitterExp",
     type=argparse_SampleJitterExp,
     default=None,
     help="sampleJitter < 2**sampleJitterExp  (samples)")
+
+argparser.add_argument("--init-ledSource",
+    type=argparse_LedSource,
+    default=None,
+    help="Data source for LED brightness, either string like 'Cov' or integer.")
 
 argparser.add_argument("--prng-seed",
     type=int,
@@ -284,6 +278,8 @@ def main(args) -> int: # {{{
             initRegsRW[HwReg.SamplePeriodExp] = args.init_samplePeriodExp
         if args.init_sampleJitterExp is not None:
             initRegsRW[HwReg.SampleJitterExp] = args.init_sampleJitterExp
+        if args.init_ledSource is not None:
+            initRegsRW[HwReg.LedSource] = args.init_ledSource
 
 
         if 0 < len(initRegsRW):
@@ -319,8 +315,11 @@ def main(args) -> int: # {{{
 
         try:
             verb("Recording...")
-            record(device, args, {**hwRegsRO, **hwRegsRW})
-            verb("Recording Done")
+            nLinesWritten, wrSuccess = \
+                wrLines(args.output, pktLines(device,
+                                              args.nWindows,
+                                              {**hwRegsRO, **hwRegsRW}))
+            verb("Recording %s" % ("complete" if wrSuccess else "FAILURE"))
         except KeyboardInterrupt:
             verb("KeyboardInterrupt. Exiting.")
 
