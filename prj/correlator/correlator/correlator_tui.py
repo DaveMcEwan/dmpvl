@@ -218,10 +218,9 @@ class FullWindow(CursesWindow): # {{{
 
         appName:str = "Correlator"
         devicePath:str = deviceName
-        precision:str = ["%db" % hwRegs[HwReg.WindowPrecision]]
 
         left:str = appName
-        mid:str = ' '.join((precision))
+        mid:str = ' '
         right:str = devicePath
 
         midBegin:int = (self.nChars // 2) - (len(mid) // 2)
@@ -327,68 +326,109 @@ class InputWindow(CursesWindow): # {{{
     # }}} def draw
 # }}} class InputWindow
 
-class InfoWindow(CursesWindow): # {{{
-    '''The "info" window contains a list of convenience calculations.
+class InfoCalcsWindow(CursesWindow): # {{{
+    '''This window contains a list of convenience calculations.
 
     +----------- ... -------------+
-    |label0     value0     domain0|
-    |label1     value1     domain1|
+    |section0                     |
+    |  calc0 =  value0    (unit0) |
+    |  calc1 =  value1    (unit1) |
     ...                         ...
-    |labelN     valueN     domainN|
+    |  calcN =  valueN    (unitN) |
+    |                             |
+    |section1                     |
+    |  calc0 =  value0    (unit0) |
+    |  calc1 =  value1    (unit1) |
+    ...                         ...
+    |  calcN =  valueN    (unitN) |
     +----------- ... -------------+
     '''
-    def draw(self, tuiRegs:Dict[TuiReg, Any], hwRegs:Dict[HwReg, Any]) -> None: # {{{
-        '''Draw all the parameter lines.
+    def draw(self, hwRegs:Dict[HwReg, Any]) -> None: # {{{
 
-        <label> ... <value> ... <domain>
-        '''
-        infos = (
-            ("bits/window",
-             calc_bitsPerWindow(hwRegs),
-             "= precision * nInputs * (nInputs-1)"),
-            ("windows/s",
-             calc_windowsPerSecond(tuiRegs),
-             "= sampleRate / windowLength"),
-            ("bits/s",
-             calc_bitRate(tuiRegs, hwRegs),
-             "= bits/window * windows/s"),
+        samplePeriod_cycles:int = 2**hwRegs[HwReg.SamplePeriodExp]
+        samplePeriod_ms:float = samplePeriod_cycles / float(maxSampleRate_kHz)
+        sampleRate_kHz:float = 1.0 / samplePeriod_ms
+        windowLength_samples:int = 2**hwRegs[HwReg.WindowLengthExp]
+        windowPeriod_ms:float = windowLength_samples * samplePeriod_ms
+        windowRate_kHz:float = 1.0 / windowPeriod_ms
+        pktfifoBitrate_kBps:float = 5 * windowRate_kHz
+
+        lines = (
+            "SampleStrobe",
+            "  Regularity (cycles)  ≈ %d"       % samplePeriod_cycles,
+            "  Period     (ms)      ≈ %0.5f"    % samplePeriod_ms,
+            "  Rate       (kHz)     = %0.5f"    % sampleRate_kHz,
+            "",
+            "Window",
+            "  Length     (samples) = %d"       % windowLength_samples,
+            "  Period     (ms)      ≈ %0.5f"    % windowPeriod_ms,
+            "  Rate       (kHz)     ≈ %0.5f"    % windowRate_kHz,
+            "",
+            "Pktfifo",
+            "  PacketSize (B/window) = %d"      % 5,
+            "  Bitate     (kB/s)     ≈ %0.5f"    % pktfifoBitrate_kBps,
         )
-
-        maxLenName:int = max(len(nm) for nm,v,d in infos)
 
         self.win.clear()
 
-        for i,(nm, v, d) in enumerate(infos):
-
-            left:str = ' '*(maxLenName - len(nm)) + nm + " = "
-            right:str = d
-
-            if isinstance(v, str):
-              mid = v
-            elif isinstance(v, bool):
-              mid = "True" if v else "False"
-            elif isinstance(v, int):
-              mid = "%d" % v
-            elif isinstance(v, float):
-              mid = "%0.5f" % v
-            elif isinstance(v, enum.Enum):
-              mid = v.name
-            else:
-              mid = str(v)
-
-            midBegin:int = len(left) + 2
-            rightBegin:int = 30
+        for i,line in enumerate(lines):
 
             # Fill whole line with background.
             self.drawStr(' '*self.charsWidth, y=i+1)
 
-            self.drawStr(left, y=i+1)
-            self.drawStr(mid, midBegin, y=i+1)
-            self.drawStr(right, rightBegin, y=i+1)
+            self.drawStr(line, y=i+1)
 
         return # No return value
     # }}} def draw
-# }}} class InfoWindow
+# }}} class InfoCalcsWindow
+
+class InfoHwRegsWindow(CursesWindow): # {{{
+    '''This window contains a list of absolute addresses and values.
+
+    +------------- ... ---------------+
+    |name0 (type0 @ address0) = value0|
+    |name1 (type1 @ address1) = value1|
+    ...                         ...
+    |nameN (typeN @ addressN) = valueN|
+    +------------- ... ---------------+
+    '''
+    def draw(self, hwRegs:Dict[HwReg, Any]) -> None: # {{{
+
+        # Fixed 10 lines of 34 characters.
+        lines = (
+            ("PktfifoDepth        (RO @ %2d) = %2d", HwReg.PktfifoDepth),
+            ("MaxWindowLengthExp  (RO @ %2d) = %2d", HwReg.MaxWindowLengthExp),
+            ("WindowPrecision     (RO @ %2d) = %2d", HwReg.WindowPrecision),
+            ("MaxSamplePeriodExp  (RO @ %2d) = %2d", HwReg.MaxSamplePeriodExp),
+            ("MaxSampleJitterExp  (RO @ %2d) = %2d", HwReg.MaxSampleJitterExp),
+            ("WindowLengthExp     (RW @ %2d) = %2d", HwReg.WindowLengthExp),
+            ("WindowShape         (RW @ %2d) = %2d", HwReg.WindowShape),
+            ("SamplePeriodExp     (RW @ %2d) = %2d", HwReg.SamplePeriodExp),
+            ("SampleJitterExp     (RW @ %2d) = %2d", HwReg.SampleJitterExp),
+            ("LedSource           (RW @ %2d) = %2d", HwReg.LedSource),
+        )
+
+        self.win.clear()
+        self.win.border(0, ' ', ' ', ' ', ' ', ' ', ' ', ' ')
+
+        for i,(fmt,r) in enumerate(lines):
+
+            addr = r.value
+            v = hwRegs[r]
+
+            if isinstance(v, enum.Enum):
+              value = v.value
+            else:
+              assert isinstance(v, int)
+              value = v
+
+            line = fmt % (addr, value)
+
+            self.drawStr(line, 2, y=i+1)
+
+        return # No return value
+    # }}} def draw
+# }}} class InfoHwRegsWindow
 
 def tui(scr, deviceName, rd, wr, hwRegs): # {{{
     '''
@@ -408,11 +448,17 @@ def tui(scr, deviceName, rd, wr, hwRegs): # {{{
     outstanding_ = False
     hwRegs_ = hwRegs
 
+    infoHwRegs_nLines = 10
+    infoHwRegs_lineLength = 34
+    infoCalcs_nLines = 13
+    nInfoLines = 3
+
     curses.curs_set(0) # Hide the cursor.
     cursesInitPairs() # Initialize colors
 
     full:CursesWindow = FullWindow(scr,
-        nLines=len(TuiReg)+10, nChars=80,
+        nLines=len(TuiReg) + 7 + max(infoCalcs_nLines, infoHwRegs_nLines),
+        nChars=80,
         colorPair=whiteBlue)
     full.win.box()
     full.drawTitle(deviceName, hwRegs)
@@ -427,12 +473,19 @@ def tui(scr, deviceName, rd, wr, hwRegs): # {{{
     inpt.win.keypad(True)
     inpt.win.refresh()
 
-    info:CursesWindow = InfoWindow(full.win,
-        nLines=3+2, nChars=full.nChars-2,
+    infoCalcs:CursesWindow = InfoCalcsWindow(full.win,
+        nLines=infoCalcs_nLines+2, nChars=80-infoHwRegs_lineLength-4,
         colorPair=yellowBlack,
         beginY=full.lineTop+len(TuiReg)+2, beginX=1)
-    info.draw(tuiRegs_, hwRegs_)
-    info.win.refresh()
+    infoCalcs.draw(hwRegs_)
+    infoCalcs.win.refresh()
+
+    infoHwRegs:CursesWindow = InfoHwRegsWindow(full.win,
+        nLines=infoHwRegs_nLines+2, nChars=infoHwRegs_lineLength + 2,
+        colorPair=yellowBlack,
+        beginY=full.lineTop+len(TuiReg)+2, beginX=79-infoHwRegs_lineLength-3)
+    infoHwRegs.draw(hwRegs_)
+    infoHwRegs.win.refresh()
 
     while 1:
         c = inpt.win.getch() # Calls refresh for this and derived windows.
@@ -491,8 +544,11 @@ def tui(scr, deviceName, rd, wr, hwRegs): # {{{
         inpt.draw(tuiRegs_, selectIdx_, outstanding_)
         inpt.win.refresh()
 
-        info.draw(tuiRegs_, hwRegs_)
-        info.win.refresh()
+        infoCalcs.draw(hwRegs_)
+        infoCalcs.win.refresh()
+
+        infoHwRegs.draw(hwRegs_)
+        infoHwRegs.win.refresh()
 
     return # No return value
 # }}} def tui
@@ -630,6 +686,7 @@ def main(args) -> int: # {{{
 
         verb("Reading RO registers...", end='')
         hwRegsRO:Dict[HwReg, Any] = rd((
+            HwReg.PktfifoDepth,
             HwReg.MaxWindowLengthExp,
             HwReg.WindowPrecision,
             HwReg.MaxSamplePeriodExp,
