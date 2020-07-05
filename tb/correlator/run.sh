@@ -16,10 +16,10 @@ echo "frequency_Hz 2000" > tbCtrl
 echo "continue" > tbCtrl
 
 # Run the interactive application as a foreground process.
-#../../prj/correlator/correlator/correlator_tui.py -v --device=ptyBytePipe_bp0
+#correlator-tui -v --device=ptyBytePipe_bp0
 
 # Run recording application as a (short-lived) foreground process.
-../../prj/correlator/correlator/correlator_record.py -v --device=ptyBytePipe_bp0 \
+correlator-record -v --device=ptyBytePipe_bp0 \
   --init-windowLengthExp=5 -n=200 \
   --timeout=10.0 -o ./build/data.txt
 
