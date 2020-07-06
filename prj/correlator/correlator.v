@@ -5,6 +5,7 @@ module correlator #(
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
   parameter WINDOW_PRECISION      = 8, // 1 < p <= MAX_WINDOW_LENGTH_EXP
+  parameter METRIC_PRECISION      = 16,
   parameter PKTFIFO_DEPTH         = 50
 ) (
   input wire          i_clk,
@@ -253,24 +254,35 @@ fifo #(
 // Wrapping window counter to be used only to check that packets have not been
 // dropped.
 `dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
-`dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
 
-// Only the 8 most significant bits of the counters is reported
+`dff_cg_norst(reg [TIME_W-1:0], countX,       i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countY,       i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countIsect,   i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countSymdiff, i_clk, i_cg && tDoWrap)
 always @*
   case (windowShape)
-    WINDOW_SHAPE_LOGDROP: pkt_d = {
-      logdrop_countSymdiff[WINDOW_TIME_W-8 +: 8],
-      logdrop_countIsect[WINDOW_TIME_W-8 +: 8],
-      logdrop_countY[WINDOW_TIME_W-8 +: 8],
-      logdrop_countX[WINDOW_TIME_W-8 +: 8]
-    };
-    default: pkt_d = { // WINDOW_SHAPE_RECTANGULAR
-      rect_countSymdiff[TIME_W-8 +: 8],
-      rect_countIsect[TIME_W-8 +: 8],
-      rect_countY[TIME_W-8 +: 8],
-      rect_countX[TIME_W-8 +: 8]
-    };
+    WINDOW_SHAPE_LOGDROP: begin
+      countX_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countY_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countIsect_d    = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countSymdiff_d  = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+    end
+    default: begin // WINDOW_SHAPE_RECTANGULAR
+      countX_d        = rect_countX;
+      countY_d        = rect_countX;
+      countIsect_d    = rect_countX;
+      countSymdiff_d  = rect_countX;
+    end
   endcase
+
+`dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
+// Only the 8 most significant bits of the counters is reported
+always @* pkt_d = {
+  countSymdiff_d[TIME_W-8 +: 8],
+  countIsect_d[TIME_W-8 +: 8],
+  countY_d[TIME_W-8 +: 8],
+  countX_d[TIME_W-8 +: 8]
+};
 
 wire pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
@@ -286,6 +298,34 @@ always @*
 
 // }}} Packetize and queue data for recording
 
+// {{{ Correlation metrics
+
+// Metric calculations only use top bits from the counters.
+wire [METRIC_PRECISION-1:0] countX_narrow =
+  countX_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countY_narrow =
+  countY_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countIsect_narrow =
+  countIsect_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countSymdiff_narrow =
+  countSymdiff_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+
+wire [2*METRIC_PRECISION-1:0] fullProdXY = countX_narrow * countY_narrow;
+
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg)
+always @* prodXY_d = fullProdXY[METRIC_PRECISION-1:0];
+
+wire isectGtProdXY = countIsect_narrow > prodXY_q;
+wire [METRIC_PRECISION-1:0] diffIsectProdXY = countIsect_narrow - prodXY_q;
+
+wire [METRIC_PRECISION-1:0] covInt0_pos = diffIsectProdXY;
+wire [METRIC_PRECISION-1:0] covInt0_neg = (~diffIsectProdXY) + 'd1;
+wire [METRIC_PRECISION-1:0] covInt1 = isectGtProdXY ? covInt0_pos : covInt0_neg;
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg)
+always @* metricCov_d = covInt1 << 2;
+
+// }}} Correlation metrics
+
 // {{{ LED
 
 reg [7:0] ledCtrl;
@@ -295,10 +335,10 @@ always @*
     LED_SOURCE_COUNT_Y:         ledCtrl = pkt_q[8*1 +: 8];
     LED_SOURCE_COUNT_ISECT:     ledCtrl = pkt_q[8*2 +: 8];
     LED_SOURCE_COUNT_SYMDIFF:   ledCtrl = pkt_q[8*3 +: 8];
+    LED_SOURCE_COV:             ledCtrl = metricCov_q[METRIC_PRECISION-8 +: 8];
     // TODO:
-    //LED_SOURCE_COV:             ledCtrl = Cov; // Cov
-    //LED_SOURCE_DEP:             ledCtrl = Dep; // Dep
-    //LED_SOURCE_HAM:             ledCtrl = Ham; // Ham
+    //LED_SOURCE_DEP:             ledCtrl = metricDep_q[METRIC_PRECISION-8 +: 8];
+    //LED_SOURCE_HAM:             ledCtrl = metricHam_q[METRIC_PRECISION-8 +: 8];
     default:  ledCtrl = winNum_q; // LED_SOURCE_WIN_NUM
   endcase
 
