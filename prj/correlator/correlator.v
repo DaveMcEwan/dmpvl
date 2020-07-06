@@ -27,25 +27,40 @@ module correlator #(
 
 genvar i;
 
-wire [7:0]        pktfifo_o_data;
-wire              pktfifo_o_empty;
-wire              pktfifo_i_pop;
-wire              pktfifo_i_flush;
-
 localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
-localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
-localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam LED_SOURCE_W             = 3;
+
+localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
+localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
+
+localparam LED_SOURCE_WIN_NUM       = 3'd0;
+localparam LED_SOURCE_COUNT_X       = 3'd1;
+localparam LED_SOURCE_COUNT_Y       = 3'd2;
+localparam LED_SOURCE_COUNT_ISECT   = 3'd3;
+localparam LED_SOURCE_COUNT_SYMDIFF = 3'd4;
+localparam LED_SOURCE_COV           = 3'd5;
+localparam LED_SOURCE_DEP           = 3'd6;
+localparam LED_SOURCE_HAM           = 3'd7;
+
+localparam TIME_W = MAX_WINDOW_LENGTH_EXP; // Shorter convenience alias
+
+// {{{ BytePipe memmap/register interface
+
 wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
 wire                              windowShape;
 wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
 wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
 wire [LED_SOURCE_W-1:0]           ledSource;
 
-wire [7:0]        jitterSeedByte;
-wire              jitterSeedValid;
+wire [7:0]                        pktfifo_o_data;
+wire                              pktfifo_o_empty;
+wire                              pktfifo_i_pop;
+wire                              pktfifo_i_flush;
+
+wire [7:0]                        jitterSeedByte;
+wire                              jitterSeedValid;
 
 bpReg #(
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
@@ -54,14 +69,14 @@ bpReg #(
   .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
   .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
 ) u_bpReg (
-  .i_clk              (i_clk),
-  .i_rst              (i_rst),
-  .i_cg               (i_cg),
+  .i_clk                  (i_clk),
+  .i_rst                  (i_rst),
+  .i_cg                   (i_cg),
 
-  .i_pktfifo_data   (pktfifo_o_data),
-  .i_pktfifo_empty  (pktfifo_o_empty),
-  .o_pktfifo_pop    (pktfifo_i_pop),
-  .o_pktfifo_flush  (pktfifo_i_flush),
+  .i_pktfifo_data         (pktfifo_o_data),
+  .i_pktfifo_empty        (pktfifo_o_empty),
+  .o_pktfifo_pop          (pktfifo_i_pop),
+  .o_pktfifo_flush        (pktfifo_i_flush),
 
   .o_reg_windowLengthExp  (windowLengthExp),
   .o_reg_windowShape      (windowShape),
@@ -69,17 +84,21 @@ bpReg #(
   .o_reg_sampleJitterExp  (sampleJitterExp),
   .o_reg_ledSource        (ledSource),
 
-  .o_jitterSeedByte   (jitterSeedByte),
-  .o_jitterSeedValid  (jitterSeedValid),
+  .o_jitterSeedByte       (jitterSeedByte),
+  .o_jitterSeedValid      (jitterSeedValid),
 
-  .i_bp_data   (i_bp_data),
-  .i_bp_valid  (i_bp_valid),
-  .o_bp_ready  (o_bp_ready),
+  .i_bp_data              (i_bp_data),
+  .i_bp_valid             (i_bp_valid),
+  .o_bp_ready             (o_bp_ready),
 
-  .o_bp_data   (o_bp_data),
-  .o_bp_valid  (o_bp_valid),
-  .i_bp_ready  (i_bp_ready)
+  .o_bp_data              (o_bp_data),
+  .o_bp_valid             (o_bp_valid),
+  .i_bp_ready             (i_bp_ready)
 );
+
+// }}} BytePipe memmap/register interface
+
+// {{{ Generate sampling strobe
 
 wire [MAX_SAMPLE_PERIOD_EXP:0] ctrlPeriodM1_wide = (1 << samplePeriodExp) - 1;
 wire [MAX_SAMPLE_PERIOD_EXP-1:0] ctrlPeriodM1 = ctrlPeriodM1_wide[0 +: MAX_SAMPLE_PERIOD_EXP];
@@ -110,8 +129,88 @@ strobe #(
   .o_strobe           (sampleStrobe)
 );
 
+`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
+always @* t_d = tDoWrap ? '0 : t_q + 1;
+
+wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
+generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
+  if (i == 0) begin
+    assign tDoWrapVec[0] = (windowLengthExp == 0);
+  end else begin
+    assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
+  end
+end endgenerate
+wire tDoWrap = |tDoWrapVec && sampleStrobe;
+
+// }}} Generate sampling strobe
+
+// {{{ Correlation counters
+
+wire [TIME_W-1:0] rect_countX;
+wire [TIME_W-1:0] rect_countY;
+wire [TIME_W-1:0] rect_countIsect;
+wire [TIME_W-1:0] rect_countSymdiff;
+corrCountRect #(
+  .TIME_W  (TIME_W)
+) u_winRect (
+  .i_clk          (i_clk),
+  .i_rst          (i_rst),
+  .i_cg           (i_cg && sampleStrobe),
+
+  .i_x            (i_x),
+  .i_y            (i_y),
+
+  .o_countX       (rect_countX),
+  .o_countY       (rect_countY),
+  .o_countIsect   (rect_countIsect),
+  .o_countSymdiff (rect_countSymdiff),
+
+  .i_windowLengthExp (windowLengthExp),
+
+  .i_zeroCounts   (tDoWrap)
+);
+
+// NOTE: Window coefficient is 1 sample out of of phase in order to meet timing.
+// Therefore the X and Y inputs are also flopped.
+// Okay <-- winNum is pushed into the fifo before any results.
+`dff_cg_norst(reg, x, i_clk, i_cg)
+`dff_cg_norst(reg, y, i_clk, i_cg)
+always @* y_d = i_y;
+always @* x_d = i_x;
+
+localparam WINDOW_TIME_W = WINDOW_PRECISION + TIME_W - 1;
+wire [WINDOW_TIME_W-1:0] logdrop_countX;
+wire [WINDOW_TIME_W-1:0] logdrop_countY;
+wire [WINDOW_TIME_W-1:0] logdrop_countIsect;
+wire [WINDOW_TIME_W-1:0] logdrop_countSymdiff;
+corrCountLogdrop #(
+  .INCR_W  (WINDOW_PRECISION),
+  .TIME_W  (TIME_W)
+) u_winLogdrop (
+  .i_clk          (i_clk),
+  .i_rst          (i_rst),
+  .i_cg           (i_cg && sampleStrobe),
+
+  .i_x            (x_q),
+  .i_y            (y_q),
+
+  .o_countX       (logdrop_countX),
+  .o_countY       (logdrop_countY),
+  .o_countIsect   (logdrop_countIsect),
+  .o_countSymdiff (logdrop_countSymdiff),
+
+  .i_windowLengthExp (windowLengthExp),
+
+  .i_t            (t_q),
+  .i_zeroCounts   (tDoWrap)
+);
+
+// }}} Correlation counters
+
+// {{{ Packetize and queue data for recording
+
 reg [7:0] pktfifo_i_data;
-wire pktfifo_i_push = tDoWrap || (pktIdx_q != 3'd0);
+wire pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
 wire                                  _unused_pktfifo_o_full;
 wire                                  _unused_pktfifo_o_pushed;
 wire                                  _unused_pktfifo_o_popped;
@@ -151,97 +250,29 @@ fifo #(
   .o_entries  (_unused_pktfifo_o_entries)
 );
 
-localparam TIME_W = MAX_WINDOW_LENGTH_EXP;
-`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
-always @* t_d = tDoWrap ? '0 : t_q + 1;
-
-wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
-generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
-  if (i == 0) begin
-    assign tDoWrapVec[0] = (windowLengthExp == 0);
-  end else begin
-    assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
-  end
-end endgenerate
-wire tDoWrap = |tDoWrapVec && sampleStrobe;
-
-wire [TIME_W-1:0] rect_countX;
-wire [TIME_W-1:0] rect_countY;
-wire [TIME_W-1:0] rect_countIsect;
-wire [TIME_W-1:0] rect_countSymdiff;
-corrCountRect #(
-  .TIME_W  (TIME_W)
-) u_winRect (
-  .i_clk          (i_clk),
-  .i_rst          (i_rst),
-  .i_cg           (sampleStrobe),
-
-  .i_x            (i_x),
-  .i_y            (i_y),
-
-  .o_countX       (rect_countX),
-  .o_countY       (rect_countY),
-  .o_countIsect   (rect_countIsect),
-  .o_countSymdiff (rect_countSymdiff),
-
-  .i_windowLengthExp (windowLengthExp),
-
-  .i_zeroCounts   (tDoWrap)
-);
-
-// NOTE: Window coefficient is 1 sample out of of phase in order to meet timing.
-// Therefore the X and Y inputs are also flopped.
-// Okay <-- winNum is pushed into the fifo before any results.
-`dff_cg_norst(reg, x, i_clk, i_cg)
-`dff_cg_norst(reg, y, i_clk, i_cg)
-always @* y_d = i_y;
-always @* x_d = i_x;
-
-
-localparam WINDOW_TIME_W = WINDOW_PRECISION + TIME_W - 1;
-wire [WINDOW_TIME_W-1:0] logdrop_countX;
-wire [WINDOW_TIME_W-1:0] logdrop_countY;
-wire [WINDOW_TIME_W-1:0] logdrop_countIsect;
-wire [WINDOW_TIME_W-1:0] logdrop_countSymdiff;
-corrCountLogdrop #(
-  .INCR_W  (WINDOW_PRECISION),
-  .TIME_W  (TIME_W)
-) u_winLogdrop (
-  .i_clk          (i_clk),
-  .i_rst          (i_rst),
-  .i_cg           (sampleStrobe),
-
-  .i_x            (x_q),
-  .i_y            (y_q),
-
-  .o_countX       (logdrop_countX),
-  .o_countY       (logdrop_countY),
-  .o_countIsect   (logdrop_countIsect),
-  .o_countSymdiff (logdrop_countSymdiff),
-
-  .i_windowLengthExp (windowLengthExp),
-
-  .i_t            (t_q),
-  .i_zeroCounts   (tDoWrap)
-);
-
 // Wrapping window counter to be used only to check that packets have not been
 // dropped.
 `dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
 `dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
 
 // Only the 8 most significant bits of the counters is reported
-always @* pkt_d = windowShape ?
-  {logdrop_countSymdiff[WINDOW_TIME_W-8 +: 8],
-   logdrop_countIsect[WINDOW_TIME_W-8 +: 8],
-   logdrop_countY[WINDOW_TIME_W-8 +: 8],
-   logdrop_countX[WINDOW_TIME_W-8 +: 8]} :
-  {rect_countSymdiff[TIME_W-8 +: 8],
-   rect_countIsect[TIME_W-8 +: 8],
-   rect_countY[TIME_W-8 +: 8],
-   rect_countX[TIME_W-8 +: 8]};
+always @*
+  case (windowShape)
+    WINDOW_SHAPE_LOGDROP: pkt_d = {
+      logdrop_countSymdiff[WINDOW_TIME_W-8 +: 8],
+      logdrop_countIsect[WINDOW_TIME_W-8 +: 8],
+      logdrop_countY[WINDOW_TIME_W-8 +: 8],
+      logdrop_countX[WINDOW_TIME_W-8 +: 8]
+    };
+    default: pkt_d = { // WINDOW_SHAPE_RECTANGULAR
+      rect_countSymdiff[TIME_W-8 +: 8],
+      rect_countIsect[TIME_W-8 +: 8],
+      rect_countY[TIME_W-8 +: 8],
+      rect_countX[TIME_W-8 +: 8]
+    };
+  endcase
 
-wire pktIdx_wrap = ((pktIdx_q == 3'd4) && pktfifo_i_push) || pktfifo_i_flush;
+wire pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
 
 always @*
@@ -253,18 +284,22 @@ always @*
     default:  pktfifo_i_data = winNum_q;
   endcase
 
+// }}} Packetize and queue data for recording
+
+// {{{ LED
+
 reg [7:0] ledCtrl;
 always @*
   case (ledSource)
-    1:        ledCtrl = pkt_q[8*0 +: 8]; // X
-    2:        ledCtrl = pkt_q[8*1 +: 8]; // Y
-    3:        ledCtrl = pkt_q[8*2 +: 8]; // X ∩ Y
-    4:        ledCtrl = pkt_q[8*3 +: 8]; // X ⊕ Y
+    LED_SOURCE_COUNT_X:         ledCtrl = pkt_q[8*0 +: 8];
+    LED_SOURCE_COUNT_Y:         ledCtrl = pkt_q[8*1 +: 8];
+    LED_SOURCE_COUNT_ISECT:     ledCtrl = pkt_q[8*2 +: 8];
+    LED_SOURCE_COUNT_SYMDIFF:   ledCtrl = pkt_q[8*3 +: 8];
     // TODO:
-    // 5:        ledCtrl = Cov; // Cov
-    // 6:        ledCtrl = Dep; // Dep
-    // 7:        ledCtrl = Ham; // Ham
-    default:  ledCtrl = winNum_q;
+    //LED_SOURCE_COV:             ledCtrl = Cov; // Cov
+    //LED_SOURCE_DEP:             ledCtrl = Dep; // Dep
+    //LED_SOURCE_HAM:             ledCtrl = Ham; // Ham
+    default:  ledCtrl = winNum_q; // LED_SOURCE_WIN_NUM
   endcase
 
 wire [7:0] _unused_ledPwm_o_acc;
@@ -280,5 +315,7 @@ pwm #(
   .o_acc    (_unused_ledPwm_o_acc),
   .o_y      (o_ledPwm)
 );
+
+// }}} LED
 
 endmodule
