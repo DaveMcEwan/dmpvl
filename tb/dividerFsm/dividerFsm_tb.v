@@ -16,10 +16,12 @@ module dividerFsm_tb (
   input  wire [7:0]     common_i_divisor,
 
   output wire           dividerFsm_8_o_busy,
+  output wire           dividerFsm_8_o_done,
   output wire [7:0]     dividerFsm_8_o_quotient,
   output wire [7:0]     dividerFsm_8_o_remainder,
 
   output wire           dividerFsm_8_abstract_o_busy,
+  output wire           dividerFsm_8_abstract_o_done,
   output wire [7:0]     dividerFsm_8_abstract_o_quotient,
   output wire [7:0]     dividerFsm_8_abstract_o_remainder
 `endif
@@ -109,6 +111,7 @@ dividerFsm #(
   .i_dividend (common_i_dividend),
   .i_divisor  (common_i_divisor),
 
+  .o_done     (dividerFsm_8_o_done),
   .o_busy     (dividerFsm_8_o_busy),
   .o_quotient (dividerFsm_8_o_quotient),
   .o_remainder(dividerFsm_8_o_remainder)
@@ -126,6 +129,7 @@ dividerFsm #(
   .i_dividend (common_i_dividend),
   .i_divisor  (common_i_divisor),
 
+  .o_done     (dividerFsm_8_abstract_o_done),
   .o_busy     (dividerFsm_8_abstract_o_busy),
   .o_quotient (dividerFsm_8_abstract_o_quotient),
   .o_remainder(dividerFsm_8_abstract_o_remainder)

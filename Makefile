@@ -20,6 +20,7 @@ check_verif:
 
 run_tbs:
 	make -C tb/bpRegMem
+	make -C tb/dividerFsm
 	make -C tb/fifo
 	make -C tb/fxcs
 	make -C tb/logdropWindow
