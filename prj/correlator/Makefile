@@ -27,6 +27,7 @@ SRC := \
 	../../hdl/prngXoshiro128p.v \
 	../../hdl/strobe.v \
 	../../hdl/pwm.v \
+	../../hdl/dividerFsm.v \
 	correlator.v \
 	corrCountRect.v \
 	corrCountLogdrop.v \

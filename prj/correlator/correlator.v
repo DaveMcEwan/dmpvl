@@ -310,19 +310,63 @@ wire [METRIC_PRECISION-1:0] countIsect_narrow =
 wire [METRIC_PRECISION-1:0] countSymdiff_narrow =
   countSymdiff_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
 
+// NOTE: 16b multiplier path limited to ~60.5MHz on Lattice iCE40LP.
 wire [2*METRIC_PRECISION-1:0] fullProdXY = countX_narrow * countY_narrow;
-
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg && (pktIdx_q == 'd1))
 always @* prodXY_d = fullProdXY[METRIC_PRECISION-1:0];
 
-wire isectGtProdXY = countIsect_narrow > prodXY_q;
-wire [METRIC_PRECISION-1:0] diffIsectProdXY = countIsect_narrow - prodXY_q;
+// NOTE: 16b divide path limited to ~16.5MHz on Lattice iCE40LP.
+//wire [METRIC_PRECISION-1:0] ratioIsectProdXY = prodXY_q / countIsect_narrow;
+wire [METRIC_PRECISION-1:0] ratioIsectProdXY;
+wire                        ratioIsectProdXY_o_done;
+wire                        _unused_ratioIsectProdXY_o_busy;
+wire [METRIC_PRECISION-1:0] _unused_ratioIsectProdXY_o_remainder;
+dividerFsm #(
+  .WIDTH          (METRIC_PRECISION),
+  .ABSTRACT_MODEL (0)
+) u_ratioIsectProdXY (
+  .i_clk      (i_clk),
+  .i_cg       (i_cg),
+  .i_rst      (i_rst),
 
-wire [METRIC_PRECISION-1:0] covInt0_pos = diffIsectProdXY;
-wire [METRIC_PRECISION-1:0] covInt0_neg = (~diffIsectProdXY) + 'd1;
-wire [METRIC_PRECISION-1:0] covInt1 = isectGtProdXY ? covInt0_pos : covInt0_neg;
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg)
-always @* metricCov_d = covInt1 << 2;
+  .i_begin    (pktIdx_q == 'd2),
+  .i_dividend (prodXY_q),
+  .i_divisor  (countIsect_narrow),
+
+  .o_busy     (_unused_ratioIsectProdXY_o_busy),
+  .o_done     (ratioIsectProdXY_o_done),
+  .o_quotient (ratioIsectProdXY),
+  .o_remainder(_unused_ratioIsectProdXY_o_remainder)
+);
+
+// | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |   =  𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y]   : (𝔼[X ⊙ Y] > 𝔼[X].𝔼[Y])
+//                               𝔼[X].𝔼[Y] - 𝔼[X ⊙ Y]   : otherwise
+wire isectGtProdXY = (countIsect_narrow > prodXY_q);
+wire [METRIC_PRECISION-1:0] diffIsectProdXY_A = countIsect_narrow - prodXY_q;
+wire [METRIC_PRECISION-1:0] diffIsectProdXY_B = prodXY_q - countIsect_narrow;
+wire [METRIC_PRECISION-1:0] absdiffIsectProdXY = isectGtProdXY ?
+  diffIsectProdXY_A : diffIsectProdXY_B;
+
+// Ċov(X, Y) := 4 . | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |      ∊ [0, 1]
+// NOTE: Fixed point format gives actual codomain of [0, 1) therefore:
+//           = | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] | * 2**2    ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg && (pktIdx_q == 'd2))
+always @* metricCov_d = absdiffIsectProdXY << 2;
+
+// Ḋep(X, Y) := 1 - 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y]          ∊ [0, 1]
+// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
+// cannot be represented, therefore:
+//           = ¬( 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y] )          ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricDep, i_clk, i_cg && ratioIsectProdXY_o_done)
+always @* metricDep_d = ~ratioIsectProdXY;
+
+// Ḣam(X, Y) := 1 - 𝔼[| X - Y |]                  ∊ [0, 1]
+// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
+// cannot be represented, and absdiff(X,Y) is equivalent to XOR in binary data
+// therefore:
+//           = ¬𝔼[X ⊙ Y]                          ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricHam, i_clk, i_cg && (pktIdx_q == 'd1))
+always @* metricHam_d = ~countSymdiff_narrow;
 
 // }}} Correlation metrics
 
@@ -336,9 +380,8 @@ always @*
     LED_SOURCE_COUNT_ISECT:     ledCtrl = pkt_q[8*2 +: 8];
     LED_SOURCE_COUNT_SYMDIFF:   ledCtrl = pkt_q[8*3 +: 8];
     LED_SOURCE_COV:             ledCtrl = metricCov_q[METRIC_PRECISION-8 +: 8];
-    // TODO:
-    //LED_SOURCE_DEP:             ledCtrl = metricDep_q[METRIC_PRECISION-8 +: 8];
-    //LED_SOURCE_HAM:             ledCtrl = metricHam_q[METRIC_PRECISION-8 +: 8];
+    LED_SOURCE_DEP:             ledCtrl = metricDep_q[METRIC_PRECISION-8 +: 8];
+    LED_SOURCE_HAM:             ledCtrl = metricHam_q[METRIC_PRECISION-8 +: 8];
     default:  ledCtrl = winNum_q; // LED_SOURCE_WIN_NUM
   endcase
 
