@@ -20,9 +20,9 @@ module dividerFsm #(
   input  wire [WIDTH-1:0] i_dividend,
   input  wire [WIDTH-1:0] i_divisor,
 
-  // Outputs may be sampled when o_busy is clear.
-  output wire             o_busy,
+  // Outputs may be sampled on single pulse of o_done, or when o_busy is clear.
   output wire             o_done,
+  output wire             o_busy,
   output wire [WIDTH-1:0] o_quotient,
   output wire [WIDTH-1:0] o_remainder
 );
