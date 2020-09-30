@@ -1,7 +1,7 @@
 /** correlator_tb.v - Testbench for fifo
  * Expose BytePipe as a PTY for external script to use.
  */
-`include "dff.vh"
+`include "dff.svh"
 
 module correlator_tb (
 

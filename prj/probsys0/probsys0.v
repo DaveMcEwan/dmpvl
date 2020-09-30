@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 `ifndef N_CYCLES
 `define N_CYCLES 'd100

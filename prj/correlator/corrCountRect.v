@@ -1,5 +1,5 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
 
 module corrCountRect #(
   parameter TIME_W = 8

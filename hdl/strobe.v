@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 // Generate a strobe by dividing clock.
 // Optional jitter is Poisson distributed.

@@ -7,7 +7,7 @@ module serialEchoer_tb (
 `endif
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 localparam HOST2DEV_N_ENDP = 2;
 localparam DEV2HOST_N_ENDP = 2;

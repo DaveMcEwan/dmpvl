@@ -1,5 +1,5 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
 
 module usbfsSerial #(
   parameter VIDPID_SQUAT = 1,

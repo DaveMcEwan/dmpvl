@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 module axi4liteRandomMaster #(
   parameter PROB_W = 8,

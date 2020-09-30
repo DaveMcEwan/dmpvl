@@ -1,6 +1,7 @@
-`include "asrt.vh"
-`include "dff.vh"
-`include "misc.vh"
+`include "asrt.svh"
+`include "dff.svh"
+`include "misc.svh"
+`include "usbSpec.svh"
 
 module usbfsPktTx #(
   parameter MAX_PKT = 8  // in {8,16,32,64}. wMaxPacketSize
@@ -31,8 +32,6 @@ module usbfsPktTx #(
   output wire                       o_inflight
 );
 // approx 60 DFFs,
-
-`include "usbSpec.vh"
 
 // Max number of bytes in a packet is (1<SOP> + 1<PID> + MAX_PKT + 2<CRC16>)
 // SOP is always sent when (nBytesSent_q == 0).

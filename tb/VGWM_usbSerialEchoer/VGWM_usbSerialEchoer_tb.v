@@ -1,7 +1,7 @@
 /** Testbench for Valenty/Griffiths/Williams ACM device.
  */
 
-`include "asrt.vh"
+`include "asrt.svh"
 
 module serialEchoer_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
@@ -10,7 +10,7 @@ module serialEchoer_tb (
 `endif
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 localparam HOST2DEV_N_ENDP = 2;
 localparam DEV2HOST_N_ENDP = 2;

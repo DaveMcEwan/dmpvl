@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 //  Contains all the USB setup logic.
 //  Two endpoint interfaces (1x IN, 1x OUT).
@@ -31,8 +32,6 @@ module usbCtrlSerial #(
   output wire         o_inEp_stall,
   input  wire         i_inEp_acked
 );
-
-`include "usbSpec.vh"
 
 localparam IDLE = 0;
 localparam SETUP = 1;

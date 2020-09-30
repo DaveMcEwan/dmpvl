@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 /* Pulse Width Modulator
  *

@@ -1,6 +1,6 @@
-`include "dff.vh"
-`include "asrt.vh"
-`include "misc.vh"
+`include "dff.svh"
+`include "asrt.svh"
+`include "misc.svh"
 
 module usbfsEndpRx #(
   parameter MAX_PKT = 8

@@ -1,6 +1,6 @@
-`include "dff.vh"
-`include "asrt.vh"
-`include "misc.vh"
+`include "dff.svh"
+`include "asrt.svh"
+`include "misc.svh"
 
 // WIP Divider based on FSM
 // TODO: Get this working before unrolled pipeline.

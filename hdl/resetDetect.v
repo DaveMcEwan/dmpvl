@@ -1,5 +1,5 @@
 
-`include "dff.vh"
+`include "dff.svh"
 
 // Detect reset being removed.
 // Second flop used to avoid asserting o_wentInactive for a partial cycle.

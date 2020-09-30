@@ -12,7 +12,7 @@ module usbFullSpeedPackets_tb (
 `endif
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 wire [3:0]            drvHost_o_pid;
 wire [8*8-1:0]        drvHost_o_data;

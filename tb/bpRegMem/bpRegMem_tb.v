@@ -4,7 +4,7 @@
  * Connecting wires should be <instance>_<port>
  */
 
-`include "dff.vh"
+`include "dff.svh"
 module bpRegMem_tb (
 
 `ifdef VERILATOR

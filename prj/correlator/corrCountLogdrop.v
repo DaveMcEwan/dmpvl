@@ -1,5 +1,5 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
 
 module corrCountLogdrop #(
   // Width of increment must be > 1 and <= TIME_W.

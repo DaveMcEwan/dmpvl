@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "ambaSpec.svh"
 
 module axi4liteRandomSlave #(
   parameter IDLE_TIMEOUT = 3,
@@ -66,8 +67,6 @@ module axi4liteRandomSlave #(
   output wire                       o_idle,
   output wire                       o_stall
 );
-
-`include "ambaSpec.vh"
 
 localparam OFFSET_W = $clog2(N_MEM_WORD); // 10
 localparam OFFSET_L = $clog2(DATA_BYTEW); // 2

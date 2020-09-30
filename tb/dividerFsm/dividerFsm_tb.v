@@ -1,5 +1,5 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
 
 /** dividerFsm_tb.sv - Testbench for dividerFsm
  * Instance name should be u_dividerFsm_<width>_[abstract]

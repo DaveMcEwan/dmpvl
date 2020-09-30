@@ -1,5 +1,6 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbFullSpeedTransactor #(
   parameter AS_HOST_NOT_DEV = 0, // 1=Operate as host, 0=Operate as device/function.
@@ -71,8 +72,6 @@ module usbFullSpeedTransactor #(
   // not be sampled whilst any transaction is outstanding.
   input  wire [6:0]                 i_devAddr
 );
-
-`include "usbSpec.vh"
 
 genvar e;
 

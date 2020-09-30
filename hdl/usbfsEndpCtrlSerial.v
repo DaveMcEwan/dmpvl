@@ -1,6 +1,7 @@
-`include "dff.vh"
-`include "asrt.vh"
-`include "misc.vh"
+`include "dff.svh"
+`include "asrt.svh"
+`include "misc.svh"
+`include "usbSpec.svh"
 
 /*
 Control endpoint pair for either a generic serial device (/dev/ttyUSB*),
@@ -66,8 +67,6 @@ module usbfsEndpCtrlSerial #(
   // flags {SETUP, OUT, IN}
   input  wire [2:0]                 i_txnType
 );
-
-`include "usbSpec.vh"
 
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT + 1);

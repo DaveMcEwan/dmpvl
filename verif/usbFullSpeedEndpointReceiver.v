@@ -1,5 +1,5 @@
-`include "dff.vh"
-`include "asrt.vh"
+`include "dff.svh"
+`include "asrt.svh"
 
 module usbFullSpeedEndpointReceiver #(
   parameter MAX_PKT = 8

@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 module correlator #(
   parameter MAX_WINDOW_LENGTH_EXP = 16,

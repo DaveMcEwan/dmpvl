@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 module generateClock (
 `ifdef VERILATOR // V_erilator must drive its own root clock

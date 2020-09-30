@@ -1,5 +1,5 @@
-`ifndef DFF_VH_
-`define DFF_VH_
+`ifndef DFF_SVH_
+`define DFF_SVH_
 
 /** Flop macros
  * These are to make the intent of flop inferences easy to determine.
@@ -273,4 +273,4 @@ always @ (posedge clk) \
 always @* n``_plus1 = n``_q + 'd1;
 // }}}
 
-`endif // DFF_VH_
+`endif // DFF_SVH_

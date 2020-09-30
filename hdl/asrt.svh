@@ -1,5 +1,5 @@
-`ifndef ASRT_VH_
-`define ASRT_VH_
+`ifndef ASRT_SVH_
+`define ASRT_SVH_
 
 `ifdef SYNTHESIS
   // Assertion macros defined as nothing in synthesis.
@@ -47,4 +47,4 @@ always @ (posedge (trigger)) \
 
 `endif
 
-`endif // ASRT_VH_
+`endif // ASRT_SVH_

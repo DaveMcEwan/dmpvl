@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 /* BytePipe interface, indended to sit on top of USB for register access.
 Unpack the register map to wires.

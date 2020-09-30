@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbPktTx (
   // A 48MHz clock is required to receive USB data at 12MHz and it's simple to
@@ -24,8 +25,6 @@ module usbPktTx (
   output wire           o_txDataGet,
   input  wire [7:0]     i_txData
 );
-
-`include "usbSpec.vh"
 
 wire [1:0] pidCodingGroup;
 wire pidIsToken;

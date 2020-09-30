@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 // The IN Protocol Engine sends data to the host.
 module usbPeIn #(
@@ -32,8 +33,6 @@ module usbPeIn #(
   input  wire                   i_txDataGet,
   output wire [7:0]             o_txData
 );
-
-`include "usbSpec.vh"
 
 wire [1:0] currentEpState;
 wire txDataAvail;

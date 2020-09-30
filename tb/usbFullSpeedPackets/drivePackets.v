@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 // Drive random packets to usbFullSpeedPacketSender.
 // No attempt made at packet level protocol compliance as this is just to
@@ -18,7 +18,7 @@ module drivePackets #(
   output wire [$clog2(MAX_PKT):0]   o_data_nBytes
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 // Randomly drop o_valid for 7/8 of cycles.
 reg [2:0] rnd_valid;

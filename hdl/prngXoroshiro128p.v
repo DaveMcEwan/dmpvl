@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 // Pseudo-Random Number Generator as designed by David Blackman and Sebastian
 // Vigna, but in synthesizable Verilog.

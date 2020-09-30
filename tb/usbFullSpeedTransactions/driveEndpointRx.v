@@ -1,5 +1,5 @@
-`include "dff.vh"
-`include "asrt.vh"
+`include "dff.svh"
+`include "asrt.svh"
 
 module driveEndpointRx #(
   parameter MAX_PKT = 8
@@ -17,7 +17,7 @@ module driveEndpointRx #(
   input  wire [2:0]                 i_txnType // {SETUP, OUT, IN}
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 wire accepted = o_erReady && i_erValid;
 

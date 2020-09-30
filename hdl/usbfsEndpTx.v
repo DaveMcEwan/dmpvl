@@ -1,5 +1,5 @@
-`include "dff.vh"
-`include "asrt.vh"
+`include "dff.svh"
+`include "asrt.svh"
 
 module usbfsEndpTx #(
   parameter NAK_NOT_ZEROLENGTHDATA = 0, // NOTE: NAK is poorly tested.

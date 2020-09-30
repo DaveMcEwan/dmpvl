@@ -1,3 +1,5 @@
+`ifndef USBSPEC_SVH_
+`define USBSPEC_SVH_
 // USB spec r1.0
 
 // Transition states.
@@ -317,3 +319,5 @@ localparam BDESCRIPTORSUBTYPE_CDC_ATMNET    = 8'h10;
 localparam BDESCRIPTORSUBTYPE_CDC_WHCM      = 8'h11;
 
 // }}} Table 13 bDescriptor SubType in Communications Class Functional Descriptors
+
+`endif // USBSPEC_SVH_

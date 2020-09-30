@@ -1,5 +1,6 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbFullSpeedPacketSender #(
   parameter AS_HOST_NOT_DEV = 1, // 1=Operate as host, 0=Operate as device/function.
@@ -30,8 +31,6 @@ module usbFullSpeedPacketSender #(
 );
 // NOTE: A design/implementation based on this logic uses approximately 60 DFFs,
 // assuming that the data source is external.
-
-`include "usbSpec.vh"
 
 // NOTE: Packet will begin sending with SYNC_SOP in cycle following this.
 wire drv_accepted = o_ready && i_valid;

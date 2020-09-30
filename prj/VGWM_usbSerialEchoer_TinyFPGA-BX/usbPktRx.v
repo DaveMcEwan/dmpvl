@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbPktRx (
   // A 48MHz clock is required to recover the clock from the incoming data.
@@ -28,8 +29,6 @@ module usbPktRx (
   // Most recent packet passes PID and CRC checks
   output wire           o_pktValid
 );
-
-`include "usbSpec.vh"
 
 /*
 dp_q[1]        _------------____________________________------------------

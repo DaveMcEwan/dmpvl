@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 module edgeDetect (
   input  wire i_clk,

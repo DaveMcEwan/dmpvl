@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 module xoroshiro #(
   parameter WINLEN = 256, // Must be power-of-2, at least 4, or 0 for no window.

@@ -1,5 +1,6 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbFullSpeedPacketReceiver #(
   parameter AS_HOST_NOT_DEV = 0, // 1=Operate as host, 0=Operate as device/function.
@@ -42,8 +43,6 @@ module usbFullSpeedPacketReceiver #(
 );
 // NOTE: A design/implementation based on this logic uses approximately TODO?? DFFs,
 // assuming that the data sink is external.
-
-`include "usbSpec.vh"
 
 // {{{ Transition detection and clock recovery
 // approx 9 dff

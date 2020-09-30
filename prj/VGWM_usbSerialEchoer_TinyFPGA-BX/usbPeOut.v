@@ -1,4 +1,5 @@
-`include "dff.vh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 // The OUT Protocol Engine receives data from the host.
 module usbPeOut #(
@@ -38,8 +39,6 @@ module usbPeOut #(
   input  wire                   i_txPktEnd,
   output wire [3:0]             o_txPid
 );
-
-`include "usbSpec.vh"
 
 genvar e;
 

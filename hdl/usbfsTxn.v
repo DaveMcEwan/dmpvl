@@ -1,5 +1,6 @@
-`include "asrt.vh"
-`include "dff.vh"
+`include "asrt.svh"
+`include "dff.svh"
+`include "usbSpec.svh"
 
 module usbfsTxn #(
   // Number of endpoints >=1. Endpoint0 is always the Default Endpoint (control).
@@ -65,7 +66,6 @@ module usbfsTxn #(
   input  wire [6:0]                 i_devAddr
 );
 
-`include "usbSpec.vh"
 
 localparam DATA_W = 8*MAX_PKT;
 localparam NBYTES_W = $clog2(MAX_PKT + 1);

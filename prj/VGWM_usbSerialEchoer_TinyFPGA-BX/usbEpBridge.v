@@ -41,7 +41,7 @@ In the case where the buffer fills to the top, i_inEp_dataFree goes low by
 itself.
 */
 
-`include "dff.vh"
+`include "dff.svh"
 
 module usbEpBridge (
   input  wire         i_clk,

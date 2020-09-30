@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 // Drive random transactions to/from usbFullSpeedTransactor.
 // No attempt made at transaction level protocol compliance as this is just to
@@ -15,7 +15,7 @@ module driveTransactions (
   output wire [3:0]                 o_txnEndp
 );
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 wire accepted = i_ready && o_valid;
 `dff_nocg_srst(reg [31:0], nTxns, i_clk, i_rst, '0)

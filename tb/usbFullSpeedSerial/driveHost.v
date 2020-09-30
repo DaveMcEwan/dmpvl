@@ -1,4 +1,4 @@
-`include "dff.vh"
+`include "dff.svh"
 
 // Drive control transfers, then random data to/from usbFullSpeedSerial.
 // The configuration (control transfers) stage is a very directed test.
@@ -42,7 +42,7 @@ module driveHost (
 
 localparam MAX_PKT = 8;
 
-`include "usbSpec.vh"
+`include "usbSpec.svh"
 
 wire txn_accepted = i_txnReady && o_txnValid;
 `dff_nocg_srst(reg [31:0], nTxns, i_clk, i_rst, '0)

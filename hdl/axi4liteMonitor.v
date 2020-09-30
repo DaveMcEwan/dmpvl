@@ -1,3 +1,5 @@
+`include "ambaSpec.svh"
+
 // Monitor for one AXI port.
 module axi4liteMonitor #(
   parameter ADDR_W = 16,
@@ -57,8 +59,6 @@ module axi4liteMonitor #(
   output wire [(1 << (ADDR_W-12))-1:0]  o_aw_pagenum,
   output wire [(1 << (ADDR_W-12))-1:0]  o_ar_pagenum
 );
-
-`include "ambaSpec.vh"
 
 localparam OFFSET_W = 10;
 localparam OFFSET_L = 2;

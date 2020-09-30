@@ -1,5 +1,5 @@
-`include "dff.vh"
-`include "misc.vh"
+`include "dff.svh"
+`include "misc.svh"
 
 module fifo #(
   parameter WIDTH = 8,  // Must be 1 or more.
