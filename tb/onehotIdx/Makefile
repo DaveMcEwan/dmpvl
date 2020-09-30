@@ -2,8 +2,8 @@
 TB := onehotIdx_tb
 
 V_SRC := \
-	../../hdl/onehotIdx.v \
-	$(TB).v
+	../../hdl/onehotIdx.sv \
+	$(TB).sv
 
 include ../common.mk
 

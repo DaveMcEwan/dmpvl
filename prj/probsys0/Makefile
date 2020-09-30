@@ -12,17 +12,17 @@ vcd: $(VCD_VERILATOR)
 #vcd: $(VCD_IVERILOG)
 
 SRC = \
-	$(PROJ).v \
-	../../hdl/resetDetect.v \
-	../../hdl/prngXoroshiro128p.v \
-	../../hdl/fifo.v \
-	../../hdl/axi4liteMonitor.v \
-	../../hdl/axi4liteRandomSlave.v \
-	../../hdl/axi4liteRandomMaster.v
+	$(PROJ).sv \
+	../../hdl/resetDetect.sv \
+	../../hdl/prngXoroshiro128p.sv \
+	../../hdl/fifo.sv \
+	../../hdl/axi4liteMonitor.sv \
+	../../hdl/axi4liteRandomSlave.sv \
+	../../hdl/axi4liteRandomMaster.sv
 
 .PHONY: lint
 lint:
-	verilator --lint-only -I../../hdl/ $(PROJ).v
+	verilator --lint-only -I../../hdl/ $(PROJ).sv
 
 # Verilator compile verilog into C++.
 #		-DABSTRACT_PRNG=1
@@ -40,7 +40,7 @@ $(BUILD)/V$(PROJ).mk: $(SRC)
 		--clk i_clk \
 		--top-module $(PROJ) \
 		../$(PROJ).cc \
-		$(PROJ).v
+		$(PROJ).sv
 
 # Compile verilated C++ into executable.
 $(BUILD)/V$(PROJ): $(BUILD)/V$(PROJ).mk

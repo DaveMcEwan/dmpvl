@@ -8,22 +8,22 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/edgeDetect.v \
-	../../hdl/fifo.v \
-	../../hdl/fpgaReset.v \
-	usbPktTxMux.v \
-	usbPktTx.v \
-	usbPktRx.v \
-	usbEpInArbiter.v \
-	usbEpOutArbiter.v \
-	usbPeIn.v \
-	usbPeOut.v \
-	usbPe.v \
-	usbEpBridge.v \
-	usbCtrlSerial.v \
-	usbSerial.v \
-	$(BUILD)/pll48.v \
-	$(PROJ).v
+	../../hdl/edgeDetect.sv \
+	../../hdl/fifo.sv \
+	../../hdl/fpgaReset.sv \
+	usbPktTxMux.sv \
+	usbPktTx.sv \
+	usbPktRx.sv \
+	usbEpInArbiter.sv \
+	usbEpOutArbiter.sv \
+	usbPeIn.sv \
+	usbPeOut.sv \
+	usbPe.sv \
+	usbEpBridge.sv \
+	usbCtrlSerial.sv \
+	usbSerial.sv \
+	$(BUILD)/pll48.sv \
+	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
 # This design is tied to a PLL frequency of 48MHz.
@@ -49,34 +49,34 @@ all: lint iverilog synth pnr pack rpt
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint:
-	verilator $(VERILATOR_FLAGS) usbPktTxMux.v
-	verilator $(VERILATOR_FLAGS) usbPktTx.v
-	verilator $(VERILATOR_FLAGS) usbPktRx.v
-	verilator $(VERILATOR_FLAGS) usbEpInArbiter.v
-	verilator $(VERILATOR_FLAGS) usbEpOutArbiter.v
-	verilator $(VERILATOR_FLAGS) usbPeIn.v
-	verilator $(VERILATOR_FLAGS) usbPeOut.v
-	verilator $(VERILATOR_FLAGS) usbPe.v
-	verilator $(VERILATOR_FLAGS) usbEpBridge.v
-	verilator $(VERILATOR_FLAGS) usbCtrlSerial.v
+	verilator $(VERILATOR_FLAGS) usbPktTxMux.sv
+	verilator $(VERILATOR_FLAGS) usbPktTx.sv
+	verilator $(VERILATOR_FLAGS) usbPktRx.sv
+	verilator $(VERILATOR_FLAGS) usbEpInArbiter.sv
+	verilator $(VERILATOR_FLAGS) usbEpOutArbiter.sv
+	verilator $(VERILATOR_FLAGS) usbPeIn.sv
+	verilator $(VERILATOR_FLAGS) usbPeOut.sv
+	verilator $(VERILATOR_FLAGS) usbPe.sv
+	verilator $(VERILATOR_FLAGS) usbEpBridge.sv
+	verilator $(VERILATOR_FLAGS) usbCtrlSerial.sv
 
 # Run through iverilog (Icarus) to ensure files are compatible.
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
-	iverilog $(IVERILOG_FLAGS) usbPktTxMux.v
-	iverilog $(IVERILOG_FLAGS) usbPktTx.v
-	iverilog $(IVERILOG_FLAGS) usbPktRx.v
-	iverilog $(IVERILOG_FLAGS) usbEpInArbiter.v
-	iverilog $(IVERILOG_FLAGS) usbEpOutArbiter.v
-	iverilog $(IVERILOG_FLAGS) usbPeIn.v
-	iverilog $(IVERILOG_FLAGS) usbPeOut.v
-	iverilog $(IVERILOG_FLAGS) -i usbPe.v
-	iverilog $(IVERILOG_FLAGS) -i usbEpBridge.v
-	iverilog $(IVERILOG_FLAGS) -i usbCtrlSerial.v
-	iverilog $(IVERILOG_FLAGS) -i usbSerial.v
+	iverilog $(IVERILOG_FLAGS) usbPktTxMux.sv
+	iverilog $(IVERILOG_FLAGS) usbPktTx.sv
+	iverilog $(IVERILOG_FLAGS) usbPktRx.sv
+	iverilog $(IVERILOG_FLAGS) usbEpInArbiter.sv
+	iverilog $(IVERILOG_FLAGS) usbEpOutArbiter.sv
+	iverilog $(IVERILOG_FLAGS) usbPeIn.sv
+	iverilog $(IVERILOG_FLAGS) usbPeOut.sv
+	iverilog $(IVERILOG_FLAGS) -i usbPe.sv
+	iverilog $(IVERILOG_FLAGS) -i usbEpBridge.sv
+	iverilog $(IVERILOG_FLAGS) -i usbCtrlSerial.sv
+	iverilog $(IVERILOG_FLAGS) -i usbSerial.sv
 
-$(BUILD)/pll48.v:
+$(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
 	icepll \
 		-q \

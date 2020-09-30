@@ -2,21 +2,21 @@
 TB := usbFullSpeedTransactions_tb
 
 V_SRC := \
-	../../hdl/resetDetect.v \
-	../../verif/generateClock.v \
-	../../verif/tristateBuffer.v \
-	../../verif/usbFullSpeedPacketSender.v \
-	../../verif/usbFullSpeedPacketReceiver.v \
-	../../verif/usbFullSpeedTransactor.v \
-	driveEndpointRx.v \
-	driveEndpointTx.v \
-	driveTransactions.v \
-	$(TB).v
+	../../hdl/resetDetect.sv \
+	../../verif/generateClock.sv \
+	../../verif/tristateBuffer.sv \
+	../../verif/usbFullSpeedPacketSender.sv \
+	../../verif/usbFullSpeedPacketReceiver.sv \
+	../../verif/usbFullSpeedTransactor.sv \
+	driveEndpointRx.sv \
+	driveEndpointTx.sv \
+	driveTransactions.sv \
+	$(TB).sv
 
 LINT_SRC := \
-	driveEndpointRx.v \
-	driveEndpointTx.v \
-	driveTransactions.v
+	driveEndpointRx.sv \
+	driveEndpointTx.sv \
+	driveTransactions.sv
 
 # NOTE: Icarus only - no support for Verilator yet.
 VCD_VERILATOR :=

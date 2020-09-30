@@ -4,8 +4,8 @@ TB := fifo_tb
 N_CYCLES ?= 1000000
 
 V_SRC := \
-	$(TB).v \
-	../../hdl/fifo.v
+	$(TB).sv \
+	../../hdl/fifo.sv
 
 CC_SRC := \
 	fifo_model.cc \

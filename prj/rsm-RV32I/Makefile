@@ -41,22 +41,22 @@ default: hello
 
 # Verilator has the best preprocessor by far, and is required for the ff_
 # macros so put the expanded source files in the build directory.
-PREPROCESSED_SRCS = $(BUILD)/rsm_hier.v
-$(BUILD)/%.v: hw/%.v
+PREPROCESSED_SRCS = $(BUILD)/rsm_hier.sv
+$(BUILD)/%.sv: hw/%.sv
 	mkdir -p $(BUILD)
 	verilator -E $< --Mdir $(BUILD)/obj_dir > $@
 pp_src: $(PREPROCESSED_SRCS)
 
 lint: pp_src
-	verilator --lint-only --Mdir $(BUILD)/obj_dir $(BUILD)/rsm_hier.v
-	yosys -q -p 'read_verilog $(BUILD)/rsm_hier.v'
-	iverilog -g2001 -s rsm_m -o $(BUILD)/rsm_hier.vvp $(BUILD)/rsm_hier.v
+	verilator --lint-only --Mdir $(BUILD)/obj_dir $(BUILD)/rsm_hier.sv
+	yosys -q -p 'read_verilog $(BUILD)/rsm_hier.sv'
+	iverilog -g2001 -s rsm_m -o $(BUILD)/rsm_hier.vvp $(BUILD)/rsm_hier.sv
 
 # Compile and elaborate icarus testbench.
 $(BUILD)/testbench.vvp: pp_src
 	iverilog -g2001 -s testbench \
-	  -DMEM_N_KBYTE=$(MEM_N_KBYTE) \
-	  -o $(BUILD)/testbench.vvp tb/testbench.v
+		-DMEM_N_KBYTE=$(MEM_N_KBYTE) \
+		-o $(BUILD)/testbench.vvp tb/testbench.sv
 
 # Run icarus testbench, dumping VCD.
 $(BUILD)/testbench.iverilog.vcd: $(BUILD)/testbench.vvp
@@ -65,7 +65,7 @@ $(BUILD)/testbench.iverilog.vcd: $(BUILD)/testbench.vvp
 # Compile verilator testbench.
 $(BUILD)/obj_dir/Vtestbench: pp_src
 $(BUILD)/obj_dir/Vtestbench: tb/testbench.cc
-$(BUILD)/obj_dir/Vtestbench: tb/testbench.v
+$(BUILD)/obj_dir/Vtestbench: tb/testbench.sv
 	verilator --cc --exe --Mdir $(BUILD)/obj_dir \
 		--trace --trace-depth $(TRACEDEPTH) \
 		-Wno-fatal \
@@ -73,7 +73,7 @@ $(BUILD)/obj_dir/Vtestbench: tb/testbench.v
 		--top-module testbench \
 		--clk i_clk \
 		../../tb/testbench.cc \
-		tb/testbench.v
+		tb/testbench.sv
 	$(MAKE) -C $(BUILD)/obj_dir -f Vtestbench.mk
 
 # Compile all testbenches ready to run.

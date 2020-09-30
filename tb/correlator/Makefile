@@ -2,20 +2,20 @@
 TB := correlator_tb
 
 V_SRC := \
-	$(TB).v \
-	../../verif/ptyBytePipe.v \
-	../../hdl/fifo.v \
-	../../hdl/fxcs.v \
-	../../hdl/logdropWindow.v \
-	../../hdl/mssbIdx.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/prngXoshiro128p.v \
-	../../hdl/strobe.v \
-	../../hdl/pwm.v \
-	../../prj/correlator/corrCountRect.v \
-	../../prj/correlator/corrCountLogdrop.v \
-	../../prj/correlator/bpReg.v \
-	../../prj/correlator/correlator.v
+	$(TB).sv \
+	../../verif/ptyBytePipe.sv \
+	../../hdl/fifo.sv \
+	../../hdl/fxcs.sv \
+	../../hdl/logdropWindow.sv \
+	../../hdl/mssbIdx.sv \
+	../../hdl/onehotIdx.sv \
+	../../hdl/prngXoshiro128p.sv \
+	../../hdl/strobe.sv \
+	../../hdl/pwm.sv \
+	../../prj/correlator/corrCountRect.sv \
+	../../prj/correlator/corrCountLogdrop.sv \
+	../../prj/correlator/bpReg.sv \
+	../../prj/correlator/correlator.sv
 
 V_INCDIRS := ../../prj/correlator
 

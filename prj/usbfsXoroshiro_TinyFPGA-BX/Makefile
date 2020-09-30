@@ -10,27 +10,27 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	xoroshiro.v \
-	../../hdl/prngXoroshiro128p.v \
-	../../hdl/prngXoshiro128pp.v \
-	../../hdl/prngXoshiro128p.v \
-	../../hdl/prngXoshiro256p.v \
-	../../hdl/prngXoroshiro64s.v \
-	../../hdl/fxcs.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/mssbIdx.v \
-	../../hdl/logdropWindow.v \
-	../../hdl/fifo.v \
-	../../hdl/fpgaReset.v \
-	../../hdl/usbfsPktRx.v \
-	../../hdl/usbfsPktTx.v \
-	../../hdl/usbfsTxn.v \
-	../../hdl/usbfsEndpRx.v \
-	../../hdl/usbfsEndpTx.v \
-	../../hdl/usbfsEndpCtrlSerial.v \
-	../../hdl/usbfsSerial.v \
-	$(BUILD)/pll48.v \
-	$(PROJ).v
+	xoroshiro.sv \
+	../../hdl/prngXoroshiro128p.sv \
+	../../hdl/prngXoshiro128pp.sv \
+	../../hdl/prngXoshiro128p.sv \
+	../../hdl/prngXoshiro256p.sv \
+	../../hdl/prngXoroshiro64s.sv \
+	../../hdl/fxcs.sv \
+	../../hdl/onehotIdx.sv \
+	../../hdl/mssbIdx.sv \
+	../../hdl/logdropWindow.sv \
+	../../hdl/fifo.sv \
+	../../hdl/fpgaReset.sv \
+	../../hdl/usbfsPktRx.sv \
+	../../hdl/usbfsPktTx.sv \
+	../../hdl/usbfsTxn.sv \
+	../../hdl/usbfsEndpRx.sv \
+	../../hdl/usbfsEndpTx.sv \
+	../../hdl/usbfsEndpCtrlSerial.sv \
+	../../hdl/usbfsSerial.sv \
+	$(BUILD)/pll48.sv \
+	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
 # The design components are tied to a PLL frequency of 48MHz.
@@ -49,7 +49,7 @@ pack: $(BUILD)/$(PROJ).icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt
 all: synth pnr pack rpt test wavedrom
 
-$(BUILD)/pll48.v:
+$(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
 	icepll \
 		-q \

@@ -54,7 +54,7 @@ $(BUILD)/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 		--clk common_clk \
 		--top-module $(VERILATOR_TOP) \
 		$(CC_SRC) \
-		$(VERILATOR_TOP).v
+		$(VERILATOR_TOP).sv
 
 # Compile verilated C++ into executable.
 $(BUILD)/V$(TB): $(BUILD)/V$(TB).mk $(VERILATOR_DPI_DEPS)

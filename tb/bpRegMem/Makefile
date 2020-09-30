@@ -4,9 +4,9 @@ TB := bpRegMem_tb
 N_CYCLES ?= 1000000
 
 V_SRC := \
-	$(TB).v \
-	../../verif/generateClock.v \
-	../../hdl/bpRegMem.v
+	$(TB).sv \
+	../../verif/generateClock.sv \
+	../../hdl/bpRegMem.sv
 
 CC_SRC := \
 	bpRegMem_model.cc \

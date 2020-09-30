@@ -10,29 +10,29 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/fpgaReset.v \
-	../../hdl/usbfsPktRx.v \
-	../../hdl/usbfsPktTx.v \
-	../../hdl/usbfsTxn.v \
-	../../hdl/usbfsEndpRx.v \
-	../../hdl/usbfsEndpTx.v \
-	../../hdl/usbfsEndpCtrlSerial.v \
-	../../hdl/usbfsSerial.v \
-	$(BUILD)/pll48.v \
-	../../hdl/fifo.v \
-	../../hdl/fxcs.v \
-	../../hdl/logdropWindow.v \
-	../../hdl/mssbIdx.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/prngXoshiro128p.v \
-	../../hdl/strobe.v \
-	../../hdl/pwm.v \
-	../../hdl/dividerFsm.v \
-	correlator.v \
-	corrCountRect.v \
-	corrCountLogdrop.v \
-	bpReg.v \
-	$(PROJ).v
+	../../hdl/fpgaReset.sv \
+	../../hdl/usbfsPktRx.sv \
+	../../hdl/usbfsPktTx.sv \
+	../../hdl/usbfsTxn.sv \
+	../../hdl/usbfsEndpRx.sv \
+	../../hdl/usbfsEndpTx.sv \
+	../../hdl/usbfsEndpCtrlSerial.sv \
+	../../hdl/usbfsSerial.sv \
+	$(BUILD)/pll48.sv \
+	../../hdl/fifo.sv \
+	../../hdl/fxcs.sv \
+	../../hdl/logdropWindow.sv \
+	../../hdl/mssbIdx.sv \
+	../../hdl/onehotIdx.sv \
+	../../hdl/prngXoshiro128p.sv \
+	../../hdl/strobe.sv \
+	../../hdl/pwm.sv \
+	../../hdl/dividerFsm.sv \
+	correlator.sv \
+	corrCountRect.sv \
+	corrCountLogdrop.sv \
+	bpReg.sv \
+	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
 # The design components are tied to a PLL frequency of 48MHz.
@@ -56,21 +56,21 @@ all: lint iverilog synth pnr pack rpt
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint:
-	verilator $(VERILATOR_FLAGS) bpReg.v
-	verilator $(VERILATOR_FLAGS) corrCountRect.v
-	verilator $(VERILATOR_FLAGS) corrCountLogdrop.v
-	verilator $(VERILATOR_FLAGS) correlator.v
+	verilator $(VERILATOR_FLAGS) bpReg.sv
+	verilator $(VERILATOR_FLAGS) corrCountRect.sv
+	verilator $(VERILATOR_FLAGS) corrCountLogdrop.sv
+	verilator $(VERILATOR_FLAGS) correlator.sv
 
 # Run through iverilog (Icarus) to ensure files are compatible.
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
-	iverilog $(IVERILOG_FLAGS) -i bpReg.v
-	iverilog $(IVERILOG_FLAGS) corrCountRect.v
-	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.v
-	iverilog $(IVERILOG_FLAGS) -i correlator.v
+	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
+	iverilog $(IVERILOG_FLAGS) corrCountRect.sv
+	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.sv
+	iverilog $(IVERILOG_FLAGS) -i correlator.sv
 
-$(BUILD)/pll48.v:
+$(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
 	icepll \
 		-q \

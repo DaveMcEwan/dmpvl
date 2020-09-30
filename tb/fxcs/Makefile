@@ -2,8 +2,8 @@
 TB := fxcs_tb
 
 V_SRC := \
-	../../hdl/fxcs.v \
-	$(TB).v
+	../../hdl/fxcs.sv \
+	$(TB).sv
 
 include ../common.mk
 

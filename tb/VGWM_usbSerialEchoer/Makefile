@@ -2,29 +2,29 @@
 TB := VGWM_usbSerialEchoer_tb
 
 V_SRC := \
-	../../verif/generateClock.v \
-	../../verif/tristateBuffer.v \
-	../../hdl/resetDetect.v \
-	../../hdl/edgeDetect.v \
-	../../hdl/fifo.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTxMux.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTx.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpInArbiter.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpOutArbiter.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPeIn.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPeOut.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPe.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbCtrlSerial.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpBridge.v \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbSerial.v \
-	../../verif/usbFullSpeedPacketSender.v \
-	../../verif/usbFullSpeedPacketReceiver.v \
-	../../verif/usbFullSpeedTransactor.v \
-	driveHost.v \
-	$(TB).v
+	../../verif/generateClock.sv \
+	../../verif/tristateBuffer.sv \
+	../../hdl/resetDetect.sv \
+	../../hdl/edgeDetect.sv \
+	../../hdl/fifo.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTxMux.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTx.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpInArbiter.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpOutArbiter.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPeIn.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPeOut.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPe.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbCtrlSerial.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbEpBridge.sv \
+	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbSerial.sv \
+	../../verif/usbFullSpeedPacketSender.sv \
+	../../verif/usbFullSpeedPacketReceiver.sv \
+	../../verif/usbFullSpeedTransactor.sv \
+	driveHost.sv \
+	$(TB).sv
 
-LINT_SRC := driveHost.v
+LINT_SRC := driveHost.sv
 IVERILOG_TOP := serialEchoer_tb
 
 # NOTE: Icarus only - no support for Verilator yet.

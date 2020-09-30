@@ -10,18 +10,18 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/bpRegMem.v \
-	../../hdl/fifo.v \
-	../../hdl/fpgaReset.v \
-	../../hdl/usbfsPktRx.v \
-	../../hdl/usbfsPktTx.v \
-	../../hdl/usbfsTxn.v \
-	../../hdl/usbfsEndpRx.v \
-	../../hdl/usbfsEndpTx.v \
-	../../hdl/usbfsEndpCtrlSerial.v \
-	../../hdl/usbfsSerial.v \
-	$(BUILD)/pll48.v \
-	$(PROJ).v
+	../../hdl/bpRegMem.sv \
+	../../hdl/fifo.sv \
+	../../hdl/fpgaReset.sv \
+	../../hdl/usbfsPktRx.sv \
+	../../hdl/usbfsPktTx.sv \
+	../../hdl/usbfsTxn.sv \
+	../../hdl/usbfsEndpRx.sv \
+	../../hdl/usbfsEndpTx.sv \
+	../../hdl/usbfsEndpCtrlSerial.sv \
+	../../hdl/usbfsSerial.sv \
+	$(BUILD)/pll48.sv \
+	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
 # The design components are tied to a PLL frequency of 48MHz.
@@ -40,7 +40,7 @@ pack: $(BUILD)/$(PROJ).icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt
 all: synth pnr pack rpt test wavedrom
 
-$(BUILD)/pll48.v:
+$(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
 	icepll \
 		-q \

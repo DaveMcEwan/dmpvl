@@ -10,17 +10,17 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/fifo.v \
-	../../hdl/fpgaReset.v \
-	../../verif/usbFullSpeedPacketReceiver.v \
-	../../verif/usbFullSpeedPacketSender.v \
-	../../verif/usbFullSpeedTransactor.v \
-	../../verif/usbFullSpeedEndpointReceiver.v \
-	../../verif/usbFullSpeedEndpointSender.v \
-	../../verif/usbFullSpeedControlSerial.v \
-	../../verif/usbFullSpeedSerial.v \
-	$(BUILD)/pll48.v \
-	$(PROJ).v
+	../../hdl/fifo.sv \
+	../../hdl/fpgaReset.sv \
+	../../verif/usbFullSpeedPacketReceiver.sv \
+	../../verif/usbFullSpeedPacketSender.sv \
+	../../verif/usbFullSpeedTransactor.sv \
+	../../verif/usbFullSpeedEndpointReceiver.sv \
+	../../verif/usbFullSpeedEndpointSender.sv \
+	../../verif/usbFullSpeedControlSerial.sv \
+	../../verif/usbFullSpeedSerial.sv \
+	$(BUILD)/pll48.sv \
+	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
 # The verif components are tied to a PLL frequency of 48MHz.
@@ -41,7 +41,7 @@ pack: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).arachne.icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).arachne.icetime.rpt
 all: synth pnr pack rpt
 
-$(BUILD)/pll48.v:
+$(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
 	icepll \
 		-q \

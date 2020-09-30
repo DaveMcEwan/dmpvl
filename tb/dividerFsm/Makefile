@@ -4,8 +4,8 @@ TB := dividerFsm_tb
 N_CYCLES ?= 1000000
 
 V_SRC := \
-	../../verif/generateClock.v \
-	../../hdl/dividerFsm.v \
-	$(TB).v
+	../../verif/generateClock.sv \
+	../../hdl/dividerFsm.sv \
+	$(TB).sv
 
 include ../common.mk

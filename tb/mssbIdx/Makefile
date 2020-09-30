@@ -2,10 +2,10 @@
 TB := mssbIdx_tb
 
 V_SRC := \
-	../../hdl/fxcs.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/mssbIdx.v \
-	$(TB).v
+	../../hdl/fxcs.sv \
+	../../hdl/onehotIdx.sv \
+	../../hdl/mssbIdx.sv \
+	$(TB).sv
 
 # NOTE: No Icarus or Verilator testbenches yet.
 VCD_VERILATOR :=

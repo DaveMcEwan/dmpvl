@@ -2,11 +2,11 @@
 TB := logdropWindow_tb
 
 V_SRC := \
-	../../hdl/fxcs.v \
-	../../hdl/onehotIdx.v \
-	../../hdl/mssbIdx.v \
-	../../hdl/logdropWindow.v \
-	$(TB).v
+	../../hdl/fxcs.sv \
+	../../hdl/onehotIdx.sv \
+	../../hdl/mssbIdx.sv \
+	../../hdl/logdropWindow.sv \
+	$(TB).sv
 
 # NOTE: Verilator only - no support for Icarus yet.
 VCD_IVERILOG :=
@@ -24,7 +24,7 @@ w_rand:
 		--Mdir $(BUILD) \
 		--top-module w_rand \
 		w_rand.cc \
-		w_rand.v
+		w_rand.sv
 	make -j -C $(BUILD) -f Vw_rand.mk Vw_rand
 	time $(BUILD)/Vw_rand > $(BUILD)/w_rand.log
 	@! grep -q ERROR ./build/Vw_rand.log
