@@ -43,12 +43,14 @@ clean_tbs:
 	make -C tb/VGWM_usbSerialEchoer clean
 	make -C tb/usbfsSerialEchoer clean
 
+# Some projects may be allowed to fail when timing is known to be tight and
+# subject to randomization.
 build_projects:
 	make -C prj/probsys0
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX
 	make -C prj/usbfsSerialEchoer_TinyFPGA-BX
-	make -C prj/usbfsBpRegMem_TinyFPGA-BX
+	-make -C prj/usbfsBpRegMem_TinyFPGA-BX
 	make -C prj/usbfsXoroshiro_TinyFPGA-BX
 
 clean_projects:
