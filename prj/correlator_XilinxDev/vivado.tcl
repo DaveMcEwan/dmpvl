@@ -3,8 +3,33 @@ set REPORT 1
 set CHECKPOINT 1
 set NETLIST 1
 
-# zc702 part
-set part "xc7z020clg484-1"
+# AC701 (Artix-7)
+#set part "xc7a200tfbg676-2"
+
+# KC705 (Kintex-7)
+#set part "xc7k325tffg900-2"
+
+# KCU1500 (Kintex UltraScale)
+#set part "xcku115-flvb2104-2-e"
+
+# KCU116 (Kintex UltraScale+)
+#set part "xcku5p-ffvb676-2-e"
+
+# VC707 (Virtex-7)
+#set part "xc7vx485tffg1157-1"
+set part "xc7vx485tffg1761-2"
+
+# VCU108 (Virtex UltraScale)
+#set part "xcvu095-ffva2104-2-e"
+
+# VCU118 (Virtex UltraScale+)
+#set part "xcvu9p-flga2104-2L-e"
+
+# ZC702 (Zynq)
+#set part "xc7z020clg484-1"
+
+# ZCU102 (Zynq UltraScale+)
+#set part "xczu9eg-ffvb1156-2-i"
 
 set projname "correlator"
 set dir_xdc "xdc"
@@ -21,16 +46,17 @@ if [ file exists untracked.tcl ] {
     source untracked.tcl
 }
 
-# Build IP from catalog.
-if [ file exists ${dir_bld}/synth_ip.DONE ] {
-  read_checkpoint ${dir_bld}/ip/ps7_m/ps7_m.dcp
-  read_checkpoint ${dir_bld}/ip/rst_m/rst_m.dcp
-} else {
-  set_part ${part}
-  source vivado.synth_ip.ps7.tcl
-  source vivado.synth_ip.rst.tcl
-  exec touch ${dir_bld}/synth_ip.DONE
-}
+# ZC702
+## Build IP from catalog.
+#if [ file exists ${dir_bld}/synth_ip.DONE ] {
+#  read_checkpoint ${dir_bld}/ip/ps7_m/ps7_m.dcp
+#  read_checkpoint ${dir_bld}/ip/rst_m/rst_m.dcp
+#} else {
+#  set_part ${part}
+#  source vivado.synth_ip.ps7.tcl
+#  source vivado.synth_ip.rst.tcl
+#  exec touch ${dir_bld}/synth_ip.DONE
+#}
 
 # Read in all source files.
 read_verilog \
