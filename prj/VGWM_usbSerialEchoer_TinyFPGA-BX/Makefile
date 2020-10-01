@@ -257,4 +257,4 @@ multipnr: $(PCF) $(BUILD)/$(PROJ).yosys.json
 multipnr: multipnr/results.csv.pdf
 
 .SECONDARY:
-.PHONY: default all synth pnr pack rpt prog clean gui
+.PHONY: default all lint iverilog synth pnr pack rpt prog clean gui

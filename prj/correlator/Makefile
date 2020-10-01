@@ -40,7 +40,6 @@ TGT_FMAX = 48
 
 # NOTE: Finding a good seed requires some trials and won't necessarily be good
 # for other setups (minor code changes, tool versions, host OS version, etc).
-# Use multipnr to find a suitable seed.
 PNR_SEED ?= 5
 
 default: lint iverilog $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
@@ -110,7 +109,6 @@ prog: $(BUILD)/$(PROJ).icepack.bin
 
 clean:
 	rm -rf build
-	rm -rf multipnr
 
 .SECONDARY:
-.PHONY: default all synth pnr pack rpt prog clean gui
+.PHONY: default all lint iverilog synth pnr pack rpt prog clean gui
