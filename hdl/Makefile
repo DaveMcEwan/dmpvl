@@ -12,6 +12,8 @@ lint:
 	verilator $(VERILATOR_FLAGS) axi4liteRandomMaster.sv
 	verilator $(VERILATOR_FLAGS) axi4liteRandomSlave.sv
 	verilator $(VERILATOR_FLAGS) bpRegMem.sv
+	verilator $(VERILATOR_FLAGS) corrCountLogdrop.sv
+	verilator $(VERILATOR_FLAGS) corrCountRect.sv
 	verilator $(VERILATOR_FLAGS) dividerFsm.sv
 	verilator $(VERILATOR_FLAGS) edgeDetect.sv
 	verilator $(VERILATOR_FLAGS) fifo.sv
@@ -46,6 +48,8 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomMaster.sv
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomSlave.sv
 	iverilog $(IVERILOG_FLAGS) bpRegMem.sv
+	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.sv
+	iverilog $(IVERILOG_FLAGS) corrCountRect.sv
 	iverilog $(IVERILOG_FLAGS) dividerFsm.sv
 	iverilog $(IVERILOG_FLAGS) edgeDetect.sv
 	iverilog $(IVERILOG_FLAGS) fifo.sv
@@ -78,6 +82,8 @@ yosys:
 	yosys -q -p 'read_verilog -sv axi4liteRandomMaster.sv'
 	yosys -q -p 'read_verilog -sv axi4liteRandomSlave.sv'
 	yosys -q -p 'read_verilog -sv bpRegMem.sv'
+	yosys -q -p 'read_verilog -sv corrCountLogdrop.sv'
+	yosys -q -p 'read_verilog -sv corrCountRect.sv'
 	yosys -q -p 'read_verilog -sv dividerFsm.sv'
 	yosys -q -p 'read_verilog -sv edgeDetect.sv'
 	yosys -q -p 'read_verilog -sv fifo.sv'
@@ -112,6 +118,8 @@ add_files \\
 	axi4liteRandomMaster.sv \\
 	axi4liteRandomSlave.sv \\
 	bpRegMem.sv \\
+	corrCountLogdrop.sv \\
+	corrCountRect.sv \\
 	dividerFsm.sv \\
 	edgeDetect.sv \\
 	fifo.sv \\
@@ -143,6 +151,8 @@ export VIVADO_TCL
 vivado:
 	@echo "$$VIVADO_TCL" > vivado.tcl
 	vivado -mode batch -source vivado.tcl > /dev/null
+	rm vivado_*.backup.jou
+	rm vivado_*.backup.log
 	@! grep -q ERROR vivado.log
 	@! grep -q WARNING vivado.log
 

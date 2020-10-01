@@ -28,9 +28,9 @@ SRC := \
 	../../hdl/strobe.sv \
 	../../hdl/pwm.sv \
 	../../hdl/dividerFsm.sv \
+	../../hdl/corrCountRect.sv \
+	../../hdl/corrCountLogdrop.sv \
 	correlator.sv \
-	corrCountRect.sv \
-	corrCountLogdrop.sv \
 	bpReg.sv \
 	$(PROJ).sv
 
@@ -57,8 +57,6 @@ VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint:
 	verilator $(VERILATOR_FLAGS) bpReg.sv
-	verilator $(VERILATOR_FLAGS) corrCountRect.sv
-	verilator $(VERILATOR_FLAGS) corrCountLogdrop.sv
 	verilator $(VERILATOR_FLAGS) correlator.sv
 
 # Run through iverilog (Icarus) to ensure files are compatible.
@@ -66,8 +64,6 @@ IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 iverilog:
 	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
-	iverilog $(IVERILOG_FLAGS) corrCountRect.sv
-	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.sv
 	iverilog $(IVERILOG_FLAGS) -i correlator.sv
 
 $(BUILD)/pll48.sv:
