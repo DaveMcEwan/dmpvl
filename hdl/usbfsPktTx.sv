@@ -39,6 +39,10 @@ module usbfsPktTx #(
 localparam NBYTES_W = $clog2(MAX_PKT + 5);
 localparam IDX_W = $clog2(MAX_PKT);
 
+wire currentBit;
+wire doStuff;
+`dff_cg_srst(reg, inflight, i_clk_48MHz, i_strobe_12MHz, i_rst, 1'b0)
+
 // NOTE: Packet will begin driving SYNC_SOP in cycle following this.
 wire tx_accepted = o_ready && i_valid;
 
@@ -196,7 +200,7 @@ always @*
   else
     byteShift_d = byteShift_q >> 1;
 
-wire currentBit = byteShift_q[0];
+assign currentBit = byteShift_q[0];
 
 // }}} Mux data into 8b shift register.
 
@@ -212,11 +216,11 @@ wire currentBit = byteShift_q[0];
 // The data “one” that ends the Sync Pattern is counted as the first one in a
 // sequence.
 // Bit stuffing is always enforced, without exception.
+wire sendBit = currentBit && !doStuff;
 `dff_cg_srst(reg [NRZI_MAXRL_ONES-1:0], nrziHistory, i_clk_48MHz, i_strobe_12MHz && inflight_q, (tx_accepted || i_rst), '0)
 always @* nrziHistory_d = {nrziHistory_q[NRZI_MAXRL_ONES-2:0], sendBit};
 
-wire doStuff = &nrziHistory_q;
-wire sendBit = currentBit && !doStuff;
+assign doStuff = &nrziHistory_q;
 
 // }}} Calculate bit stuffing and mux into sendBit.
 
@@ -245,8 +249,6 @@ always @*
 
 assign o_eopDone = (bitCntr_q == 3'd3) && eop_q;
 
-wire txSE0 = (pn_q == LINE_SE0);
-
 `dff_cg_srst(reg [1:0], pn, i_clk_48MHz, i_strobe_12MHz && inflight_q, i_rst, LINE_J)
 always @*
   if ((bitCntr_q == 3'd2) && eop_q) // EOP must revert line back to J state.
@@ -260,12 +262,13 @@ always @*
 
 assign {o_dp, o_dn} = pn_q;
 
+wire txSE0 = (pn_q == LINE_SE0);
+
 // }}} Drive differential {d+, d-}.
 
 // NOTE: inflight_q is equivalent in functionallity to an "output enable" in a
 // bidirectional GPIO design.
 // approx 1 dff
-`dff_cg_srst(reg, inflight, i_clk_48MHz, i_strobe_12MHz, i_rst, 1'b0)
 always @*
   if (tx_accepted)
     inflight_d = 1'b1;

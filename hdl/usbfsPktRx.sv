@@ -107,9 +107,18 @@ always @* pnSequence_d = {pnSequence_q[3:0], pn_q};
 // by the nearest hub.
 localparam TRANS_SOP = {LINE_J, LINE_K, LINE_K};
 localparam TRANS_EOP = {LINE_SE0, LINE_SE0};
+`dff_cg_srst(reg, inflight, i_clk_48MHz, sampleStrobe_12MHz, i_rst, 1'b0)
+`dff_nocg_srst(reg, eop, i_clk_48MHz, i_rst, 1'b0)
 wire sop = !inflight_q && (pnSequence_q == TRANS_SOP);
 wire eop = inflight_q && (pnSequence_q[3:0] == TRANS_EOP);
-`dff_cg_srst(reg, inflight, i_clk_48MHz, sampleStrobe_12MHz, i_rst, 1'b0)
+
+// NOTE: o_eop may drive a lot of logic in transactor so consider flopping.
+// Delaying o_eop by one cycle also has the effect of postponing o_oe in
+// reaction to a packet, avoiding both host and device asserting o_oe and
+// driving against each other.
+always @* eop_d = eop && sampleStrobe_12MHz;
+assign o_eop = eop_q;
+
 always @*
   if (sop)
     inflight_d = 1'b1;
@@ -120,13 +129,6 @@ always @*
 
 assign o_inflight = inflight_q;
 
-// NOTE: o_eop may drive a lot of logic in transactor so consider flopping.
-// Delaying o_eop by one cycle also has the effect of postponing o_oe in
-// reaction to a packet, avoiding both host and device asserting o_oe and
-// driving against each other.
-`dff_nocg_srst(reg, eop, i_clk_48MHz, i_rst, 1'b0)
-always @* eop_d = eop && sampleStrobe_12MHz;
-assign o_eop = eop_q;
 
 wire rxSE0 = (pn_q == LINE_SE0);
 

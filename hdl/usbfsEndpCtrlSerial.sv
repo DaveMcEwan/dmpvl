@@ -75,6 +75,9 @@ localparam IDX_W = $clog2(MAX_PKT);
 wire er_accepted = o_er0Ready && i_er0Valid;
 wire et_accepted = i_et0Ready && o_et0Valid;
 
+`dff_nocg_srst(reg, et0Stall, i_clk, i_rst, 1'b0)
+`dff_nocg_srst(reg, er0Stall, i_clk, i_rst, 1'b0)
+
 // {{{ Push setup payload into storage.
 
 // NOTE: Relies on USB wire speed being much slower than clock.
@@ -166,6 +169,7 @@ Even though the device may only support a couple of types of requests, it still
 must abide by the Control Transfer protocol.
 */
 
+
 // High immediately after receiving token[SETUP] while data is copied from the
 // u_rx buffer to the flops is this module.
 `dff_nocg_srst(reg, setupInflight, i_clk, i_rst, 1'b0)
@@ -178,6 +182,7 @@ always @*
     setupInflight_d = setupInflight_q;
 
 wire beginCtrlTfr = setupInflight_q && rdFinalPush;
+`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_et0WrEn, i_rst || et_accepted || beginCtrlTfr)
 wire rcvdZeroLengthOut = i_txnType[1] && er_accepted;// && (i_er0RdNBytes == '0); NOTE: Host may misbehave
 wire sentZeroLengthIn  = i_txnType[0] && et_accepted && (wrIdx_q == '0);
 
@@ -226,46 +231,6 @@ wire [2:0] tfrFlags_q = {
 `asrt(tfrFlags_q, i_clk, !i_rst, $onehot0(tfrFlags_q))
 
 // }}} Control Transfer flags
-
-// {{{ Stall (Request Error) flags
-
-/* 9.2.7 Request Error
-When a request is received by a device that is not defined for the device, is
-inappropriate for the current setting of the device, or has values that are not
-compatible with the request, then a Request Error exists.
-The device deals with the Request Error by returning a STALL PID in response to
-the next Data stage transaction or in the Status stage of the message.
-It is preferred that the STALL PID be returned at the next Data stage
-transaction, as this avoids unnecessary bus activity.
-*/
-// Device does not know when STALL has been sent so flag must be kept high until
-// The next transfer begins.
-// NOTE: Cannot use dff_flag because raise must occur on beginCtrlTfr.
-wire et0Stall_raise = tfrRead_raise && !supported;
-wire et0Stall_lower = beginCtrlTfr;
-`dff_nocg_srst(reg, et0Stall, i_clk, i_rst, 1'b0)
-always @*
-  if (et0Stall_raise)
-    et0Stall_d = 1'b1;
-  else if (et0Stall_lower)
-    et0Stall_d = 1'b0;
-  else
-    et0Stall_d = et0Stall_q;
-assign o_et0Stall = et0Stall_q;
-
-wire er0Stall_raise = tfrWrite_raise && !supported;
-wire er0Stall_lower = beginCtrlTfr;
-`dff_nocg_srst(reg, er0Stall, i_clk, i_rst, 1'b0)
-always @*
-  if (er0Stall_raise)
-    er0Stall_d = 1'b1;
-  else if (er0Stall_lower)
-    er0Stall_d = 1'b0;
-  else
-    er0Stall_d = er0Stall_q;
-assign o_er0Stall = er0Stall_q;
-
-// }}} Stall (Request Error) flags
 
 /*
 o_er0Ready must be high to ACK:
@@ -511,6 +476,44 @@ wire supported =
 
 // }}} Supported commands
 
+// {{{ Stall (Request Error) flags
+
+/* 9.2.7 Request Error
+When a request is received by a device that is not defined for the device, is
+inappropriate for the current setting of the device, or has values that are not
+compatible with the request, then a Request Error exists.
+The device deals with the Request Error by returning a STALL PID in response to
+the next Data stage transaction or in the Status stage of the message.
+It is preferred that the STALL PID be returned at the next Data stage
+transaction, as this avoids unnecessary bus activity.
+*/
+// Device does not know when STALL has been sent so flag must be kept high until
+// The next transfer begins.
+// NOTE: Cannot use dff_flag because raise must occur on beginCtrlTfr.
+wire et0Stall_raise = tfrRead_raise && !supported;
+wire et0Stall_lower = beginCtrlTfr;
+always @*
+  if (et0Stall_raise)
+    et0Stall_d = 1'b1;
+  else if (et0Stall_lower)
+    et0Stall_d = 1'b0;
+  else
+    et0Stall_d = et0Stall_q;
+assign o_et0Stall = et0Stall_q;
+
+wire er0Stall_raise = tfrWrite_raise && !supported;
+wire er0Stall_lower = beginCtrlTfr;
+always @*
+  if (er0Stall_raise)
+    er0Stall_d = 1'b1;
+  else if (er0Stall_lower)
+    er0Stall_d = 1'b0;
+  else
+    er0Stall_d = er0Stall_q;
+assign o_er0Stall = er0Stall_q;
+
+// }}} Stall (Request Error) flags
+
 // {{{ SET_ADDRESS, o_devAddr
 
 // SET_ADDRESS control transfer is finished with an out[DATA1] transaction which
@@ -561,14 +564,14 @@ Send data, not NAK/STALL for:
   - Zero-length in[DATA1] which ends Status stage of NoData.
   - Zero-length in[DATA1] which ends Status stage of Write (NOTE: unsupported here).
 */
+`dff_upcounter(reg [6:0], nBytesWritten, i_clk, o_et0WrEn, i_rst || beginCtrlTfr)
+wire writingLastByte = ((nBytesWritten_q + 'd1) == nBytesToSend_q) && o_et0WrEn;
+wire allBytesWritten = (nBytesToSend_q == nBytesWritten_q);
+
 assign o_et0Valid =
   (tfrRead_q && !allBytesWritten) ||
   tfrNoData_q ||
   tfrWrite_q; // NOTE: STALL overrides NAK when unsupported.
-
-`dff_upcounter(reg [6:0], nBytesWritten, i_clk, o_et0WrEn, i_rst || beginCtrlTfr)
-wire writingLastByte = ((nBytesWritten_q + 'd1) == nBytesToSend_q) && o_et0WrEn;
-wire allBytesWritten = (nBytesToSend_q == nBytesWritten_q);
 
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 always @*
@@ -579,7 +582,6 @@ always @*
   else
     writing_d = writing_q;
 
-`dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, o_et0WrEn, i_rst || et_accepted || beginCtrlTfr)
 
 assign o_et0WrEn = tfrRead_q && writing_q;
 assign o_et0WrIdx = wrIdx_q;

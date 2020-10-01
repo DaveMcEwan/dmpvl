@@ -104,61 +104,8 @@ wire [3:0]                tx_pid;
 always @* tx_acceptance_d = tx_ready && tx_valid;
 wire tx_accepted = !tx_acceptance_d && tx_acceptance_q;
 
-usbfsPktRx #(
-  .MAX_PKT          (MAX_PKT)
-) u_rx (
-  .i_clk_48MHz          (i_clk_48MHz),
-  .i_rst                (i_rst),
-
-  .i_dp                 (i_dp),
-  .i_dn                 (i_dn),
-
-  .o_strobe_12MHz       (strobe_12MHz),
-  .o_eop                (rx_eop),
-  .o_inflight           (rx_inflight),
-
-  .o_pid                (rx_pid),
-  .o_addr               (rx_addr),
-  .o_endp               (rx_endp),
-
-  .i_clk_rd             (i_clk_48MHz),
-  .i_rdEn               (erRdEn),
-  .i_rdIdx              (erRdIdx),
-  .o_rdByte             (o_erRdByte),
-  .o_rdNBytes           (o_erRdNBytes),
-
-  .o_pidOkay            (rx_pidOkay),
-  .o_tokenOkay          (rx_tokenOkay),
-  .o_dataOkay           (rx_dataOkay)
-);
-
-usbfsPktTx #(
-  .MAX_PKT          (MAX_PKT)
-) u_tx (
-  .i_clk_48MHz              (i_clk_48MHz),
-  .i_strobe_12MHz           (strobe_12MHz),
-  .i_rst                    (i_rst),
-
-  .o_ready                  (tx_ready),
-  .i_valid                  (tx_valid),
-
-  .o_eopDone                (tx_eopDone),
-
-  .i_pid                    (tx_pid),
-
-  .i_wrEn                   (etWrEn),
-  .i_wrIdx                  (etWrIdx),
-  .i_wrByte                 (etWrByte),
-
-  .o_dp                     (o_dp),
-  .o_dn                     (o_dn),
-  .o_inflight               (tx_inflight)
-);
-
 assign o_erRdByte = rx_rdByte;
 assign o_erRdNBytes = rx_rdNBytes;
-
-assign o_oe = tx_inflight || tosend_q;
 
 // }}} u_rd, u_tx
 
@@ -231,6 +178,8 @@ wire sentHandshake_stall = sent_isHandshake && (tx_pid[3:2] == PID_HANDSHAKE_STA
 // }}} PID rx/tx decode
 
 // {{{ Transaction type flags
+
+wire etIsochronous;
 
 /*
 Flags raised on send/receive of SETUP/OUT/IN token indicating start of
@@ -313,6 +262,8 @@ Device can send IN(tx)-STALL handshake to indicate either:
     All designs will likely have this.
 */
 
+wire rx_acceptData;
+
 // Endpoint receive
 wire [RX_N_ENDP-1:0] erVecMask;
 wire [RX_N_ENDP-1:0] erVec_stalled;
@@ -358,7 +309,7 @@ end endgenerate
 `asrt(etVec_isochronous, i_clk_48MHz, !i_rst, $onehot0(etVec_isochronous))
 
 wire etStalled = |etVec_stalled;
-wire etIsochronous = |etVec_isochronous;
+assign etIsochronous = |etVec_isochronous;
 wire etReady = |(o_etReady & etVecMask);
 wire etValid = |(i_etValid & etVecMask); // Tx endpoint has data.
 wire etWrEn = |(i_etWrEn & etVecMask);
@@ -404,11 +355,12 @@ Each endpoint maintains its own ARQ state.
 
 // DATAx PID to send, per endpoint.
 `dff_nocg_srst(reg [TX_N_ENDP-1:0], etArq, i_clk_48MHz, i_rst, '0)
+wire awaitHandshake;
 generate for (e=0; e < TX_N_ENDP; e=e+1) begin
   always @*
     if (rcvdToken_setup && etVecMask[e])
       etArq_d[e] = 1'b1;
-    else if (awaitHandshake_q && rcvdHandshake_ack && etVecMask[e])
+    else if (awaitHandshake && rcvdHandshake_ack && etVecMask[e])
       etArq_d[e] = !etArq_q[e];
     else
       etArq_d[e] = etArq_q[e];
@@ -429,7 +381,7 @@ generate for (e=0; e < RX_N_ENDP; e=e+1) begin
       erArq_d[e] = erArq_q[e];
 end endgenerate
 wire erArq = |(erArq_q & erVecMask);
-wire rx_acceptData = erArq ? rcvdData_data1 : rcvdData_data0;
+assign rx_acceptData = erArq ? rcvdData_data1 : rcvdData_data0;
 
 wire arqMismatch = rcvd_isData && !rx_acceptData; // debug-only
 `asrt(arqMismatch, i_clk_48MHz, !i_rst, !arqMismatch)
@@ -444,6 +396,7 @@ wire awaitHandshake_raise,  awaitHandshake_lower;
 wire awaitToken; // Dev-mode awaitToken flag resets high.
 `dff_flag(awaitData,      i_clk_48MHz, i_rst, awaitData_raise,      awaitData_lower)
 `dff_flag(awaitHandshake, i_clk_48MHz, i_rst, awaitHandshake_raise, awaitHandshake_lower)
+assign awaitHandshake = awaitHandshake_q;
 
 assign {awaitToken_raise, awaitToken_lower} =
   {rcvd_isHandshake ||
@@ -570,5 +523,59 @@ assign tx_pid = tosendPid_q;
 // Data will be sent before being accepted from endpoint.
 // Endpoint will only know data has been sent when an ACK has been received.
 assign o_etReady = etVecMask & {TX_N_ENDP{(rcvdHandshake_ack)}};
+
+assign o_oe = tx_inflight || tosend_q;
+
+
+usbfsPktRx #(
+  .MAX_PKT          (MAX_PKT)
+) u_rx (
+  .i_clk_48MHz          (i_clk_48MHz),
+  .i_rst                (i_rst),
+
+  .i_dp                 (i_dp),
+  .i_dn                 (i_dn),
+
+  .o_strobe_12MHz       (strobe_12MHz),
+  .o_eop                (rx_eop),
+  .o_inflight           (rx_inflight),
+
+  .o_pid                (rx_pid),
+  .o_addr               (rx_addr),
+  .o_endp               (rx_endp),
+
+  .i_clk_rd             (i_clk_48MHz),
+  .i_rdEn               (erRdEn),
+  .i_rdIdx              (erRdIdx),
+  .o_rdByte             (o_erRdByte),
+  .o_rdNBytes           (o_erRdNBytes),
+
+  .o_pidOkay            (rx_pidOkay),
+  .o_tokenOkay          (rx_tokenOkay),
+  .o_dataOkay           (rx_dataOkay)
+);
+
+usbfsPktTx #(
+  .MAX_PKT          (MAX_PKT)
+) u_tx (
+  .i_clk_48MHz              (i_clk_48MHz),
+  .i_strobe_12MHz           (strobe_12MHz),
+  .i_rst                    (i_rst),
+
+  .o_ready                  (tx_ready),
+  .i_valid                  (tx_valid),
+
+  .o_eopDone                (tx_eopDone),
+
+  .i_pid                    (tx_pid),
+
+  .i_wrEn                   (etWrEn),
+  .i_wrIdx                  (etWrIdx),
+  .i_wrByte                 (etWrByte),
+
+  .o_dp                     (o_dp),
+  .o_dn                     (o_dn),
+  .o_inflight               (tx_inflight)
+);
 
 endmodule

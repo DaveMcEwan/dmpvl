@@ -25,6 +25,7 @@ module usbfsEndpTx #(
 );
 
 localparam MAX_IDX = MAX_PKT - 1;
+localparam IDX_W = $clog2(MAX_PKT);
 
 wire accepted = o_ready && i_valid;
 wire et_accepted = i_etReady && o_etValid; // ACK received
@@ -37,6 +38,8 @@ wire _unused_fifo_o_rdptr;
 wire [1:0] _unused_fifo_o_valid;
 wire [1:0] _unused_fifo_o_nEntries;
 wire [15:0] _unused_fifo_o_entries;
+
+`dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 
 fifo #(
   .WIDTH          (8),
@@ -70,7 +73,6 @@ fifo #(
 );
 assign o_ready = !fifo_o_full;
 
-`dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 // No more data, OR sent MAX_PKT.
 wire writing_goDn = fifo_o_empty || (o_etWrIdx == MAX_IDX[IDX_W-1:0]);
 always @*
@@ -83,7 +85,6 @@ always @*
 
 wire wrIdx_incr = o_etWrEn;
 wire wrIdx_zero = writing_goDn; // Clear at end of packet.
-localparam IDX_W = $clog2(MAX_PKT);
 `dff_upcounter(reg [IDX_W-1:0], wrIdx, i_clk, wrIdx_incr, i_rst || wrIdx_zero)
 assign o_etWrIdx = wrIdx_q;
 
