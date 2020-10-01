@@ -1,6 +1,7 @@
 
 # As a basic sanity check `make` should complete with no warnings or errors.
-all: lint iverilog yosys
+default: lint iverilog yosys
+all: lint iverilog yosys vivado
 
 # Use Verilator's LINT mode to ensure there's nothing too obviously wrong.
 # This also ensures files are compatible with verilator.
@@ -99,5 +100,48 @@ yosys:
 	yosys -q -p 'read_verilog -sv usbfsEndpCtrlSerial.sv'
 	yosys -q -p 'read_verilog -sv usbfsSerial.sv'
 
+# Tested with Vivado 2018.2
+define VIVADO_TCL =
+create_project -in_memory projectDummy
+create_fileset -blockset filesetDummy
+add_files \\
+	axi4liteMonitor.sv \\
+	axi4liteRandomMaster.sv \\
+	axi4liteRandomSlave.sv \\
+	bpRegMem.sv \\
+	dividerFsm.sv \\
+	edgeDetect.sv \\
+	fifo.sv \\
+	fpgaReset.sv \\
+	fxcs.sv \\
+	logdropWindow.sv \\
+	mssbIdx.sv \\
+	onehotIdx.sv \\
+	popcnt6.sv \\
+	prngXoroshiro128p.sv \\
+	prngXoroshiro64s.sv \\
+	prngXoshiro128pp.sv \\
+	prngXoshiro128p.sv \\
+	prngXoshiro256p.sv \\
+	pwm.sv \\
+	resetDetect.sv \\
+	strobe.sv \\
+	usbfsEndpCtrlSerial.sv \\
+	usbfsEndpRx.sv \\
+	usbfsEndpTx.sv \\
+	usbfsPktRx.sv \\
+	usbfsPktTx.sv \\
+	usbfsSerial.sv \\
+	usbfsTxn.sv \\
+	-fileset filesetDummy
+check_syntax -fileset filesetDummy
+endef
+export VIVADO_TCL
+vivado:
+	@echo "$$VIVADO_TCL" > vivado.tcl
+	vivado -mode batch -source vivado.tcl > /dev/null
+	@! grep -q ERROR vivado.log
+	@! grep -q WARNING vivado.log
+
 .SECONDARY:
-.PHONY: lint iverilog yosys
+.PHONY: lint iverilog yosys vivado

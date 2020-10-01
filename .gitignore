@@ -11,3 +11,10 @@ tb/*/build/*
 
 # Build and process for multipnr experiments.
 prj/*/multipnr/*
+
+# Vivado journal and logs.
+vivado*.jou
+vivado*.log
+
+# Temporary TCL scripts for Vivado.
+hdl/vivado.tcl
