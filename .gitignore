@@ -15,6 +15,8 @@ prj/*/multipnr/*
 # Vivado journal and logs.
 vivado*.jou
 vivado*.log
+webtalk*.jou
+webtalk*.log
 
 # Temporary TCL scripts for Vivado.
 hdl/vivado.tcl
