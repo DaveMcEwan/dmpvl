@@ -1,7 +1,88 @@
+# Filters are Python-regex, listed in Vivado-logfile order.
+
+# USB Full Speed Transactor signals awaitData, awaitToken, and await are
+# useful for simulation but not required for device-mode functionality.
+.* \[Synth 8-6014\] Unused sequential element awaitData_q_reg was removed\.\s+\[.*/hdl/usbfsTxn\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element awaitToken_q_reg was removed\.\s+\[.*/hdl/usbfsTxn\.sv:\d+\]
+
+# USB Full Speed Transaction endpoint fields are defined to fit better in the
+# context of the USB spec but are not required for functionality.
+.* \[Synth 8-6014\] Unused sequential element wIndex0_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wIndex1_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wLength1_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+
+# Generate loop functioning as intended.
+.* \[Synth 8-693\] zero replication count - replication ignored  \[.*/hdl/corrCountLogdrop\.sv:\d+\]
+
+# Ports are connected through constant assignments to individual bits of a wire
+# vector in usbfsSerial.sv.
+.* \[Synth 8-3331\] design usbfsEndpTx has unconnected port i_etReady
+.* \[Synth 8-3331\] design usbfsTxn has unconnected port i_erStall\[1\]
+.* \[Synth 8-3331\] design usbfsTxn has unconnected port i_erStall\[0\]
+.* \[Synth 8-3331\] design usbfsTxn has unconnected port i_etStall\[1\]
+
+# usbfs* component registers removed via RTL Optimization Phase 2.
+.* \[Synth 8-6014\] Unused sequential element nBytesRcvd_q_reg was removed\.\s+\[.*/hdl/usbfsPktRx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nBytes_q_reg was removed\.\s+\[.*/hdl/usbfsPktRx.sv:\d+\]
+.* \[Synth 8-3936\] Found unconnected internal register 'pid_q_reg' and it is trimmed from '4' to '2' bits\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wrNBytes_q_reg was removed\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nBytesSent_q_reg was removed\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nBytesSent_q_reg_rep was removed\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element rdIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wrIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nPktsSent_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nBytesWritten_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element nEntries_q_reg was removed\.\s+\[.*/hdl/fifo\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element rdIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpRx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wrIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpTx\.sv:\d+\]
+
+# Correlator registers removed via RTL Optimization Phase 2.
+.* \[Synth 8-6014\] Unused sequential element countX_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countY_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countSymdiff_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element t_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element winNum_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+# Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
+.* \[Synth 8-6014\] Unused sequential element countX_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countY_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countIsect_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countSymdiff_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countX_q_reg was removed.\s+\[.*/hdl/corrCountLogdrop\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countY_q_reg was removed.\s+\[.*/hdl/corrCountLogdrop\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countIsect_q_reg was removed.\s+\[.*/hdl/corrCountLogdrop\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element countSymdiff_q_reg was removed.\s+\[.*/hdl/corrCountLogdrop\.sv:\d+\]
 
 # Master XDC file contains all ports, only some of which are actually used.
 # Signing off these warnings is much easier than commenting out all unused ports
 # and allows the same master XDC.
-.* \[Vivado 12-584\] No ports matched '.*'. \[.*/vc707.xdc:\d+\]
-.* \[Common 17-55\] 'set_property' expects at least one object.  \[.*/vc707.xdc:\d+\]
+.* \[Vivado 12-584\] No ports matched '.*'\. \[.*/vc707.xdc:\d+\]
+.* \[Common 17-55\] 'set_property' expects at least one object\.\s+\[.*/vc707\.xdc:\d+\]
+
+# usbfs* component registers removed via Cross Boundary and Area Optimization.
+.* \[Synth 8-6014\] Unused sequential element nPktsSent_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element wrIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpCtrlSerial\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_txn/frameNumber_q_reg was removed\.\s+\[.*/hdl/usbfsTxn\.sv:\d+\]
+# Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
+.* \[Synth 8-6014\] Unused sequential element u_txn/u_rx/nBytesRcvd_q_reg was removed\.\s+\[.*/hdl/usbfsPktRx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_txn/u_rx/nBytes_q_reg was removed\.\s+\[.*/hdl/usbfsPktRx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_txn/u_tx/nBytesSent_q_reg was removed\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_txn/u_tx/wrNBytes_q_reg was removed\.\s+\[.*/hdl/usbfsPktTx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_endpRx/u_fifo/nEntries_q_reg was removed\.\s+\[.*/hdl/fifo\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_endpRx/rdIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpRx\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_endpTx/wrIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpTx\.sv:\d+\]
+
+# Correlator registers removed via Cross Boundary and Area Optimization.
+.* \[Synth 8-6014\] Unused sequential element countIsect_q_reg was removed\.\s+\[.*/correlator\.sv:\d+\]
+# Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
+.* \[Synth 8-6014\] Unused sequential element u_winRect/countY_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_winRect/countIsect_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_winRect/countSymdiff_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_winRect/countX_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_pktfifo/nEntries_q_reg was removed\.\s+\[.*/hdl/fifo\.sv:\d+\]
+
+# High-level (hierarchically) register merging.
+.* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module top\.
+.* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module correlator\.
+# Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
+.* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module corrCountLogdrop\.
 
