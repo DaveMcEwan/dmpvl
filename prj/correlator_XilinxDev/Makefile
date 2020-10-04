@@ -56,18 +56,6 @@ iverilog:
 $(BUILD)/correlator.bit: $(SRC) vivado.tcl vc707.xdc
 	vivado -mode batch -source vivado.tcl
 
-# For this target to work ssh must be setup appropriately using ~/.ssh/config
-# on the host.
-# E.G. Something like this:
-#  Host zc702
-#  Hostname 192.168.0.10
-#  User root
-#  StrictHostKeyChecking no
-#  UserKnownHostsFile /dev/null
-#  LogLevel QUIET
-prog: $(BUILD)/$(PROJ).vivado.bin
-	scp $(BUILD)/$(PROJ).vivado.bin zc702:~/
-	ssh zc702 -C "cat $(PROJ).vivado.bin > /dev/xdevcfg"
 
 clean:
 	rm -rf build
