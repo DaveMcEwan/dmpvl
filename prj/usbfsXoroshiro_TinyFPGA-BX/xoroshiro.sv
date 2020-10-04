@@ -91,7 +91,6 @@ wire [63:0] s0, s1, prngResult;
 generate if (ALGORITHM == 1) begin
   prngXoroshiro128p u_prng (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (seedValid),
@@ -105,7 +104,6 @@ generate if (ALGORITHM == 1) begin
 end else if (ALGORITHM == 2) begin
   prngXoshiro128pp u_prng (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (seedValid),
@@ -125,7 +123,6 @@ end else if (ALGORITHM == 2) begin
 end else if (ALGORITHM == 3) begin
   prngXoshiro128p u_prng (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (seedValid),
@@ -149,7 +146,6 @@ end else if (ALGORITHM == 4) begin
   wire [63:0] seedS3 = s3s2_wr[64 +: 64];
   prngXoshiro256p u_prng (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (seedValid),
@@ -167,7 +163,6 @@ end else if (ALGORITHM == 4) begin
 end else if (ALGORITHM == 5) begin
   prngXoroshiro64s u_prng (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (seedValid),

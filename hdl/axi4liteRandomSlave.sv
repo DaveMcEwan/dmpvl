@@ -168,7 +168,6 @@ reg [1:0] rresp;
   wire [63:0] prngResult;
   prngXoroshiro128p u_prng (
     .i_clk      (i_clk),
-    .i_rst      (i_rst),
     .i_cg       (1'b1), // unused
     .i_seedValid(doSeed),
     .i_seedS0   (64'd3141592654), // pi

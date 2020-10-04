@@ -7,7 +7,6 @@
 // allows these to be implemented externally if required.
 module prngXoroshiro64s  (
   input  wire                       i_clk,
-  input  wire                       i_rst,
   input  wire                       i_cg,
 
   input  wire                       i_seedValid,

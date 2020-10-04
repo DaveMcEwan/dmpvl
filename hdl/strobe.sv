@@ -27,7 +27,6 @@ generate if (ENABLE_JITTER != '0) begin
   wire [127:0] prngSeed_wr = {prngState[127-8:0], i_jitterSeedByte};
   prngXoshiro128p u_prngJitter (
     .i_clk              (i_clk),
-    .i_rst              (i_rst),
     .i_cg               (i_cg),
 
     .i_seedValid        (i_jitterSeedValid),
