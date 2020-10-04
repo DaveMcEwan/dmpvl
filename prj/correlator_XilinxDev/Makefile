@@ -53,8 +53,16 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) -i pll48.sv
 	iverilog $(IVERILOG_FLAGS) -i top.sv
 
-$(BUILD)/correlator.bit: $(SRC) vivado.tcl vc707.xdc
+BITFILE ?= $(BUILD)/correlator.bit
+$(BITFILE): $(SRC) vivado.tcl vc707.xdc
 	vivado -mode batch -source vivado.tcl
+
+VIVADO_SIGNOFF ?= signoffVivado.regex
+$(BUILD)/vivado.warnings: $(BITFILE) $(VIVADO_SIGNOFF)
+	grep -n WARNING vivado.log | lineFilter $(VIVADO_SIGNOFF) > $@
+
+signoff: $(BUILD)/vivado.warnings
+	! test -s $<
 
 
 clean:

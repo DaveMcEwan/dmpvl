@@ -1,0 +1,7 @@
+
+# Master XDC file contains all ports, only some of which are actually used.
+# Signing off these warnings is much easier than commenting out all unused ports
+# and allows the same master XDC.
+.* \[Vivado 12-584\] No ports matched '.*'. \[.*/vc707.xdc:\d+\]
+.* \[Common 17-55\] 'set_property' expects at least one object.  \[.*/vc707.xdc:\d+\]
+
