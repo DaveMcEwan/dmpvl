@@ -130,6 +130,7 @@ strobe #(
   .o_strobe           (sampleStrobe)
 );
 
+wire tDoWrap;
 `dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
@@ -141,7 +142,7 @@ generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
     assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
   end
 end endgenerate
-wire tDoWrap = |tDoWrapVec && sampleStrobe;
+assign tDoWrap = |tDoWrapVec && sampleStrobe;
 
 // }}} Generate sampling strobe
 
@@ -208,97 +209,17 @@ corrCountLogdrop #(
 
 // }}} Correlation counters
 
-// {{{ Packetize and queue data for recording
+wire pktfifo_i_push;
+wire pktIdx_wrap;
+`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
+assign pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
 
-reg [7:0] pktfifo_i_data;
-wire pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
-wire                                  _unused_pktfifo_o_full;
-wire                                  _unused_pktfifo_o_pushed;
-wire                                  _unused_pktfifo_o_popped;
-wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wrptr;
-wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rdptr;
-wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_valid;
-wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
-wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
-fifo #(
-  .WIDTH          (8),
-  .DEPTH          (PKTFIFO_DEPTH),
-  .FLOPS_NOT_MEM  (0)
-) u_pktfifo (
-  .i_clk      (i_clk),
-  .i_rst      (i_rst),
-  .i_cg       (i_cg),
-
-  .i_flush    (pktfifo_i_flush),
-  .i_push     (pktfifo_i_push),
-  .i_pop      (pktfifo_i_pop),
-
-  .i_data     (pktfifo_i_data),
-  .o_data     (pktfifo_o_data),
-
-  .o_empty    (pktfifo_o_empty),
-  .o_full     (_unused_pktfifo_o_full),
-
-  .o_pushed   (_unused_pktfifo_o_pushed),
-  .o_popped   (_unused_pktfifo_o_popped),
-
-  .o_wrptr    (_unused_pktfifo_o_wrptr),
-  .o_rdptr    (_unused_pktfifo_o_rdptr),
-
-  .o_valid    (_unused_pktfifo_o_valid),
-  .o_nEntries (_unused_pktfifo_o_nEntries),
-
-  .o_entries  (_unused_pktfifo_o_entries)
-);
-
-// Wrapping window counter to be used only to check that packets have not been
-// dropped.
-`dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
+// {{{ Correlation metrics
 
 `dff_cg_norst(reg [TIME_W-1:0], countX,       i_clk, i_cg && tDoWrap)
 `dff_cg_norst(reg [TIME_W-1:0], countY,       i_clk, i_cg && tDoWrap)
 `dff_cg_norst(reg [TIME_W-1:0], countIsect,   i_clk, i_cg && tDoWrap)
 `dff_cg_norst(reg [TIME_W-1:0], countSymdiff, i_clk, i_cg && tDoWrap)
-always @*
-  case (windowShape)
-    WINDOW_SHAPE_LOGDROP: begin
-      countX_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countY_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countIsect_d    = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countSymdiff_d  = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-    end
-    default: begin // WINDOW_SHAPE_RECTANGULAR
-      countX_d        = rect_countX;
-      countY_d        = rect_countX;
-      countIsect_d    = rect_countX;
-      countSymdiff_d  = rect_countX;
-    end
-  endcase
-
-`dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
-// Only the 8 most significant bits of the counters is reported
-always @* pkt_d = {
-  countSymdiff_d[TIME_W-8 +: 8],
-  countIsect_d[TIME_W-8 +: 8],
-  countY_d[TIME_W-8 +: 8],
-  countX_d[TIME_W-8 +: 8]
-};
-
-wire pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
-`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
-
-always @*
-  case (pktIdx_q)
-    3'd1:     pktfifo_i_data = pkt_q[8*0 +: 8];
-    3'd2:     pktfifo_i_data = pkt_q[8*1 +: 8];
-    3'd3:     pktfifo_i_data = pkt_q[8*2 +: 8];
-    3'd4:     pktfifo_i_data = pkt_q[8*3 +: 8];
-    default:  pktfifo_i_data = winNum_q;
-  endcase
-
-// }}} Packetize and queue data for recording
-
-// {{{ Correlation metrics
 
 // Metric calculations only use top bits from the counters.
 wire [METRIC_PRECISION-1:0] countX_narrow =
@@ -369,6 +290,89 @@ always @* metricDep_d = ~ratioIsectProdXY;
 always @* metricHam_d = ~countSymdiff_narrow;
 
 // }}} Correlation metrics
+
+// {{{ Packetize and queue data for recording
+
+reg [7:0] pktfifo_i_data;
+assign pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
+wire                                  _unused_pktfifo_o_full;
+wire                                  _unused_pktfifo_o_pushed;
+wire                                  _unused_pktfifo_o_popped;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wrptr;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rdptr;
+wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_valid;
+wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
+wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
+fifo #(
+  .WIDTH          (8),
+  .DEPTH          (PKTFIFO_DEPTH),
+  .FLOPS_NOT_MEM  (0)
+) u_pktfifo (
+  .i_clk      (i_clk),
+  .i_rst      (i_rst),
+  .i_cg       (i_cg),
+
+  .i_flush    (pktfifo_i_flush),
+  .i_push     (pktfifo_i_push),
+  .i_pop      (pktfifo_i_pop),
+
+  .i_data     (pktfifo_i_data),
+  .o_data     (pktfifo_o_data),
+
+  .o_empty    (pktfifo_o_empty),
+  .o_full     (_unused_pktfifo_o_full),
+
+  .o_pushed   (_unused_pktfifo_o_pushed),
+  .o_popped   (_unused_pktfifo_o_popped),
+
+  .o_wrptr    (_unused_pktfifo_o_wrptr),
+  .o_rdptr    (_unused_pktfifo_o_rdptr),
+
+  .o_valid    (_unused_pktfifo_o_valid),
+  .o_nEntries (_unused_pktfifo_o_nEntries),
+
+  .o_entries  (_unused_pktfifo_o_entries)
+);
+
+// Wrapping window counter to be used only to check that packets have not been
+// dropped.
+`dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
+
+always @*
+  case (windowShape)
+    WINDOW_SHAPE_LOGDROP: begin
+      countX_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countY_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countIsect_d    = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countSymdiff_d  = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+    end
+    default: begin // WINDOW_SHAPE_RECTANGULAR
+      countX_d        = rect_countX;
+      countY_d        = rect_countX;
+      countIsect_d    = rect_countX;
+      countSymdiff_d  = rect_countX;
+    end
+  endcase
+
+`dff_cg_norst(reg [4*8-1:0], pkt, i_clk, i_cg && tDoWrap)
+// Only the 8 most significant bits of the counters is reported
+always @* pkt_d = {
+  countSymdiff_d[TIME_W-8 +: 8],
+  countIsect_d[TIME_W-8 +: 8],
+  countY_d[TIME_W-8 +: 8],
+  countX_d[TIME_W-8 +: 8]
+};
+
+always @*
+  case (pktIdx_q)
+    3'd1:     pktfifo_i_data = pkt_q[8*0 +: 8];
+    3'd2:     pktfifo_i_data = pkt_q[8*1 +: 8];
+    3'd3:     pktfifo_i_data = pkt_q[8*2 +: 8];
+    3'd4:     pktfifo_i_data = pkt_q[8*3 +: 8];
+    default:  pktfifo_i_data = winNum_q;
+  endcase
+
+// }}} Packetize and queue data for recording
 
 // {{{ LED
 
