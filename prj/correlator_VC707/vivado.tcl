@@ -45,8 +45,16 @@ if [ file exists untracked.tcl ] {
     source untracked.tcl
 }
 
-# Read in all source files.
-read_verilog \
+# Header files.
+add_files \
+  ${dirHdl}/asrt.svh \
+  ${dirHdl}/dff.svh \
+  ${dirHdl}/misc.svh \
+  ${dirHdl}/usbSpec.svh
+set_property is_global_include true [get_files -regexp .*\.svh]
+
+# Generic HDL, used by other projects.
+add_files \
   ${dirHdl}/fpgaReset.sv \
   ${dirHdl}/usbfsPktRx.sv \
   ${dirHdl}/usbfsPktTx.sv \
@@ -65,19 +73,23 @@ read_verilog \
   ${dirHdl}/pwm.sv \
   ${dirHdl}/dividerFsm.sv \
   ${dirHdl}/corrCountRect.sv \
-  ${dirHdl}/corrCountLogdrop.sv \
+  ${dirHdl}/corrCountLogdrop.sv
+
+# Project-specific HDL.
+add_files \
   pll48.sv \
   correlator.sv \
   bpReg.sv \
   top.sv
 
+set_property file_type "Verilog Header" [get_files -regexp .*\.svh]
 check_syntax
 
 # Read in constraints.
 read_xdc vc707.xdc
 
 # Synthesize design.
-synth_design -part ${part} -top top -include_dirs ../../hdl
+synth_design -part ${part} -top top -include_dirs ${dirHdl}
 if $CHECKPOINT {
   write_checkpoint -force ${dirBuild}/synth.dcp
 }
