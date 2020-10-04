@@ -86,8 +86,6 @@ wire                      rx_inflight;
 wire [3:0]                rx_pid;
 wire [6:0]                rx_addr;
 wire [3:0]                rx_endp;
-wire [7:0]                rx_rdByte;
-wire [NBYTES_W-1:0]       rx_rdNBytes;
 wire                      rx_pidOkay;
 wire                      rx_tokenOkay;
 wire                      rx_dataOkay;
@@ -103,9 +101,6 @@ wire [3:0]                tx_pid;
 `dff_nocg_srst(reg, tx_acceptance, i_clk_48MHz, i_rst, 1'b0)
 always @* tx_acceptance_d = tx_ready && tx_valid;
 wire tx_accepted = !tx_acceptance_d && tx_acceptance_q;
-
-assign o_erRdByte = rx_rdByte;
-assign o_erRdNBytes = rx_rdNBytes;
 
 // }}} u_rd, u_tx
 
