@@ -14,11 +14,11 @@ module top (
 
 wire i_pin_sysclk_p_200MHz = SYSCLK_P;
 wire i_pin_sysclk_n_200MHz = SYSCLK_N;
-wire b_pin_usb_p = USER_SMA_GPIO_P; // USB d+
-wire b_pin_usb_n = USER_SMA_GPIO_N; // USB d-
-wire i_pin_x = GPIO_SW_W; // X-probe (AW40 GPIO_SW_W LVCMOS18 SW7.3)
-wire i_pin_y = GPIO_SW_E; // Y-probe (AU38 GPIO_SW_E LVCMOS18 SW4.3)
-wire o_pin_led = GPIO_LED_0;  // (AM39 GPIO_LED_0 LVCMOS18 DS2.2)
+wire b_pin_usb_p = USER_SMA_GPIO_P;
+wire b_pin_usb_n = USER_SMA_GPIO_N;
+wire i_pin_x = GPIO_SW_W;
+wire i_pin_y = GPIO_SW_E;
+wire o_pin_led; assign GPIO_LED_0 = o_pin_led;
 
 wire clk_48MHz;
 wire pllLocked;
