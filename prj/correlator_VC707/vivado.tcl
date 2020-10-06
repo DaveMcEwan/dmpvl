@@ -89,7 +89,14 @@ check_syntax
 read_xdc vc707.xdc
 
 # Synthesize design.
+# NOTE: The clock period only needs to be less than 20.833ns.
+# The actual clock speed at runtime is set by the PLL settings.
+# Synthesizing with a lower value less just means the logic *could* function at
+# higher frequencies.
 synth_design -part ${part} -top top -include_dirs ${dirHdl}
+create_clock -name clk48MHz -period 4 [get_nets clk_48MHz]
+set_property CONFIG_VOLTAGE 1.8 [current_design]
+set_property CFGBVS GND [current_design]
 if $CHECKPOINT {
   write_checkpoint -force ${dirBuild}/synth.dcp
 }
@@ -97,6 +104,7 @@ if $REPORT {
   report_timing_summary   -file ${dirRpt}/synth_timing_summary.rpt
   report_power            -file ${dirRpt}/synth_power.rpt
 }
+
 
 # Optimize, place design.
 opt_design
