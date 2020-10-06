@@ -231,12 +231,17 @@ wire [METRIC_PRECISION-1:0] countIsect_narrow =
 wire [METRIC_PRECISION-1:0] countSymdiff_narrow =
   countSymdiff_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
 
-// NOTE: 16b multiplier path limited to ~60.5MHz on Lattice iCE40LP.
+// NOTE: Lattice iCE40LP 16b multiplier path limited to ~60.5MHz.
+// NOTE: Xilinx 7s DSP48E1 requires two pipeline stages to infer both MREG=1
+// and PREG=1 because the multiplier outputs two partial products that need to
+// be added together in the second (P) stage.
 wire [2*METRIC_PRECISION-1:0] fullProdXY = countX_narrow * countY_narrow;
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg && (pktIdx_q == 'd1))
-always @* prodXY_d = fullProdXY[METRIC_PRECISION-1:0];
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY_partial, i_clk, i_cg && (pktIdx_q == 'd1))
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg && (pktIdx_q == 'd2))
+always @* prodXY_partial_d = fullProdXY[METRIC_PRECISION-1:0];
+always @* prodXY_d = prodXY_partial_q;
 
-// NOTE: 16b divide path limited to ~16.5MHz on Lattice iCE40LP.
+// NOTE: Lattice iCE40LP 16b divide path limited to ~16.5MHz.
 //wire [METRIC_PRECISION-1:0] ratioIsectProdXY = prodXY_q / countIsect_narrow;
 wire [METRIC_PRECISION-1:0] ratioIsectProdXY;
 wire                        ratioIsectProdXY_o_done;
@@ -250,7 +255,7 @@ dividerFsm #(
   .i_cg       (i_cg),
   .i_rst      (i_rst),
 
-  .i_begin    (pktIdx_q == 'd2),
+  .i_begin    (pktIdx_q == 'd3),
   .i_dividend (prodXY_q),
   .i_divisor  (countIsect_narrow),
 
@@ -271,7 +276,7 @@ wire [METRIC_PRECISION-1:0] absdiffIsectProdXY = isectGtProdXY ?
 // Ċov(X, Y) := 4 . | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |      ∊ [0, 1]
 // NOTE: Fixed point format gives actual codomain of [0, 1) therefore:
 //           = | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] | * 2**2    ∊ [0, 1)
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg && (pktIdx_q == 'd2))
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg && (pktIdx_q == 'd3))
 always @* metricCov_d = absdiffIsectProdXY << 2;
 
 // Ḋep(X, Y) := 1 - 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y]          ∊ [0, 1]

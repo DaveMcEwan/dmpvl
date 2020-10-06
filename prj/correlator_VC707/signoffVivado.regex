@@ -42,6 +42,7 @@
 .* \[Synth 8-6014\] Unused sequential element countSymdiff_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element t_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element winNum_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element prodXY_partial_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
 # Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
 .* \[Synth 8-6014\] Unused sequential element countX_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element countY_q_reg was removed.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
