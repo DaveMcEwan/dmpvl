@@ -130,6 +130,7 @@ strobe #(
   .o_strobe           (sampleStrobe)
 );
 
+wire tDoWrap;
 `dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
@@ -141,7 +142,7 @@ generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
     assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
   end
 end endgenerate
-wire tDoWrap = |tDoWrapVec && sampleStrobe;
+assign tDoWrap = |tDoWrapVec && sampleStrobe;
 
 // }}} Generate sampling strobe
 
@@ -208,10 +209,97 @@ corrCountLogdrop #(
 
 // }}} Correlation counters
 
+wire pktfifo_i_push;
+wire pktIdx_wrap;
+`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
+assign pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
+
+// {{{ Correlation metrics
+
+`dff_cg_norst(reg [TIME_W-1:0], countX,       i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countY,       i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countIsect,   i_clk, i_cg && tDoWrap)
+`dff_cg_norst(reg [TIME_W-1:0], countSymdiff, i_clk, i_cg && tDoWrap)
+
+// Metric calculations only use top bits from the counters.
+wire [METRIC_PRECISION-1:0] countX_narrow =
+  countX_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countY_narrow =
+  countY_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countIsect_narrow =
+  countIsect_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+wire [METRIC_PRECISION-1:0] countSymdiff_narrow =
+  countSymdiff_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
+
+// NOTE: Lattice iCE40LP 16b multiplier path limited to ~60.5MHz.
+// NOTE: Xilinx 7s DSP48E1 requires two pipeline stages to infer both MREG=1
+// and PREG=1 because the multiplier outputs two partial products that need to
+// be added together in the second (P) stage.
+wire [2*METRIC_PRECISION-1:0] fullProdXY = countX_narrow * countY_narrow;
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY_partial, i_clk, i_cg && (pktIdx_q == 'd1))
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg && (pktIdx_q == 'd2))
+always @* prodXY_partial_d = fullProdXY[METRIC_PRECISION-1:0];
+always @* prodXY_d = prodXY_partial_q;
+
+// NOTE: Lattice iCE40LP 16b divide path limited to ~16.5MHz.
+//wire [METRIC_PRECISION-1:0] ratioIsectProdXY = prodXY_q / countIsect_narrow;
+wire [METRIC_PRECISION-1:0] ratioIsectProdXY;
+wire                        ratioIsectProdXY_o_done;
+wire                        _unused_ratioIsectProdXY_o_busy;
+wire [METRIC_PRECISION-1:0] _unused_ratioIsectProdXY_o_remainder;
+dividerFsm #(
+  .WIDTH          (METRIC_PRECISION),
+  .ABSTRACT_MODEL (0)
+) u_ratioIsectProdXY (
+  .i_clk      (i_clk),
+  .i_cg       (i_cg),
+  .i_rst      (i_rst),
+
+  .i_begin    (pktIdx_q == 'd3),
+  .i_dividend (prodXY_q),
+  .i_divisor  (countIsect_narrow),
+
+  .o_busy     (_unused_ratioIsectProdXY_o_busy),
+  .o_done     (ratioIsectProdXY_o_done),
+  .o_quotient (ratioIsectProdXY),
+  .o_remainder(_unused_ratioIsectProdXY_o_remainder)
+);
+
+// | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |   =  𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y]   : (𝔼[X ⊙ Y] > 𝔼[X].𝔼[Y])
+//                               𝔼[X].𝔼[Y] - 𝔼[X ⊙ Y]   : otherwise
+wire isectGtProdXY = (countIsect_narrow > prodXY_q);
+wire [METRIC_PRECISION-1:0] diffIsectProdXY_A = countIsect_narrow - prodXY_q;
+wire [METRIC_PRECISION-1:0] diffIsectProdXY_B = prodXY_q - countIsect_narrow;
+wire [METRIC_PRECISION-1:0] absdiffIsectProdXY = isectGtProdXY ?
+  diffIsectProdXY_A : diffIsectProdXY_B;
+
+// Ċov(X, Y) := 4 . | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |      ∊ [0, 1]
+// NOTE: Fixed point format gives actual codomain of [0, 1) therefore:
+//           = | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] | * 2**2    ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg && (pktIdx_q == 'd3))
+always @* metricCov_d = absdiffIsectProdXY << 2;
+
+// Ḋep(X, Y) := 1 - 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y]          ∊ [0, 1]
+// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
+// cannot be represented, therefore:
+//           = ¬( 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y] )          ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricDep, i_clk, i_cg && ratioIsectProdXY_o_done)
+always @* metricDep_d = ~ratioIsectProdXY;
+
+// Ḣam(X, Y) := 1 - 𝔼[| X - Y |]                  ∊ [0, 1]
+// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
+// cannot be represented, and absdiff(X,Y) is equivalent to XOR in binary data
+// therefore:
+//           = ¬𝔼[X ⊙ Y]                          ∊ [0, 1)
+`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricHam, i_clk, i_cg && (pktIdx_q == 'd1))
+always @* metricHam_d = ~countSymdiff_narrow;
+
+// }}} Correlation metrics
+
 // {{{ Packetize and queue data for recording
 
 reg [7:0] pktfifo_i_data;
-wire pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
+assign pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
 wire                                  _unused_pktfifo_o_full;
 wire                                  _unused_pktfifo_o_pushed;
 wire                                  _unused_pktfifo_o_popped;
@@ -255,10 +343,6 @@ fifo #(
 // dropped.
 `dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
 
-`dff_cg_norst(reg [TIME_W-1:0], countX,       i_clk, i_cg && tDoWrap)
-`dff_cg_norst(reg [TIME_W-1:0], countY,       i_clk, i_cg && tDoWrap)
-`dff_cg_norst(reg [TIME_W-1:0], countIsect,   i_clk, i_cg && tDoWrap)
-`dff_cg_norst(reg [TIME_W-1:0], countSymdiff, i_clk, i_cg && tDoWrap)
 always @*
   case (windowShape)
     WINDOW_SHAPE_LOGDROP: begin
@@ -284,9 +368,6 @@ always @* pkt_d = {
   countX_d[TIME_W-8 +: 8]
 };
 
-wire pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
-`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
-
 always @*
   case (pktIdx_q)
     3'd1:     pktfifo_i_data = pkt_q[8*0 +: 8];
@@ -297,78 +378,6 @@ always @*
   endcase
 
 // }}} Packetize and queue data for recording
-
-// {{{ Correlation metrics
-
-// Metric calculations only use top bits from the counters.
-wire [METRIC_PRECISION-1:0] countX_narrow =
-  countX_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
-wire [METRIC_PRECISION-1:0] countY_narrow =
-  countY_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
-wire [METRIC_PRECISION-1:0] countIsect_narrow =
-  countIsect_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
-wire [METRIC_PRECISION-1:0] countSymdiff_narrow =
-  countSymdiff_q[TIME_W-METRIC_PRECISION +: METRIC_PRECISION];
-
-// NOTE: 16b multiplier path limited to ~60.5MHz on Lattice iCE40LP.
-wire [2*METRIC_PRECISION-1:0] fullProdXY = countX_narrow * countY_narrow;
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], prodXY, i_clk, i_cg && (pktIdx_q == 'd1))
-always @* prodXY_d = fullProdXY[METRIC_PRECISION-1:0];
-
-// NOTE: 16b divide path limited to ~16.5MHz on Lattice iCE40LP.
-//wire [METRIC_PRECISION-1:0] ratioIsectProdXY = prodXY_q / countIsect_narrow;
-wire [METRIC_PRECISION-1:0] ratioIsectProdXY;
-wire                        ratioIsectProdXY_o_done;
-wire                        _unused_ratioIsectProdXY_o_busy;
-wire [METRIC_PRECISION-1:0] _unused_ratioIsectProdXY_o_remainder;
-dividerFsm #(
-  .WIDTH          (METRIC_PRECISION),
-  .ABSTRACT_MODEL (0)
-) u_ratioIsectProdXY (
-  .i_clk      (i_clk),
-  .i_cg       (i_cg),
-  .i_rst      (i_rst),
-
-  .i_begin    (pktIdx_q == 'd2),
-  .i_dividend (prodXY_q),
-  .i_divisor  (countIsect_narrow),
-
-  .o_busy     (_unused_ratioIsectProdXY_o_busy),
-  .o_done     (ratioIsectProdXY_o_done),
-  .o_quotient (ratioIsectProdXY),
-  .o_remainder(_unused_ratioIsectProdXY_o_remainder)
-);
-
-// | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |   =  𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y]   : (𝔼[X ⊙ Y] > 𝔼[X].𝔼[Y])
-//                               𝔼[X].𝔼[Y] - 𝔼[X ⊙ Y]   : otherwise
-wire isectGtProdXY = (countIsect_narrow > prodXY_q);
-wire [METRIC_PRECISION-1:0] diffIsectProdXY_A = countIsect_narrow - prodXY_q;
-wire [METRIC_PRECISION-1:0] diffIsectProdXY_B = prodXY_q - countIsect_narrow;
-wire [METRIC_PRECISION-1:0] absdiffIsectProdXY = isectGtProdXY ?
-  diffIsectProdXY_A : diffIsectProdXY_B;
-
-// Ċov(X, Y) := 4 . | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] |      ∊ [0, 1]
-// NOTE: Fixed point format gives actual codomain of [0, 1) therefore:
-//           = | 𝔼[X ⊙ Y] - 𝔼[X].𝔼[Y] | * 2**2    ∊ [0, 1)
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricCov, i_clk, i_cg && (pktIdx_q == 'd2))
-always @* metricCov_d = absdiffIsectProdXY << 2;
-
-// Ḋep(X, Y) := 1 - 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y]          ∊ [0, 1]
-// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
-// cannot be represented, therefore:
-//           = ¬( 𝔼[X].𝔼[Y] / 𝔼[X ⊙ Y] )          ∊ [0, 1)
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricDep, i_clk, i_cg && ratioIsectProdXY_o_done)
-always @* metricDep_d = ~ratioIsectProdXY;
-
-// Ḣam(X, Y) := 1 - 𝔼[| X - Y |]                  ∊ [0, 1]
-// NOTE: Fixed point format gives codomain of [0, 1), therefore the leading 1
-// cannot be represented, and absdiff(X,Y) is equivalent to XOR in binary data
-// therefore:
-//           = ¬𝔼[X ⊙ Y]                          ∊ [0, 1)
-`dff_cg_norst(reg [METRIC_PRECISION-1:0], metricHam, i_clk, i_cg && (pktIdx_q == 'd1))
-always @* metricHam_d = ~countSymdiff_narrow;
-
-// }}} Correlation metrics
 
 // {{{ LED
 
