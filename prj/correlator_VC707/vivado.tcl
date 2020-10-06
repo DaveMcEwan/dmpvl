@@ -35,6 +35,7 @@ proc getopt {_argv name {_var ""} {default ""}} {
 getopt argv --report        REPORT      1
 getopt argv --checkpoint    CHECKPOINT  1
 getopt argv --netlist       NETLIST     1
+getopt argv --synth_yosys   SYNTH_YOSYS 0
 
 # AC701 (Artix-7)
 #set part "xc7a200tfbg676-2"
@@ -86,34 +87,56 @@ add_files \
   ${dirHdl}/usbSpec.svh
 set_property is_global_include true [get_files -regexp .*\.svh]
 
-# Generic HDL, used by other projects.
-add_files \
-  ${dirHdl}/fpgaReset.sv \
-  ${dirHdl}/usbfsPktRx.sv \
-  ${dirHdl}/usbfsPktTx.sv \
-  ${dirHdl}/usbfsTxn.sv \
-  ${dirHdl}/usbfsEndpRx.sv \
-  ${dirHdl}/usbfsEndpTx.sv \
-  ${dirHdl}/usbfsEndpCtrlSerial.sv \
-  ${dirHdl}/usbfsSerial.sv \
-  ${dirHdl}/fifo.sv \
-  ${dirHdl}/fxcs.sv \
-  ${dirHdl}/logdropWindow.sv \
-  ${dirHdl}/mssbIdx.sv \
-  ${dirHdl}/onehotIdx.sv \
-  ${dirHdl}/prngXoshiro128p.sv \
-  ${dirHdl}/strobe.sv \
-  ${dirHdl}/pwm.sv \
-  ${dirHdl}/dividerFsm.sv \
-  ${dirHdl}/corrCountRect.sv \
-  ${dirHdl}/corrCountLogdrop.sv
+if {$SYNTH_YOSYS == 0} {
+  # Generic HDL, used by other projects.
+  add_files \
+    ${dirHdl}/fpgaReset.sv \
+    ${dirHdl}/usbfsPktRx.sv \
+    ${dirHdl}/usbfsPktTx.sv \
+    ${dirHdl}/usbfsTxn.sv \
+    ${dirHdl}/usbfsEndpRx.sv \
+    ${dirHdl}/usbfsEndpTx.sv \
+    ${dirHdl}/usbfsEndpCtrlSerial.sv \
+    ${dirHdl}/usbfsSerial.sv \
+    ${dirHdl}/fifo.sv \
+    ${dirHdl}/fxcs.sv \
+    ${dirHdl}/logdropWindow.sv \
+    ${dirHdl}/mssbIdx.sv \
+    ${dirHdl}/onehotIdx.sv \
+    ${dirHdl}/prngXoshiro128p.sv \
+    ${dirHdl}/strobe.sv \
+    ${dirHdl}/pwm.sv \
+    ${dirHdl}/dividerFsm.sv \
+    ${dirHdl}/corrCountRect.sv \
+    ${dirHdl}/corrCountLogdrop.sv
 
-# Project-specific HDL.
-add_files \
-  pll48.sv \
-  correlator.sv \
-  bpReg.sv \
-  top.sv
+  # Project-specific HDL.
+  add_files \
+    pll48.sv \
+    correlator.sv \
+    bpReg.sv \
+    top.sv
+} else {
+  # Generic HDL, used by other projects.
+  read_verilog -sv \
+    ${dirHdl}/fpgaReset.sv \
+    ${dirHdl}/usbfsPktRx.sv \
+    ${dirHdl}/usbfsPktTx.sv \
+    ${dirHdl}/usbfsTxn.sv \
+    ${dirHdl}/usbfsEndpRx.sv \
+    ${dirHdl}/usbfsEndpTx.sv \
+    ${dirHdl}/usbfsEndpCtrlSerial.sv \
+    ${dirHdl}/usbfsSerial.sv \
+    ${dirHdl}/fifo.sv
+
+  # Top-level HDL.
+  read_verilog -sv \
+    pll48.sv \
+    top.sv
+
+  # Structural verilog netlist produced by yosys synthesis.
+  read_verilog -sv ${dirBuild}/correlator.yosys.v
+}
 
 set_property file_type "Verilog Header" [get_files -regexp .*\.svh]
 check_syntax

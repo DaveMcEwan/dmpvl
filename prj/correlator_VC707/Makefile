@@ -6,14 +6,6 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/fpgaReset.sv \
-	../../hdl/usbfsPktRx.sv \
-	../../hdl/usbfsPktTx.sv \
-	../../hdl/usbfsTxn.sv \
-	../../hdl/usbfsEndpRx.sv \
-	../../hdl/usbfsEndpTx.sv \
-	../../hdl/usbfsEndpCtrlSerial.sv \
-	../../hdl/usbfsSerial.sv \
 	../../hdl/fifo.sv \
 	../../hdl/fxcs.sv \
 	../../hdl/logdropWindow.sv \
@@ -25,18 +17,43 @@ SRC := \
 	../../hdl/dividerFsm.sv \
 	../../hdl/corrCountRect.sv \
 	../../hdl/corrCountLogdrop.sv \
-	pll48.sv \
-	correlator.sv \
 	bpReg.sv \
+	correlator.sv
+
+SRC_TOP := \
+	../../hdl/fpgaReset.sv \
+	../../hdl/usbfsPktRx.sv \
+	../../hdl/usbfsPktTx.sv \
+	../../hdl/usbfsTxn.sv \
+	../../hdl/usbfsEndpRx.sv \
+	../../hdl/usbfsEndpTx.sv \
+	../../hdl/usbfsEndpCtrlSerial.sv \
+	../../hdl/usbfsSerial.sv \
+	pll48.sv \
 	$(PROJ).sv
 
 default: lint synth
 
 synth: $(BUILD)/correlator.bit
 
+SYNTH_YOSYS ?= 0
+synth_yosys: $(BUILD)/correlator.yosys.edif
+%.yosys.edif: $(SRC)
+	mkdir -p $(BUILD)
+	yosys -q \
+		-l $*.yosys.log \
+		-p 'read_verilog -sv -I../../hdl/ $^' \
+		-p 'synth_xilinx -top correlator -edif $*.yosys.edif' \
+		-p 'flatten' \
+		-p 'write_verilog $*.yosys.v'
+
 BITFILE ?= $(BUILD)/correlator.bit
-$(BITFILE): $(SRC) vivado.tcl vc707.xdc
-	vivado -mode batch -source vivado.tcl
+$(BITFILE): $(SRC) $(SRC_TOP) vivado.tcl vc707.xdc
+ifneq ($(SYNTH_YOSYS), 0)
+$(BITFILE): $(BUILD)/correlator.yosys.edif
+endif
+	vivado -mode batch -source vivado.tcl \
+		-tclargs --synth_yosys $(SYNTH_YOSYS)
 
 VIVADO_SIGNOFF ?= signoffVivado.regex
 $(BUILD)/vivado.warnings: $(BITFILE) $(VIVADO_SIGNOFF)
