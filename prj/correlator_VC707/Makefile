@@ -30,28 +30,9 @@ SRC := \
 	bpReg.sv \
 	$(PROJ).sv
 
-default: lint iverilog synth
+default: lint synth
 
 synth: $(BUILD)/correlator.bit
-
-# Use Verilator's LINT mode to ensure there's nothing too obviously wrong.
-# This also ensures files are compatible with verilator.
-VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
-lint:
-	verilator $(VERILATOR_FLAGS) bpReg.sv
-	verilator $(VERILATOR_FLAGS) correlator.sv
-	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s pll48.sv
-	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s top.sv
-
-# Run through iverilog (Icarus) to ensure files are compatible.
-IVERILOG_LANG ?= -g2005-sv
-IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
-iverilog:
-	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
-	iverilog $(IVERILOG_FLAGS) -i correlator.sv
-	iverilog $(IVERILOG_FLAGS) -i pll48.sv
-	iverilog $(IVERILOG_FLAGS) -i top.sv
 
 BITFILE ?= $(BUILD)/correlator.bit
 $(BITFILE): $(SRC) vivado.tcl vc707.xdc
@@ -64,6 +45,32 @@ $(BUILD)/vivado.warnings: $(BITFILE) $(VIVADO_SIGNOFF)
 signoff: $(BUILD)/vivado.warnings
 	! test -s $<
 
+# Read in design files with a variety of tools to ensure there's nothing too
+# obviously wrong.
+lint: lint_verilator lint_iverilog lint_yosys
+
+VERILATOR_LANG ?= --language 1800-2005
+VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
+lint_verilator:
+	verilator $(VERILATOR_FLAGS) bpReg.sv
+	verilator $(VERILATOR_FLAGS) correlator.sv
+	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s pll48.sv
+	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s top.sv
+
+IVERILOG_LANG ?= -g2005-sv
+IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
+lint_iverilog:
+	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
+	iverilog $(IVERILOG_FLAGS) -i correlator.sv
+	iverilog $(IVERILOG_FLAGS) -i pll48.sv
+	iverilog $(IVERILOG_FLAGS) -i top.sv
+
+# pll48.sv emits warnings because the PLL primitive uses real parameters which
+# yosys treats as strings.
+lint_yosys:
+	yosys -q -p 'read_verilog -sv -I../../hdl/ bpReg.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ correlator.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ top.sv'
 
 clean:
 	rm -rf build
@@ -74,4 +81,5 @@ clean:
 	rm -rf vivado*.jou
 
 .SECONDARY:
-.PHONY: default lint iverilog synth prog clean
+.PHONY: default synth signoff clean
+.PHONY: lint lint_verilator lint_iverilog lint_yosys
