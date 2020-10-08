@@ -118,7 +118,14 @@ bpReg #(
 );
 
 
-correlator u_correlator (
+correlator #(
+  .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
+  .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
+  .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP),
+  .WINDOW_PRECISION         (WINDOW_PRECISION),
+  .METRIC_PRECISION         (METRIC_PRECISION),
+  .PKTFIFO_DEPTH            (PKTFIFO_DEPTH) // Bytes, not packets.
+) u_correlator (
   .i_clk                  (i_clk_48MHz),
   .i_rst                  (i_rst),
   .i_cg                   (i_cg),
