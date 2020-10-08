@@ -12,9 +12,10 @@ V_SRC := \
 	../../hdl/prngXoshiro128p.sv \
 	../../hdl/strobe.sv \
 	../../hdl/pwm.sv \
-	../../prj/correlator/corrCountRect.sv \
-	../../prj/correlator/corrCountLogdrop.sv \
+	../../hdl/corrCountRect.sv \
+	../../hdl/corrCountLogdrop.sv \
 	../../prj/correlator/bpReg.sv \
+	../../prj/correlator/usbfsBpCorrelator.sv \
 	../../prj/correlator/correlator.sv
 
 V_INCDIRS := ../../prj/correlator
