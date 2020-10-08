@@ -74,21 +74,21 @@ IOBUF #(
   );
 
 
-wire [7:0] devToHost_data;
-wire       devToHost_valid;
-wire       devToHost_ready;
-wire [7:0] hostToDev_data;
-wire       hostToDev_valid;
-wire       hostToDev_ready;
-
-// NOTE: Setting MAX_PKT to 8 will actually *increase* LUT usage as yosys will
-// convert all the memories to flops instead of using BRAMs.
-usbfsSerial #(
-  .ACM_NOT_GENERIC  (1),
-  .MAX_PKT  (16) // in {8,16,32,64}
-) u_dev (
+wire ledPwm;
+usbfsBpCorrelator #(
+  .USBFS_VIDPID_SQUAT     (1),
+  .USBFS_ACM_NOT_GENERIC  (1),
+  .USBFS_MAX_PKT          (16), // in {8,16,32,64}. wMaxPacketSize
+  .MAX_WINDOW_LENGTH_EXP  (16),
+  .MAX_SAMPLE_PERIOD_EXP  (15),
+  .MAX_SAMPLE_JITTER_EXP  (8),
+  .WINDOW_PRECISION       (8), // 1 < p <= MAX_WINDOW_LENGTH_EXP
+  .METRIC_PRECISION       (16),
+  .PKTFIFO_DEPTH          (50)
+) u_usbfsBpCorrelator (
   .i_clk_48MHz        (clk_48MHz),
   .i_rst              (rst),
+  .i_cg               (1'b1),
 
   // USB {d+, d-}, output enable.
   .i_dp               (usbRx_p),
@@ -97,34 +97,12 @@ usbfsSerial #(
   .o_dn               (usbTx_n),
   .o_oe               (usbOutputEnable),
 
-  .i_devToHost_data   (devToHost_data),
-  .i_devToHost_valid  (devToHost_valid),
-  .o_devToHost_ready  (devToHost_ready),
-
-  .o_hostToDev_data   (hostToDev_data),
-  .o_hostToDev_valid  (hostToDev_valid),
-  .i_hostToDev_ready  (hostToDev_ready)
-);
-
-wire ledPwm;
-correlator u_correlator (
-  .i_clk              (clk_48MHz),
-  .i_rst              (rst),
-  .i_cg               (1'b1),
-
   .i_x                (i_pin_x),
   .i_y                (i_pin_y),
 
-  .o_ledPwm           (ledPwm),
-
-  .i_bp_data          (hostToDev_data),
-  .i_bp_valid         (hostToDev_valid),
-  .o_bp_ready         (hostToDev_ready),
-
-  .o_bp_data          (devToHost_data),
-  .o_bp_valid         (devToHost_valid),
-  .i_bp_ready         (devToHost_ready)
+  .o_ledPwm           (ledPwm)
 );
+
 
 localparam LED_BLINKONLY = 0;
 generate if (LED_BLINKONLY != 0) begin

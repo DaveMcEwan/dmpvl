@@ -96,6 +96,8 @@ clean:
 	rm -rf usage_statistics*
 	rm -rf vivado*.log
 	rm -rf vivado*.jou
+	rm -rf webtalk*.log
+	rm -rf webtalk*.jou
 
 .SECONDARY:
 .PHONY: default synth signoff clean

@@ -115,6 +115,7 @@ if {$SYNTH_YOSYS == 0} {
     pll48.sv \
     correlator.sv \
     bpReg.sv \
+    usbfsBpCorrelator.sv \
     top.sv
 } else {
   # Generic HDL, used by other projects.
@@ -132,6 +133,7 @@ if {$SYNTH_YOSYS == 0} {
   # Top-level HDL.
   read_verilog -sv \
     pll48.sv \
+    usbfsBpCorrelator.sv \
     top.sv
 
   # Structural verilog netlist produced by yosys synthesis.
