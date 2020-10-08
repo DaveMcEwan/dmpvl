@@ -18,7 +18,6 @@ SRC := \
 	../../hdl/usbfsEndpTx.sv \
 	../../hdl/usbfsEndpCtrlSerial.sv \
 	../../hdl/usbfsSerial.sv \
-	$(BUILD)/pll48.sv \
 	../../hdl/fifo.sv \
 	../../hdl/fxcs.sv \
 	../../hdl/logdropWindow.sv \
@@ -32,6 +31,8 @@ SRC := \
 	../../hdl/corrCountLogdrop.sv \
 	correlator.sv \
 	bpReg.sv \
+	usbfsBpCorrelator.sv \
+	$(BUILD)/pll48.sv \
 	$(PROJ).sv
 
 # Target fMax, not the PLL frequency.
@@ -42,7 +43,7 @@ TGT_FMAX = 48
 # for other setups (minor code changes, tool versions, host OS version, etc).
 PNR_SEED ?= 5
 
-default: lint iverilog $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
+default: lint $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
 
 synth: $(BUILD)/$(PROJ).yosys.json
 pnr: $(BUILD)/$(PROJ).nextpnr.asc
@@ -50,20 +51,31 @@ pack: $(BUILD)/$(PROJ).icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt
 all: lint iverilog synth pnr pack rpt
 
-# Use Verilator's LINT mode to ensure there's nothing too obviously wrong.
-# This also ensures files are compatible with verilator.
+# Read in design files with a variety of tools to ensure there's nothing too
+# obviously wrong.
+lint: lint_verilator lint_iverilog lint_yosys
+
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
-lint:
-	verilator $(VERILATOR_FLAGS) bpReg.sv
+lint_verilator:
 	verilator $(VERILATOR_FLAGS) correlator.sv
+	verilator $(VERILATOR_FLAGS) bpReg.sv
+	verilator $(VERILATOR_FLAGS) usbfsBpCorrelator.sv
 
-# Run through iverilog (Icarus) to ensure files are compatible.
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
-iverilog:
-	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
+lint_iverilog:
 	iverilog $(IVERILOG_FLAGS) -i correlator.sv
+	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
+	iverilog $(IVERILOG_FLAGS) -i usbfsBpCorrelator.sv
+	iverilog $(IVERILOG_FLAGS) -i top.sv
+
+lint_yosys:
+	yosys -q -p 'read_verilog -sv -I../../hdl/ correlator.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ bpReg.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ usbfsBpCorrelator.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ top.sv'
+
 
 $(BUILD)/pll48.sv:
 	mkdir -p $(BUILD)
@@ -111,4 +123,5 @@ clean:
 	rm -rf build
 
 .SECONDARY:
-.PHONY: default all lint iverilog synth pnr pack rpt prog clean gui
+.PHONY: default all synth pnr pack rpt prog clean gui
+.PHONY: lint lint_verilator lint_iverilog lint_yosys

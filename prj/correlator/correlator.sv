@@ -12,18 +12,24 @@ module correlator #(
   input wire          i_rst,
   input wire          i_cg,
 
+  output wire [7:0]   o_pktfifo_data,
+  output wire         o_pktfifo_empty, // !valid
+  input  wire         i_pktfifo_pop, // ready
+  input  wire         i_pktfifo_flush,
+
+  input  wire [$clog2(MAX_WINDOW_LENGTH_EXP+1)-1:0]   i_windowLengthExp,
+  input  wire                                         i_windowShape,
+  input  wire [$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]   i_samplePeriodExp,
+  input  wire [$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]   i_sampleJitterExp,
+  input  wire [2:0]                                   i_ledSource,
+
+  input  wire [7:0]   i_jitterSeedByte,
+  input  wire         i_jitterSeedValid,
+
   input  wire         i_x,
   input  wire         i_y,
 
-  output wire         o_ledPwm,
-
-  input  wire [7:0]   i_bp_data,
-  input  wire         i_bp_valid,
-  output wire         o_bp_ready,
-
-  output wire [7:0]   o_bp_data,
-  output wire         o_bp_valid,
-  input  wire         i_bp_ready
+  output wire         o_ledPwm
 );
 
 genvar i;
@@ -47,66 +53,14 @@ localparam LED_SOURCE_HAM           = 3'd7;
 
 localparam TIME_W = MAX_WINDOW_LENGTH_EXP; // Shorter convenience alias
 
-// {{{ BytePipe memmap/register interface
-
-wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
-wire                              windowShape;
-wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
-wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
-wire [LED_SOURCE_W-1:0]           ledSource;
-
-wire [7:0]                        pktfifo_o_data;
-wire                              pktfifo_o_empty;
-wire                              pktfifo_i_pop;
-wire                              pktfifo_i_flush;
-
-wire [7:0]                        jitterSeedByte;
-wire                              jitterSeedValid;
-
-bpReg #(
-  .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
-  .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-  .WINDOW_PRECISION         (WINDOW_PRECISION),
-  .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
-  .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
-) u_bpReg (
-  .i_clk                  (i_clk),
-  .i_rst                  (i_rst),
-  .i_cg                   (i_cg),
-
-  .i_pktfifo_data         (pktfifo_o_data),
-  .i_pktfifo_empty        (pktfifo_o_empty),
-  .o_pktfifo_pop          (pktfifo_i_pop),
-  .o_pktfifo_flush        (pktfifo_i_flush),
-
-  .o_reg_windowLengthExp  (windowLengthExp),
-  .o_reg_windowShape      (windowShape),
-  .o_reg_samplePeriodExp  (samplePeriodExp),
-  .o_reg_sampleJitterExp  (sampleJitterExp),
-  .o_reg_ledSource        (ledSource),
-
-  .o_jitterSeedByte       (jitterSeedByte),
-  .o_jitterSeedValid      (jitterSeedValid),
-
-  .i_bp_data              (i_bp_data),
-  .i_bp_valid             (i_bp_valid),
-  .o_bp_ready             (o_bp_ready),
-
-  .o_bp_data              (o_bp_data),
-  .o_bp_valid             (o_bp_valid),
-  .i_bp_ready             (i_bp_ready)
-);
-
-// }}} BytePipe memmap/register interface
-
 // {{{ Generate sampling strobe
 
-wire [MAX_SAMPLE_PERIOD_EXP:0] ctrlPeriodM1_wide = (1 << samplePeriodExp) - 1;
+wire [MAX_SAMPLE_PERIOD_EXP:0] ctrlPeriodM1_wide = (1 << i_samplePeriodExp) - 1;
 wire [MAX_SAMPLE_PERIOD_EXP-1:0] ctrlPeriodM1 = ctrlPeriodM1_wide[0 +: MAX_SAMPLE_PERIOD_EXP];
 
 wire [MAX_SAMPLE_JITTER_EXP-1:0] ctrlJitter;
 generate for (i = 0; i < MAX_SAMPLE_JITTER_EXP; i=i+1) begin
-  assign ctrlJitter[i] = (sampleJitterExp == (i+1));
+  assign ctrlJitter[i] = (i_sampleJitterExp == (i+1));
 end endgenerate
 
 wire sampleStrobe;
@@ -123,8 +77,8 @@ strobe #(
   .i_ctrlPeriodM1     (ctrlPeriodM1),
   .i_ctrlJitter       (ctrlJitter),
 
-  .i_jitterSeedByte   (jitterSeedByte),
-  .i_jitterSeedValid  (jitterSeedValid),
+  .i_jitterSeedByte   (i_jitterSeedByte),
+  .i_jitterSeedValid  (i_jitterSeedValid),
   .o_jitterPrng       (_unused_sampleStrobe_xoshiro128p),
 
   .o_strobe           (sampleStrobe)
@@ -137,9 +91,9 @@ always @* t_d = tDoWrap ? '0 : t_q + 1;
 wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
 generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
   if (i == 0) begin
-    assign tDoWrapVec[0] = (windowLengthExp == 0);
+    assign tDoWrapVec[0] = (i_windowLengthExp == 0);
   end else begin
-    assign tDoWrapVec[i] = (windowLengthExp == i) && (&t_q[0 +: i]);
+    assign tDoWrapVec[i] = (i_windowLengthExp == i) && (&t_q[0 +: i]);
   end
 end endgenerate
 assign tDoWrap = |tDoWrapVec && sampleStrobe;
@@ -167,7 +121,7 @@ corrCountRect #(
   .o_countIsect   (rect_countIsect),
   .o_countSymdiff (rect_countSymdiff),
 
-  .i_windowLengthExp (windowLengthExp),
+  .i_windowLengthExp (i_windowLengthExp),
 
   .i_zeroCounts   (tDoWrap)
 );
@@ -201,7 +155,7 @@ corrCountLogdrop #(
   .o_countIsect   (logdrop_countIsect),
   .o_countSymdiff (logdrop_countSymdiff),
 
-  .i_windowLengthExp (windowLengthExp),
+  .i_windowLengthExp (i_windowLengthExp),
 
   .i_t            (t_q),
   .i_zeroCounts   (tDoWrap)
@@ -212,7 +166,7 @@ corrCountLogdrop #(
 wire pktfifo_i_push;
 wire pktIdx_wrap;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
-assign pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || pktfifo_i_flush;
+assign pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || i_pktfifo_flush;
 
 // {{{ Correlation metrics
 
@@ -317,14 +271,14 @@ fifo #(
   .i_rst      (i_rst),
   .i_cg       (i_cg),
 
-  .i_flush    (pktfifo_i_flush),
+  .i_flush    (i_pktfifo_flush),
   .i_push     (pktfifo_i_push),
-  .i_pop      (pktfifo_i_pop),
+  .i_pop      (i_pktfifo_pop),
 
   .i_data     (pktfifo_i_data),
-  .o_data     (pktfifo_o_data),
+  .o_data     (o_pktfifo_data),
 
-  .o_empty    (pktfifo_o_empty),
+  .o_empty    (o_pktfifo_empty),
   .o_full     (_unused_pktfifo_o_full),
 
   .o_pushed   (_unused_pktfifo_o_pushed),
@@ -344,7 +298,7 @@ fifo #(
 `dff_upcounter(reg [7:0], winNum, i_clk, i_cg && tDoWrap, i_rst)
 
 always @*
-  case (windowShape)
+  case (i_windowShape)
     WINDOW_SHAPE_LOGDROP: begin
       countX_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
       countY_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
@@ -383,7 +337,7 @@ always @*
 
 reg [7:0] ledCtrl;
 always @*
-  case (ledSource)
+  case (i_ledSource)
     LED_SOURCE_COUNT_X:         ledCtrl = pkt_q[8*0 +: 8];
     LED_SOURCE_COUNT_Y:         ledCtrl = pkt_q[8*1 +: 8];
     LED_SOURCE_COUNT_ISECT:     ledCtrl = pkt_q[8*2 +: 8];
