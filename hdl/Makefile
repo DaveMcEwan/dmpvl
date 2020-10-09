@@ -38,6 +38,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) usbfsPktTx.sv
 	verilator $(VERILATOR_FLAGS) usbfsSerial.sv
 	verilator $(VERILATOR_FLAGS) usbfsTxn.sv
+	verilator $(VERILATOR_FLAGS) xbar.sv
 
 # None of these modules actually simulate anything useful on their own but try
 # running them through iverilog (Icarus) to ensure files are compatible.
@@ -74,6 +75,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) usbfsPktTx.sv
 	iverilog $(IVERILOG_FLAGS) -i usbfsSerial.sv
 	iverilog $(IVERILOG_FLAGS) -i usbfsTxn.sv
+	iverilog $(IVERILOG_FLAGS) -i xbar.sv
 
 # None of these modules actually synthesize to anything useful on their own but
 # try reading them with yosys, to ensure files are compatible.
@@ -108,6 +110,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv usbfsPktTx.sv'
 	yosys -q -p 'read_verilog -sv usbfsSerial.sv'
 	yosys -q -p 'read_verilog -sv usbfsTxn.sv'
+	yosys -q -p 'read_verilog -sv xbar.sv'
 
 # Tested with Vivado 2018.2
 define VIVADO_TCL =
@@ -144,15 +147,17 @@ add_files \\
 	usbfsPktTx.sv \\
 	usbfsSerial.sv \\
 	usbfsTxn.sv \\
+	xbar.sv \\
 	-fileset filesetDummy
 check_syntax -fileset filesetDummy
 endef
 export VIVADO_TCL
 vivado:
+	rm -f vivado_*.backup.jou
+	rm -f vivado_*.backup.log
+	rm -f webtalk*
 	@echo "$$VIVADO_TCL" > vivado.tcl
 	vivado -mode batch -source vivado.tcl > /dev/null
-	rm vivado_*.backup.jou
-	rm vivado_*.backup.log
 	@! grep -q ERROR vivado.log
 	@! grep -q WARNING vivado.log
 
