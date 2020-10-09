@@ -29,6 +29,7 @@ SRC := \
 	../../hdl/dividerFsm.sv \
 	../../hdl/corrCountRect.sv \
 	../../hdl/corrCountLogdrop.sv \
+	../../hdl/xbar.sv \
 	correlator.sv \
 	bpReg.sv \
 	usbfsBpCorrelator.sv \
@@ -107,7 +108,7 @@ $(BUILD)/pll48.sv:
 gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 	nextpnr-ice40 --gui \
 		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
-		--json $*.yosys.json \
+		--json $(BUILD)/$(PROJ).yosys.json \
 		--asc $(BUILD)/$(PROJ).asc
 
 %.icepack.bin: %.nextpnr.asc

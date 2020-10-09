@@ -3,6 +3,8 @@ module usbfsBpCorrelator #(
   parameter USBFS_VIDPID_SQUAT = 1,
   parameter USBFS_ACM_NOT_GENERIC = 0,
   parameter USBFS_MAX_PKT = 8,  // in {8,16,32,64}. wMaxPacketSize
+  parameter N_PROBE               = 2, // 2..256
+  parameter N_PAIR                = 1, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
@@ -22,11 +24,12 @@ module usbfsBpCorrelator #(
   output wire                       o_oe,
 
 
-  input  wire                       i_x,
-  input  wire                       i_y,
+  input  wire [N_PROBE-1:0]         i_probe,
 
-  output wire                       o_ledPwm
+  output wire [N_PAIR-1:0]          o_ledPwm
 );
+
+genvar i;
 
 // USB serial pipeline to/from bpReg
 wire [7:0] devToHost_data;
@@ -68,22 +71,26 @@ localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam LED_SOURCE_W             = 3;
+localparam INPUT_SOURCE_W           = 8;
 
-wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
-wire                              windowShape;
-wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
-wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
-wire [LED_SOURCE_W-1:0]           ledSource;
+wire [N_PAIR*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
+wire [N_PAIR-1:0]                       windowShape;
+wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
+wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
+wire [N_PAIR*LED_SOURCE_W-1:0]          ledSource;
+wire [N_PAIR*INPUT_SOURCE_W-1:0]        xSource;
+wire [N_PAIR*INPUT_SOURCE_W-1:0]        ySource;
 
-wire [7:0]                        pktfifo_o_data;
-wire                              pktfifo_o_empty;
-wire                              pktfifo_i_pop;
-wire                              pktfifo_i_flush;
+wire [N_PAIR*8-1:0]                     pktfifo_o_data;
+wire [N_PAIR-1:0]                       pktfifo_o_empty;
+wire [N_PAIR-1:0]                       pktfifo_i_pop;
+wire [N_PAIR-1:0]                       pktfifo_i_flush;
 
-wire [7:0]                        jitterSeedByte;
-wire                              jitterSeedValid;
+wire [N_PAIR*8-1:0]                     jitterSeedByte;
+wire [N_PAIR-1:0]                       jitterSeedValid;
 
 bpReg #(
+  .N_PAIR                   (N_PAIR),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),
@@ -104,6 +111,8 @@ bpReg #(
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
   .o_reg_ledSource        (ledSource),
+  .o_reg_xSource          (xSource),
+  .o_reg_ySource          (ySource),
 
   .o_jitterSeedByte       (jitterSeedByte),
   .o_jitterSeedValid      (jitterSeedValid),
@@ -118,36 +127,58 @@ bpReg #(
 );
 
 
-correlator #(
-  .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-  .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
-  .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP),
-  .WINDOW_PRECISION         (WINDOW_PRECISION),
-  .METRIC_PRECISION         (METRIC_PRECISION),
-  .PKTFIFO_DEPTH            (PKTFIFO_DEPTH) // Bytes, not packets.
-) u_correlator (
-  .i_clk                  (i_clk_48MHz),
-  .i_rst                  (i_rst),
-  .i_cg                   (i_cg),
+localparam PROBE_SELECT_W = $clog2(N_PROBE);
+wire [N_PAIR-1:0] probeX, probeY;
+generate for (i = 0; i < N_PAIR; i=i+1) begin
+  xbar #(
+    .N_IN       (N_PROBE),
+    .N_OUT      (2),
+    .WIDTH      (1),
+    .FF_IN      (1),
+    .FF_OUT     (1),
+    .FF_SELECT  (0)
+  ) u_probeDemux (
+    .i_clk        (i_clk_48MHz),
+    .i_cg         (i_cg),
 
-  .o_pktfifo_data         (pktfifo_o_data),
-  .o_pktfifo_empty        (pktfifo_o_empty),
-  .i_pktfifo_pop          (pktfifo_i_pop),
-  .i_pktfifo_flush        (pktfifo_i_flush),
+    .i_in         (i_probe),
+    .o_out        ({probeY[i],
+                    probeX[i]}),
+    .i_select     ({ySource[i*PROBE_SELECT_W +: PROBE_SELECT_W],
+                    xSource[i*PROBE_SELECT_W +: PROBE_SELECT_W]})
+  );
 
-  .i_windowLengthExp      (windowLengthExp),
-  .i_windowShape          (windowShape),
-  .i_samplePeriodExp      (samplePeriodExp),
-  .i_sampleJitterExp      (sampleJitterExp),
-  .i_ledSource            (ledSource),
+  correlator #(
+    .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
+    .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
+    .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP),
+    .WINDOW_PRECISION         (WINDOW_PRECISION),
+    .METRIC_PRECISION         (METRIC_PRECISION),
+    .PKTFIFO_DEPTH            (PKTFIFO_DEPTH) // Bytes, not packets.
+  ) u_correlator (
+    .i_clk                  (i_clk_48MHz),
+    .i_rst                  (i_rst),
+    .i_cg                   (i_cg),
 
-  .i_jitterSeedByte       (jitterSeedByte),
-  .i_jitterSeedValid      (jitterSeedValid),
+    .o_pktfifo_data         (pktfifo_o_data[i*8 +: 8]),
+    .o_pktfifo_empty        (pktfifo_o_empty[i]),
+    .i_pktfifo_pop          (pktfifo_i_pop[i]),
+    .i_pktfifo_flush        (pktfifo_i_flush[i]),
 
-  .i_x                    (i_x),
-  .i_y                    (i_y),
+    .i_windowLengthExp      (windowLengthExp[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W]),
+    .i_windowShape          (windowShape[i]),
+    .i_samplePeriodExp      (samplePeriodExp[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W]),
+    .i_sampleJitterExp      (sampleJitterExp[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W]),
+    .i_ledSource            (ledSource[i*LED_SOURCE_W +: LED_SOURCE_W]),
 
-  .o_ledPwm               (o_ledPwm)
-);
+    .i_jitterSeedByte       (jitterSeedByte[i*8 +: 8]),
+    .i_jitterSeedValid      (jitterSeedValid[i]),
+
+    .i_x                    (probeX[i]),
+    .i_y                    (probeY[i]),
+
+    .o_ledPwm               (o_ledPwm[i])
+  );
+end endgenerate
 
 endmodule

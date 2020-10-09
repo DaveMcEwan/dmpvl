@@ -6,8 +6,7 @@ module top (
   inout  b_pin_usb_n,     // USB d-
   output o_pin_pu,        // USB host-detect pull-up
 
-  input  i_pin_x,         // X-probe
-  input  i_pin_y,         // Y-probe
+  input  [1:0] i_pin_probe, // XY probes
 
   output o_pin_led
 );
@@ -69,6 +68,8 @@ usbfsBpCorrelator #(
   .USBFS_VIDPID_SQUAT     (1),
   .USBFS_ACM_NOT_GENERIC  (1),
   .USBFS_MAX_PKT          (16), // in {8,16,32,64}. wMaxPacketSize
+  .N_PROBE                (2),
+  .N_PAIR                 (1),
   .MAX_WINDOW_LENGTH_EXP  (16),
   .MAX_SAMPLE_PERIOD_EXP  (15),
   .MAX_SAMPLE_JITTER_EXP  (8),
@@ -87,8 +88,7 @@ usbfsBpCorrelator #(
   .o_dn               (usbTx_n),
   .o_oe               (usbOutputEnable),
 
-  .i_x                (i_pin_x),
-  .i_y                (i_pin_y),
+  .i_probe            (i_pin_probe),
 
   .o_ledPwm           (ledPwm)
 );

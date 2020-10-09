@@ -17,8 +17,10 @@ SRC := \
 	../../hdl/dividerFsm.sv \
 	../../hdl/corrCountRect.sv \
 	../../hdl/corrCountLogdrop.sv \
+	../../hdl/xbar.sv \
 	bpReg.sv \
-	correlator.sv
+	correlator.sv \
+	usbfsBpCorrelator.sv
 
 SRC_TOP := \
 	../../hdl/fpgaReset.sv \
@@ -37,13 +39,13 @@ default: lint synth
 synth: $(BUILD)/correlator.bit
 
 SYNTH_YOSYS ?= 0
-synth_yosys: $(BUILD)/correlator.yosys.edif
+synth_yosys: $(BUILD)/usbfsBpCorrelator.yosys.edif
 %.yosys.edif: $(SRC)
 	mkdir -p $(BUILD)
 	yosys -q \
 		-l $*.yosys.log \
 		-p 'read_verilog -sv -I../../hdl/ $^' \
-		-p 'synth_xilinx -top correlator -edif $*.yosys.edif' \
+		-p 'synth_xilinx -top usbfsBpCorrelator -edif $*.yosys.edif' \
 		-p 'flatten' \
 		-p 'write_verilog $*.yosys.v'
 

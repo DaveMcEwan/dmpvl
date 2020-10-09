@@ -109,6 +109,7 @@ if {$SYNTH_YOSYS == 0} {
     ${dirHdl}/dividerFsm.sv \
     ${dirHdl}/corrCountRect.sv \
     ${dirHdl}/corrCountLogdrop.sv
+    ${dirHdl}/xbar.sv
 
   # Project-specific HDL.
   add_files \
@@ -137,7 +138,7 @@ if {$SYNTH_YOSYS == 0} {
     top.sv
 
   # Structural verilog netlist produced by yosys synthesis.
-  read_verilog -sv ${dirBuild}/correlator.yosys.v
+  read_verilog -sv ${dirBuild}/usbfsBpCorrelator.yosys.v
 }
 
 set_property file_type "Verilog Header" [get_files -regexp .*\.svh]
