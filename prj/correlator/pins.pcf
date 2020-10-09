@@ -9,5 +9,7 @@ set_io b_pin_usb_n      A4 # bottom SMR usb_n
 set_io o_pin_pu         A3 # bottom SMR usb_pu
 set_io i_pin_probe[0]   A2 # top TH pin1
 set_io i_pin_probe[1]   A1 # top TH pin2
+set_io i_pin_probe[2]   B1 # top TH pin3
+set_io i_pin_probe[3]   C2 # top TH pin4
 set_io o_pin_led        B3 # bottom SMR led
 
