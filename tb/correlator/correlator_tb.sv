@@ -47,6 +47,7 @@ ptyBytePipe #(
   .o_bpDnstream_ready (bp0_dnstream_ready)
 ); // }}}
 
+localparam N_PAIR                 = 1;
 localparam MAX_WINDOW_LENGTH_EXP  = 16;
 localparam MAX_SAMPLE_PERIOD_EXP  = 15;
 localparam MAX_SAMPLE_JITTER_EXP  = 8;
@@ -59,12 +60,15 @@ localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam LED_SOURCE_W             = 3;
+localparam INPUT_SOURCE_W           = 8;
 
 wire [WINDOW_LENGTH_EXP_W-1:0]    windowLengthExp;
 wire                              windowShape;
 wire [SAMPLE_PERIOD_EXP_W-1:0]    samplePeriodExp;
 wire [SAMPLE_JITTER_EXP_W-1:0]    sampleJitterExp;
 wire [LED_SOURCE_W-1:0]           ledSource;
+wire [INPUT_SOURCE_W-1:0]         xSource;
+wire [INPUT_SOURCE_W-1:0]         ySource;
 
 wire [7:0]                        pktfifo_o_data;
 wire                              pktfifo_o_empty;
@@ -77,6 +81,7 @@ wire                              jitterSeedValid;
 wire                              ledPwm;
 
 bpReg #(
+  .N_PAIR                   (N_PAIR),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),
@@ -97,6 +102,8 @@ bpReg #(
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
   .o_reg_ledSource        (ledSource),
+  .o_reg_xSource          (xSource),
+  .o_reg_ySource          (ySource),
 
   .o_jitterSeedByte       (jitterSeedByte),
   .o_jitterSeedValid      (jitterSeedValid),
