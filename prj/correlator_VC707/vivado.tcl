@@ -108,7 +108,7 @@ if {$SYNTH_YOSYS == 0} {
     ${dirHdl}/pwm.sv \
     ${dirHdl}/dividerFsm.sv \
     ${dirHdl}/corrCountRect.sv \
-    ${dirHdl}/corrCountLogdrop.sv
+    ${dirHdl}/corrCountLogdrop.sv \
     ${dirHdl}/xbar.sv
 
   # Project-specific HDL.
@@ -116,23 +116,13 @@ if {$SYNTH_YOSYS == 0} {
     pll48.sv \
     correlator.sv \
     bpReg.sv \
+    bpCorrelator.sv \
     usbfsBpCorrelator.sv \
     top.sv
 } else {
-  # Generic HDL, used by other projects.
-  read_verilog -sv \
-    ${dirHdl}/fpgaReset.sv \
-    ${dirHdl}/usbfsPktRx.sv \
-    ${dirHdl}/usbfsPktTx.sv \
-    ${dirHdl}/usbfsTxn.sv \
-    ${dirHdl}/usbfsEndpRx.sv \
-    ${dirHdl}/usbfsEndpTx.sv \
-    ${dirHdl}/usbfsEndpCtrlSerial.sv \
-    ${dirHdl}/usbfsSerial.sv \
-    ${dirHdl}/fifo.sv
-
   # Top-level HDL.
   read_verilog -sv \
+    ${dirHdl}/fpgaReset.sv \
     pll48.sv \
     usbfsBpCorrelator.sv \
     top.sv
@@ -161,7 +151,7 @@ if $CHECKPOINT {
 }
 if $REPORT {
   report_timing_summary   -file ${dirRpt}/synth_timing_summary.rpt
-  report_power            -file ${dirRpt}/synth_power.rpt
+  report_power -advisory  -file ${dirRpt}/synth_power.rpt
 }
 
 
@@ -184,7 +174,7 @@ if $REPORT {
   report_timing_summary       -file ${dirRpt}/route_timing_summary.rpt
   report_clock_utilization    -file ${dirRpt}/route_clock_utilization.rpt
   report_utilization          -file ${dirRpt}/route_utilization.rpt
-  report_power                -file ${dirRpt}/route_power.rpt
+  report_power -advisory      -file ${dirRpt}/route_power.rpt
   report_drc                  -file ${dirRpt}/route_drc.rpt
 }
 

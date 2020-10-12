@@ -4,7 +4,7 @@
 Unpack the register map to wires.
 */
 module bpReg #(
-  parameter N_PAIR                = 1, // 1..8
+  parameter N_PAIR                = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
   parameter MAX_SAMPLE_JITTER_EXP = 32,
@@ -155,37 +155,37 @@ localparam INPUT_SOURCE_W           = 8;
 `dff_nocg_srst(reg [N_PAIR*INPUT_SOURCE_W-1:0],      ySource,         i_clk, i_rst, '0)
 generate for (i = 0; i < N_PAIR; i=i+1) begin
   always @* windowLengthExp_d[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W] =
-    wr_windowLengthExp ?
+    wr_windowLengthExp[i] ?
     i_bp_data[WINDOW_LENGTH_EXP_W-1:0] :
     windowLengthExp_q[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W];
 
   always @* windowShape_d[i] =
-    wr_windowShape ?
+    wr_windowShape[i] ?
     i_bp_data[0] :
     windowShape_q[i];
 
   always @* samplePeriodExp_d[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W] =
-    wr_samplePeriodExp ?
+    wr_samplePeriodExp[i] ?
     i_bp_data[SAMPLE_PERIOD_EXP_W-1:0] :
     samplePeriodExp_q[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W];
 
   always @* sampleJitterExp_d[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W] =
-    wr_sampleJitterExp ?
+    wr_sampleJitterExp[i] ?
     i_bp_data[SAMPLE_JITTER_EXP_W-1:0] :
     sampleJitterExp_q[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W];
 
   always @* ledSource_d[i*LED_SOURCE_W +: LED_SOURCE_W] =
-    wr_ledSource ?
+    wr_ledSource[i] ?
     i_bp_data[LED_SOURCE_W-1:0] :
     ledSource_q[i*LED_SOURCE_W +: LED_SOURCE_W];
 
   always @* xSource_d[i*INPUT_SOURCE_W +: INPUT_SOURCE_W] =
-    wr_xSource ?
+    wr_xSource[i] ?
     i_bp_data[INPUT_SOURCE_W-1:0] :
     xSource_q[i*INPUT_SOURCE_W +: INPUT_SOURCE_W];
 
   always @* ySource_d[i*INPUT_SOURCE_W +: INPUT_SOURCE_W] =
-    wr_ySource ?
+    wr_ySource[i] ?
     i_bp_data[INPUT_SOURCE_W-1:0] :
     ySource_q[i*INPUT_SOURCE_W +: INPUT_SOURCE_W];
 end endgenerate

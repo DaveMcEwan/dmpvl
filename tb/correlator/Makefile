@@ -14,9 +14,10 @@ V_SRC := \
 	../../hdl/pwm.sv \
 	../../hdl/corrCountRect.sv \
 	../../hdl/corrCountLogdrop.sv \
+	../../prj/correlator/correlator.sv \
 	../../prj/correlator/bpReg.sv \
-	../../prj/correlator/usbfsBpCorrelator.sv \
-	../../prj/correlator/correlator.sv
+	../../prj/correlator/bpCorrelator.sv \
+	../../prj/correlator/usbfsBpCorrelator.sv
 
 V_INCDIRS := ../../prj/correlator
 

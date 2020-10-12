@@ -37,6 +37,8 @@
 .* \[Synth 8-6014\] Unused sequential element wrIdx_q_reg was removed\.\s+\[.*/hdl/usbfsEndpTx\.sv:\d+\]
 
 # Correlator registers removed via RTL Optimization Phase 2.
+.* \[Synth 8-6014\] Unused sequential element\s+was removed.\s+\[.*\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element [A-Z] was removed.\s+\[.*\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element countX_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element countY_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element countSymdiff_q_reg was removed.\s+\[.*/prj/correlator_VC707/correlator\.sv:\d+\]
@@ -74,6 +76,8 @@
 
 # Correlator registers removed via Cross Boundary and Area Optimization.
 .* \[Synth 8-6014\] Unused sequential element countIsect_q_reg was removed\.\s+\[.*/correlator\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element genblk\d+\[\d+\]\.u_probeDemux/inFF_q_reg was removed\.\s+\[.*/hdl/xbar\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element u_usbfsBpCorrelator/u_dev/u_txn/frameNumber_q_reg was removed\.\s+\[.*/hdl/usbfsTxn\.sv:\d+\]
 # Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
 .* \[Synth 8-6014\] Unused sequential element u_winRect/countY_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element u_winRect/countIsect_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
@@ -86,4 +90,7 @@
 .* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module correlator\.
 # Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
 .* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module corrCountLogdrop\.
+
+# Power analysis gets some signal types wrong.
+.* \[Power 33-332\] Found switching activity that implies high-fanout reset nets being asserted for excessive periods of time which may result in inaccurate power analysis\.
 

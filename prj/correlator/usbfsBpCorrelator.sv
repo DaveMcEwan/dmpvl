@@ -4,7 +4,7 @@ module usbfsBpCorrelator #(
   parameter USBFS_ACM_NOT_GENERIC = 0,
   parameter USBFS_MAX_PKT = 8,  // in {8,16,32,64}. wMaxPacketSize
   parameter N_PROBE               = 4, // 2..256
-  parameter N_PAIR                = 1, // 1..8
+  parameter N_PAIR                = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
@@ -89,33 +89,18 @@ wire [N_PAIR-1:0]                       pktfifo_i_flush;
 wire [N_PAIR*8-1:0]                     jitterSeedByte;
 wire [N_PAIR-1:0]                       jitterSeedValid;
 
-bpReg #(
+bpCorrelator #(
+  .N_PROBE                  (N_PROBE),
   .N_PAIR                   (N_PAIR),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),
   .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
   .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP)
-) u_bpReg (
+) u_bpCorrelator (
   .i_clk                  (i_clk_48MHz),
   .i_rst                  (i_rst),
   .i_cg                   (i_cg),
-
-  .i_pktfifo_data         (pktfifo_o_data),
-  .i_pktfifo_empty        (pktfifo_o_empty),
-  .o_pktfifo_pop          (pktfifo_i_pop),
-  .o_pktfifo_flush        (pktfifo_i_flush),
-
-  .o_reg_windowLengthExp  (windowLengthExp),
-  .o_reg_windowShape      (windowShape),
-  .o_reg_samplePeriodExp  (samplePeriodExp),
-  .o_reg_sampleJitterExp  (sampleJitterExp),
-  .o_reg_ledSource        (ledSource),
-  .o_reg_xSource          (xSource),
-  .o_reg_ySource          (ySource),
-
-  .o_jitterSeedByte       (jitterSeedByte),
-  .o_jitterSeedValid      (jitterSeedValid),
 
   .i_bp_data              (hostToDev_data),
   .i_bp_valid             (hostToDev_valid),
@@ -123,62 +108,10 @@ bpReg #(
 
   .o_bp_data              (devToHost_data),
   .o_bp_valid             (devToHost_valid),
-  .i_bp_ready             (devToHost_ready)
+  .i_bp_ready             (devToHost_ready),
+
+  .i_probe                (i_probe),
+  .o_ledPwm               (o_ledPwm)
 );
-
-
-localparam PROBE_SELECT_W = $clog2(N_PROBE);
-wire [N_PAIR-1:0] probeX, probeY;
-generate for (i = 0; i < N_PAIR; i=i+1) begin
-  xbar #(
-    .N_IN       (N_PROBE),
-    .N_OUT      (2),
-    .WIDTH      (1),
-    .FF_IN      (1),
-    .FF_OUT     (1),
-    .FF_SELECT  (0)
-  ) u_probeDemux (
-    .i_clk        (i_clk_48MHz),
-    .i_cg         (i_cg),
-
-    .i_in         (i_probe),
-    .o_out        ({probeY[i],
-                    probeX[i]}),
-    .i_select     ({ySource[i*PROBE_SELECT_W +: PROBE_SELECT_W],
-                    xSource[i*PROBE_SELECT_W +: PROBE_SELECT_W]})
-  );
-
-  correlator #(
-    .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
-    .MAX_SAMPLE_PERIOD_EXP    (MAX_SAMPLE_PERIOD_EXP),
-    .MAX_SAMPLE_JITTER_EXP    (MAX_SAMPLE_JITTER_EXP),
-    .WINDOW_PRECISION         (WINDOW_PRECISION),
-    .METRIC_PRECISION         (METRIC_PRECISION),
-    .PKTFIFO_DEPTH            (PKTFIFO_DEPTH) // Bytes, not packets.
-  ) u_correlator (
-    .i_clk                  (i_clk_48MHz),
-    .i_rst                  (i_rst),
-    .i_cg                   (i_cg),
-
-    .o_pktfifo_data         (pktfifo_o_data[i*8 +: 8]),
-    .o_pktfifo_empty        (pktfifo_o_empty[i]),
-    .i_pktfifo_pop          (pktfifo_i_pop[i]),
-    .i_pktfifo_flush        (pktfifo_i_flush[i]),
-
-    .i_windowLengthExp      (windowLengthExp[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W]),
-    .i_windowShape          (windowShape[i]),
-    .i_samplePeriodExp      (samplePeriodExp[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W]),
-    .i_sampleJitterExp      (sampleJitterExp[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W]),
-    .i_ledSource            (ledSource[i*LED_SOURCE_W +: LED_SOURCE_W]),
-
-    .i_jitterSeedByte       (jitterSeedByte[i*8 +: 8]),
-    .i_jitterSeedValid      (jitterSeedValid[i]),
-
-    .i_x                    (probeX[i]),
-    .i_y                    (probeY[i]),
-
-    .o_ledPwm               (o_ledPwm[i])
-  );
-end endgenerate
 
 endmodule

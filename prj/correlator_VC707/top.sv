@@ -6,19 +6,28 @@ module top (
   inout  USER_SMA_GPIO_P, // USB d+ (AN31 LVCMOS18 J33.1)
   inout  USER_SMA_GPIO_N, // USB d- (AP31 LVCMOS18 J34.1)
 
-  input  GPIO_SW_W,  // X-probe (AW40 LVCMOS18 SW7.3)
-  input  GPIO_SW_E,  // Y-probe (AU38 LVCMOS18 SW4.3)
+  input  GPIO_SW_N,  // probe[0] (AR40 LVCMOS18 SW3.3)
+  input  GPIO_SW_E,  // probe[1] (AU38 LVCMOS18 SW4.3)
+  input  GPIO_SW_S,  // probe[2] (AP40 LVCMOS18 SW5.3)
+  input  GPIO_SW_W,  // probe[3] (AW40 LVCMOS18 SW7.3)
 
-  output GPIO_LED_0  // (AM39 LVCMOS18 DS2.2)
+  output GPIO_LED_0, // (AM39 LVCMOS18 DS2.2)
+  output GPIO_LED_1  // (AN39 LVCMOS18 DS3.2)
 );
 
 wire i_pin_sysclk_p_200MHz = SYSCLK_P;
 wire i_pin_sysclk_n_200MHz = SYSCLK_N;
 wire b_pin_usb_p = USER_SMA_GPIO_P;
 wire b_pin_usb_n = USER_SMA_GPIO_N;
-wire i_pin_x = GPIO_SW_W;
-wire i_pin_y = GPIO_SW_E;
-wire o_pin_led; assign GPIO_LED_0 = o_pin_led;
+wire [3:0] i_pin_probe = {
+  GPIO_SW_W,
+  GPIO_SW_S,
+  GPIO_SW_E,
+  GPIO_SW_N
+};
+wire [1:0] o_pin_led;
+  assign GPIO_LED_0 = o_pin_led[0];
+  assign GPIO_LED_1 = o_pin_led[1];
 
 wire clk_48MHz;
 wire pllLocked;
@@ -74,11 +83,13 @@ IOBUF #(
   );
 
 
-wire ledPwm;
+wire [1:0] ledPwm;
 usbfsBpCorrelator #(
   .USBFS_VIDPID_SQUAT     (1),
   .USBFS_ACM_NOT_GENERIC  (1),
   .USBFS_MAX_PKT          (16), // in {8,16,32,64}. wMaxPacketSize
+  .N_PROBE                (4),
+  .N_PAIR                 (2),
   .MAX_WINDOW_LENGTH_EXP  (16),
   .MAX_SAMPLE_PERIOD_EXP  (15),
   .MAX_SAMPLE_JITTER_EXP  (8),
@@ -97,8 +108,7 @@ usbfsBpCorrelator #(
   .o_dn               (usbTx_n),
   .o_oe               (usbOutputEnable),
 
-  .i_x                (i_pin_x),
-  .i_y                (i_pin_y),
+  .i_probe            (i_pin_probe),
 
   .o_ledPwm           (ledPwm)
 );
@@ -106,13 +116,13 @@ usbfsBpCorrelator #(
 
 localparam LED_BLINKONLY = 0;
 generate if (LED_BLINKONLY != 0) begin
-  reg [22:0] ledCounter_q;
+  reg [23:0] ledCounter_q;
   always @(posedge clk_48MHz)
     if (rst)
-      ledCounter_q <= 23'd0;
+      ledCounter_q <= 24'd0;
     else
-      ledCounter_q <= ledCounter_q + 23'd1;
-  assign o_pin_led = ledCounter_q[22];
+      ledCounter_q <= ledCounter_q + 24'd1;
+  assign o_pin_led = ledCounter_q[23:22];
 end else begin
   assign o_pin_led = ledPwm;
 end endgenerate

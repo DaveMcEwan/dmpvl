@@ -32,6 +32,7 @@ SRC := \
 	../../hdl/xbar.sv \
 	correlator.sv \
 	bpReg.sv \
+	bpCorrelator.sv \
 	usbfsBpCorrelator.sv \
 	$(BUILD)/pll48.sv \
 	$(PROJ).sv
@@ -61,6 +62,7 @@ VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
 lint_verilator:
 	verilator $(VERILATOR_FLAGS) correlator.sv
 	verilator $(VERILATOR_FLAGS) bpReg.sv
+	verilator $(VERILATOR_FLAGS) bpCorrelator.sv
 	verilator $(VERILATOR_FLAGS) usbfsBpCorrelator.sv
 
 IVERILOG_LANG ?= -g2005-sv
@@ -68,12 +70,14 @@ IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
 lint_iverilog:
 	iverilog $(IVERILOG_FLAGS) -i correlator.sv
 	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
+	iverilog $(IVERILOG_FLAGS) -i bpCorrelator.sv
 	iverilog $(IVERILOG_FLAGS) -i usbfsBpCorrelator.sv
 	iverilog $(IVERILOG_FLAGS) -i top.sv
 
 lint_yosys:
 	yosys -q -p 'read_verilog -sv -I../../hdl/ correlator.sv'
 	yosys -q -p 'read_verilog -sv -I../../hdl/ bpReg.sv'
+	yosys -q -p 'read_verilog -sv -I../../hdl/ bpCorrelator.sv'
 	yosys -q -p 'read_verilog -sv -I../../hdl/ usbfsBpCorrelator.sv'
 	yosys -q -p 'read_verilog -sv -I../../hdl/ top.sv'
 
