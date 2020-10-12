@@ -40,20 +40,20 @@ default: lint synth
 synth: $(BUILD)/correlator.bit
 
 SYNTH_YOSYS ?= 0
-synth_yosys: $(BUILD)/usbfsBpCorrelator.yosys.edif
-%.yosys.edif: $(SRC)
+synth_yosys: $(BUILD)/usbfsBpCorrelator.edif
+%.edif: $(SRC)
 	mkdir -p $(BUILD)
 	yosys -q \
 		-l $*.yosys.log \
 		-p 'read_verilog -sv -I../../hdl/ $^' \
-		-p 'synth_xilinx -top usbfsBpCorrelator -edif $*.yosys.edif' \
+		-p 'synth_xilinx -top usbfsBpCorrelator -edif $*.edif' \
 		-p 'flatten' \
 		-p 'write_verilog $*.yosys.v'
 
 BITFILE ?= $(BUILD)/correlator.bit
 $(BITFILE): $(SRC) $(SRC_TOP) vivado.tcl vc707.xdc
 ifneq ($(SYNTH_YOSYS), 0)
-$(BITFILE): $(BUILD)/correlator.yosys.edif
+$(BITFILE): $(BUILD)/usbfsBpCorrelator.edif
 endif
 	vivado -mode batch -source vivado.tcl \
 		-tclargs --synth_yosys $(SYNTH_YOSYS)

@@ -122,13 +122,13 @@ if {$SYNTH_YOSYS == 0} {
 } else {
   # Top-level HDL.
   read_verilog -sv \
+    usbfsBpCorrelator.stub.sv \
     ${dirHdl}/fpgaReset.sv \
     pll48.sv \
-    usbfsBpCorrelator.sv \
     top.sv
 
-  # Structural verilog netlist produced by yosys synthesis.
-  read_verilog -sv ${dirBuild}/usbfsBpCorrelator.yosys.v
+  # EDIF produced by yosys synthesis.
+  read_edif ${dirBuild}/usbfsBpCorrelator.edif
 }
 
 set_property file_type "Verilog Header" [get_files -regexp .*\.svh]
