@@ -3,7 +3,7 @@ module usbfsBpCorrelator #(
   parameter USBFS_VIDPID_SQUAT = 1,
   parameter USBFS_ACM_NOT_GENERIC = 0,
   parameter USBFS_MAX_PKT = 8,  // in {8,16,32,64}. wMaxPacketSize
-  parameter N_PROBE               = 4, // 2..256
+  parameter N_PROBE               = 4, // 2..64
   parameter N_PAIR                = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,

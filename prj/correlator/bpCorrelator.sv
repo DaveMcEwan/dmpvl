@@ -1,6 +1,6 @@
 
 module bpCorrelator #(
-  parameter N_PROBE               = 4, // 2..256
+  parameter N_PROBE               = 4, // 2..64
   parameter N_PAIR                = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
@@ -35,15 +35,15 @@ localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam LED_SOURCE_W             = 3;
-localparam INPUT_SOURCE_W           = 8;
+localparam PROBE_SELECT_W           = $clog2(N_PROBE);
 
 wire [N_PAIR*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
 wire [N_PAIR-1:0]                       windowShape;
 wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
 wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
 wire [N_PAIR*LED_SOURCE_W-1:0]          ledSource;
-wire [N_PAIR*INPUT_SOURCE_W-1:0]        xSource;
-wire [N_PAIR*INPUT_SOURCE_W-1:0]        ySource;
+wire [N_PAIR*PROBE_SELECT_W-1:0]        xSource;
+wire [N_PAIR*PROBE_SELECT_W-1:0]        ySource;
 
 wire [N_PAIR*8-1:0]                     pktfifo_o_data;
 wire [N_PAIR-1:0]                       pktfifo_o_empty;
@@ -54,6 +54,7 @@ wire [N_PAIR*8-1:0]                     jitterSeedByte;
 wire [N_PAIR-1:0]                       jitterSeedValid;
 
 bpReg #(
+  .N_PROBE                  (N_PROBE),
   .N_PAIR                   (N_PAIR),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
@@ -91,7 +92,6 @@ bpReg #(
 );
 
 
-localparam PROBE_SELECT_W = $clog2(N_PROBE);
 wire [N_PAIR-1:0] probeX, probeY;
 generate for (i = 0; i < N_PAIR; i=i+1) begin
   xbar #(

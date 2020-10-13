@@ -4,6 +4,7 @@
 Unpack the register map to wires.
 */
 module bpReg #(
+  parameter N_PROBE               = 4, // 2..64
   parameter N_PAIR                = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
@@ -25,8 +26,8 @@ module bpReg #(
   output wire [N_PAIR*$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]  o_reg_samplePeriodExp,
   output wire [N_PAIR*$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]  o_reg_sampleJitterExp,
   output wire [N_PAIR*3-1:0]                                o_reg_ledSource,
-  output wire [N_PAIR*8-1:0]                                o_reg_xSource,
-  output wire [N_PAIR*8-1:0]                                o_reg_ySource,
+  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_xSource,
+  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_ySource,
 
   output wire [N_PAIR*8-1:0]  o_jitterSeedByte,
   output wire [N_PAIR-1:0]    o_jitterSeedValid,
@@ -143,16 +144,16 @@ localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
 localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
+localparam PROBE_SELECT_W           = $clog2(N_PROBE);
 localparam LED_SOURCE_W             = 3;
-localparam INPUT_SOURCE_W           = 8;
 
 `dff_nocg_srst(reg [N_PAIR*WINDOW_LENGTH_EXP_W-1:0], windowLengthExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR-1:0],                     windowShape,     i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0], samplePeriodExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_JITTER_EXP_W-1:0], sampleJitterExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*LED_SOURCE_W-1:0],        ledSource,       i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*INPUT_SOURCE_W-1:0],      xSource,         i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*INPUT_SOURCE_W-1:0],      ySource,         i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      xSource,         i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      ySource,         i_clk, i_rst, '0)
 generate for (i = 0; i < N_PAIR; i=i+1) begin
   always @* windowLengthExp_d[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W] =
     wr_windowLengthExp[i] ?
@@ -179,15 +180,15 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     i_bp_data[LED_SOURCE_W-1:0] :
     ledSource_q[i*LED_SOURCE_W +: LED_SOURCE_W];
 
-  always @* xSource_d[i*INPUT_SOURCE_W +: INPUT_SOURCE_W] =
+  always @* xSource_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
     wr_xSource[i] ?
-    i_bp_data[INPUT_SOURCE_W-1:0] :
-    xSource_q[i*INPUT_SOURCE_W +: INPUT_SOURCE_W];
+    i_bp_data[PROBE_SELECT_W-1:0] :
+    xSource_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
 
-  always @* ySource_d[i*INPUT_SOURCE_W +: INPUT_SOURCE_W] =
+  always @* ySource_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
     wr_ySource[i] ?
-    i_bp_data[INPUT_SOURCE_W-1:0] :
-    ySource_q[i*INPUT_SOURCE_W +: INPUT_SOURCE_W];
+    i_bp_data[PROBE_SELECT_W-1:0] :
+    ySource_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
 end endgenerate
 
 // Expose non-static (RW) regs as wires.
@@ -218,8 +219,8 @@ always @*
       ADDR_SAMPLE_PERIOD_EXP:       rdData_d = samplePeriodExp_q[addrPair*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W];
       ADDR_SAMPLE_JITTER_EXP:       rdData_d = sampleJitterExp_q[addrPair*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W];
       ADDR_LED_SOURCE:              rdData_d = ledSource_q[addrPair*LED_SOURCE_W +: LED_SOURCE_W];
-      ADDR_X_SOURCE:                rdData_d = xSource_q[addrPair*INPUT_SOURCE_W +: INPUT_SOURCE_W];
-      ADDR_Y_SOURCE:                rdData_d = ySource_q[addrPair*INPUT_SOURCE_W +: INPUT_SOURCE_W];
+      ADDR_X_SOURCE:                rdData_d = xSource_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
+      ADDR_Y_SOURCE:                rdData_d = ySource_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
                                                   /* verilator lint_on  WIDTH */
       default:                      rdData_d = '0;
     endcase
