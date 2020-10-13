@@ -21,7 +21,7 @@ module correlator #(
   input  wire                                         i_windowShape,
   input  wire [$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]   i_samplePeriodExp,
   input  wire [$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]   i_sampleJitterExp,
-  input  wire [2:0]                                   i_ledSource,
+  input  wire [2:0]                                   i_pwmSelect,
 
   input  wire [7:0]   i_jitterSeedByte,
   input  wire         i_jitterSeedValid,
@@ -29,7 +29,7 @@ module correlator #(
   input  wire         i_x,
   input  wire         i_y,
 
-  output wire         o_ledPwm
+  output wire         o_pwm
 );
 
 genvar i;
@@ -37,19 +37,19 @@ genvar i;
 localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
-localparam LED_SOURCE_W             = 3;
+localparam PWM_SELECT_W             = 3;
 
 localparam WINDOW_SHAPE_RECTANGULAR = 1'd0;
 localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 
-localparam LED_SOURCE_WIN_NUM       = 3'd0;
-localparam LED_SOURCE_COUNT_X       = 3'd1;
-localparam LED_SOURCE_COUNT_Y       = 3'd2;
-localparam LED_SOURCE_COUNT_ISECT   = 3'd3;
-localparam LED_SOURCE_COUNT_SYMDIFF = 3'd4;
-localparam LED_SOURCE_COV           = 3'd5;
-localparam LED_SOURCE_DEP           = 3'd6;
-localparam LED_SOURCE_HAM           = 3'd7;
+localparam PWM_SELECT_WIN_NUM       = 3'd0;
+localparam PWM_SELECT_COUNT_X       = 3'd1;
+localparam PWM_SELECT_COUNT_Y       = 3'd2;
+localparam PWM_SELECT_COUNT_ISECT   = 3'd3;
+localparam PWM_SELECT_COUNT_SYMDIFF = 3'd4;
+localparam PWM_SELECT_COV           = 3'd5;
+localparam PWM_SELECT_DEP           = 3'd6;
+localparam PWM_SELECT_HAM           = 3'd7;
 
 localparam TIME_W = MAX_WINDOW_LENGTH_EXP; // Shorter convenience alias
 
@@ -333,35 +333,35 @@ always @*
 
 // }}} Packetize and queue data for recording
 
-// {{{ LED
+// {{{ Pulse-Width (or Delta-Sigma) Modulation
 
-reg [7:0] ledCtrl;
+reg [7:0] pwmCtrl;
 always @*
-  case (i_ledSource)
-    LED_SOURCE_COUNT_X:         ledCtrl = pkt_q[8*0 +: 8];
-    LED_SOURCE_COUNT_Y:         ledCtrl = pkt_q[8*1 +: 8];
-    LED_SOURCE_COUNT_ISECT:     ledCtrl = pkt_q[8*2 +: 8];
-    LED_SOURCE_COUNT_SYMDIFF:   ledCtrl = pkt_q[8*3 +: 8];
-    LED_SOURCE_COV:             ledCtrl = metricCov_q[METRIC_PRECISION-8 +: 8];
-    LED_SOURCE_DEP:             ledCtrl = metricDep_q[METRIC_PRECISION-8 +: 8];
-    LED_SOURCE_HAM:             ledCtrl = metricHam_q[METRIC_PRECISION-8 +: 8];
-    default:  ledCtrl = winNum_q; // LED_SOURCE_WIN_NUM
+  case (i_pwmSelect)
+    PWM_SELECT_COUNT_X:         pwmCtrl = pkt_q[8*0 +: 8];
+    PWM_SELECT_COUNT_Y:         pwmCtrl = pkt_q[8*1 +: 8];
+    PWM_SELECT_COUNT_ISECT:     pwmCtrl = pkt_q[8*2 +: 8];
+    PWM_SELECT_COUNT_SYMDIFF:   pwmCtrl = pkt_q[8*3 +: 8];
+    PWM_SELECT_COV:             pwmCtrl = metricCov_q[METRIC_PRECISION-8 +: 8];
+    PWM_SELECT_DEP:             pwmCtrl = metricDep_q[METRIC_PRECISION-8 +: 8];
+    PWM_SELECT_HAM:             pwmCtrl = metricHam_q[METRIC_PRECISION-8 +: 8];
+    default:  pwmCtrl = winNum_q; // PWM_SELECT_WIN_NUM
   endcase
 
-wire [7:0] _unused_ledPwm_o_acc;
+wire [7:0] _unused_pwm_o_acc;
 pwm #(
   .WIDTH  (8),
-  .ARCH   (1) // ΔΣ for DC offset
-) u_ledPwm (
+  .ARCH   (1) // ΔΣ for smoother DC offset
+) u_pwm (
   .i_clk    (i_clk),
   .i_rst    (i_rst),
   .i_cg     (i_cg),
 
-  .i_x      (ledCtrl),
-  .o_acc    (_unused_ledPwm_o_acc),
-  .o_y      (o_ledPwm)
+  .i_x      (pwmCtrl),
+  .o_acc    (_unused_pwm_o_acc),
+  .o_y      (o_pwm)
 );
 
-// }}} LED
+// }}} Pulse-Width (or Delta-Sigma) Modulation
 
 endmodule

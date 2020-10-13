@@ -55,7 +55,7 @@ ptyBytePipe #(
   .o_bpDnstream_ready (bp0_dnstream_ready)
 ); // }}}
 
-wire [N_PAIR-1:0] ledPwm;
+wire [N_PAIR-1:0] resultPwm;
 
 bpCorrelator #(
   .N_PROBE                  (N_PROBE),
@@ -79,7 +79,7 @@ bpCorrelator #(
   .i_bp_ready             (bp0_dnstream_ready),
 
   .i_probe                (common_probe),
-  .o_ledPwm               (ledPwm)
+  .o_pwm                  (resultPwm)
 );
 
 endmodule

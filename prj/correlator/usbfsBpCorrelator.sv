@@ -26,7 +26,7 @@ module usbfsBpCorrelator #(
 
   input  wire [N_PROBE-1:0]         i_probe,
 
-  output wire [N_PAIR-1:0]          o_ledPwm
+  output wire [N_PAIR-1:0]          o_pwm
 );
 
 // USB serial pipeline to/from bpReg
@@ -85,7 +85,7 @@ bpCorrelator #(
   .i_bp_ready             (devToHost_ready),
 
   .i_probe                (i_probe),
-  .o_ledPwm               (o_ledPwm)
+  .o_pwm                  (o_pwm)
 );
 
 endmodule

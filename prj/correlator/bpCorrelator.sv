@@ -25,7 +25,7 @@ module bpCorrelator #(
 
   input  wire [N_PROBE-1:0]         i_probe,
 
-  output wire [N_PAIR-1:0]          o_ledPwm
+  output wire [N_PAIR-1:0]          o_pwm
 );
 
 genvar i;
@@ -34,14 +34,14 @@ genvar i;
 localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
-localparam LED_SOURCE_W             = 3;
+localparam PWM_SELECT_W             = 3;
 localparam PROBE_SELECT_W           = $clog2(N_PROBE);
 
 wire [N_PAIR*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
 wire [N_PAIR-1:0]                       windowShape;
 wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
 wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
-wire [N_PAIR*LED_SOURCE_W-1:0]          ledSource;
+wire [N_PAIR*PWM_SELECT_W-1:0]          pwmSelect;
 wire [N_PAIR*PROBE_SELECT_W-1:0]        xSelect;
 wire [N_PAIR*PROBE_SELECT_W-1:0]        ySelect;
 
@@ -75,7 +75,7 @@ bpReg #(
   .o_reg_windowShape      (windowShape),
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
-  .o_reg_ledSource        (ledSource),
+  .o_reg_pwmSelect        (pwmSelect),
   .o_reg_xSelect          (xSelect),
   .o_reg_ySelect          (ySelect),
 
@@ -133,7 +133,7 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     .i_windowShape          (windowShape[i]),
     .i_samplePeriodExp      (samplePeriodExp[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W]),
     .i_sampleJitterExp      (sampleJitterExp[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W]),
-    .i_ledSource            (ledSource[i*LED_SOURCE_W +: LED_SOURCE_W]),
+    .i_pwmSelect            (pwmSelect[i*PWM_SELECT_W +: PWM_SELECT_W]),
 
     .i_jitterSeedByte       (jitterSeedByte[i*8 +: 8]),
     .i_jitterSeedValid      (jitterSeedValid[i]),
@@ -141,7 +141,7 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     .i_x                    (probeX[i]),
     .i_y                    (probeY[i]),
 
-    .o_ledPwm               (o_ledPwm[i])
+    .o_pwm                  (o_pwm[i])
   );
 end endgenerate
 

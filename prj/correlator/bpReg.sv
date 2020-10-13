@@ -25,7 +25,7 @@ module bpReg #(
   output wire [N_PAIR-1:0]                                  o_reg_windowShape,
   output wire [N_PAIR*$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]  o_reg_samplePeriodExp,
   output wire [N_PAIR*$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]  o_reg_sampleJitterExp,
-  output wire [N_PAIR*3-1:0]                                o_reg_ledSource,
+  output wire [N_PAIR*3-1:0]                                o_reg_pwmSelect,
   output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_xSelect,
   output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_ySelect,
 
@@ -59,7 +59,7 @@ localparam ADDR_WINDOW_LENGTH_EXP         = 9;  // RW
 localparam ADDR_WINDOW_SHAPE              = 10; // RW
 localparam ADDR_SAMPLE_PERIOD_EXP         = 11; // RW
 localparam ADDR_SAMPLE_JITTER_EXP         = 12; // RW
-localparam ADDR_LED_SOURCE                = 13; // RW
+localparam ADDR_PWM_SELECT                = 13; // RW
 localparam ADDR_X_SELECT                  = 14; // RW
 localparam ADDR_Y_SELECT                  = 15; // RW
 
@@ -118,7 +118,7 @@ wire [N_PAIR-1:0] wr_windowLengthExp;
 wire [N_PAIR-1:0] wr_windowShape;
 wire [N_PAIR-1:0] wr_samplePeriodExp;
 wire [N_PAIR-1:0] wr_sampleJitterExp;
-wire [N_PAIR-1:0] wr_ledSource;
+wire [N_PAIR-1:0] wr_pwmSelect;
 wire [N_PAIR-1:0] wr_xSelect;
 wire [N_PAIR-1:0] wr_ySelect;
 
@@ -129,7 +129,7 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
   assign wr_windowShape[i]      = doWriteReg[i] && (addrReg == ADDR_WINDOW_SHAPE);
   assign wr_samplePeriodExp[i]  = doWriteReg[i] && (addrReg == ADDR_SAMPLE_PERIOD_EXP);
   assign wr_sampleJitterExp[i]  = doWriteReg[i] && (addrReg == ADDR_SAMPLE_JITTER_EXP);
-  assign wr_ledSource[i]        = doWriteReg[i] && (addrReg == ADDR_LED_SOURCE);
+  assign wr_pwmSelect[i]        = doWriteReg[i] && (addrReg == ADDR_PWM_SELECT);
   assign wr_xSelect[i]          = doWriteReg[i] && (addrReg == ADDR_X_SELECT);
   assign wr_ySelect[i]          = doWriteReg[i] && (addrReg == ADDR_Y_SELECT);
 
@@ -145,13 +145,13 @@ localparam WINDOW_SHAPE_LOGDROP     = 1'd1;
 localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
 localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam PROBE_SELECT_W           = $clog2(N_PROBE);
-localparam LED_SOURCE_W             = 3;
+localparam PWM_SELECT_W             = 3;
 
 `dff_nocg_srst(reg [N_PAIR*WINDOW_LENGTH_EXP_W-1:0], windowLengthExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR-1:0],                     windowShape,     i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0], samplePeriodExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_JITTER_EXP_W-1:0], sampleJitterExp, i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*LED_SOURCE_W-1:0],        ledSource,       i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_PAIR*PWM_SELECT_W-1:0],        pwmSelect,       i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      xSelect,         i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      ySelect,         i_clk, i_rst, '0)
 generate for (i = 0; i < N_PAIR; i=i+1) begin
@@ -175,10 +175,10 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     i_bp_data[SAMPLE_JITTER_EXP_W-1:0] :
     sampleJitterExp_q[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W];
 
-  always @* ledSource_d[i*LED_SOURCE_W +: LED_SOURCE_W] =
-    wr_ledSource[i] ?
-    i_bp_data[LED_SOURCE_W-1:0] :
-    ledSource_q[i*LED_SOURCE_W +: LED_SOURCE_W];
+  always @* pwmSelect_d[i*PWM_SELECT_W +: PWM_SELECT_W] =
+    wr_pwmSelect[i] ?
+    i_bp_data[PWM_SELECT_W-1:0] :
+    pwmSelect_q[i*PWM_SELECT_W +: PWM_SELECT_W];
 
   always @* xSelect_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
     wr_xSelect[i] ?
@@ -196,7 +196,7 @@ assign o_reg_windowLengthExp = windowLengthExp_q;
 assign o_reg_windowShape     = windowShape_q;
 assign o_reg_samplePeriodExp = samplePeriodExp_q;
 assign o_reg_sampleJitterExp = sampleJitterExp_q;
-assign o_reg_ledSource       = ledSource_q;
+assign o_reg_pwmSelect       = pwmSelect_q;
 assign o_reg_xSelect         = xSelect_q;
 assign o_reg_ySelect         = ySelect_q;
 
@@ -218,7 +218,7 @@ always @*
       ADDR_WINDOW_SHAPE:            rdData_d = windowShape_q[addrPair];
       ADDR_SAMPLE_PERIOD_EXP:       rdData_d = samplePeriodExp_q[addrPair*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W];
       ADDR_SAMPLE_JITTER_EXP:       rdData_d = sampleJitterExp_q[addrPair*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W];
-      ADDR_LED_SOURCE:              rdData_d = ledSource_q[addrPair*LED_SOURCE_W +: LED_SOURCE_W];
+      ADDR_PWM_SELECT:              rdData_d = pwmSelect_q[addrPair*PWM_SELECT_W +: PWM_SELECT_W];
       ADDR_X_SELECT:                rdData_d = xSelect_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
       ADDR_Y_SELECT:                rdData_d = ySelect_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
                                                   /* verilator lint_on  WIDTH */

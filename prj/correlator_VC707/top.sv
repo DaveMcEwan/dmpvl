@@ -25,9 +25,9 @@ wire [3:0] i_pin_probe = {
   GPIO_SW_E,
   GPIO_SW_N
 };
-wire [1:0] o_pin_led;
-  assign GPIO_LED_0 = o_pin_led[0];
-  assign GPIO_LED_1 = o_pin_led[1];
+wire [1:0] o_pin_pwm;
+  assign GPIO_LED_0 = o_pin_pwm[0];
+  assign GPIO_LED_1 = o_pin_pwm[1];
 
 wire clk_48MHz;
 wire pllLocked;
@@ -83,7 +83,7 @@ IOBUF #(
   );
 
 
-wire [1:0] ledPwm;
+wire [1:0] resultPwm;
 usbfsBpCorrelator #(
   .USBFS_VIDPID_SQUAT     (1),
   .USBFS_ACM_NOT_GENERIC  (1),
@@ -110,7 +110,7 @@ usbfsBpCorrelator #(
 
   .i_probe            (i_pin_probe),
 
-  .o_ledPwm           (ledPwm)
+  .o_pwm              (resultPwm)
 );
 
 
@@ -122,9 +122,9 @@ generate if (LED_BLINKONLY != 0) begin
       ledCounter_q <= 24'd0;
     else
       ledCounter_q <= ledCounter_q + 24'd1;
-  assign o_pin_led = ledCounter_q[23:22];
+  assign o_pin_pwm = ledCounter_q[23:22];
 end else begin
-  assign o_pin_led = ledPwm;
+  assign o_pin_pwm = resultPwm;
 end endgenerate
 
 endmodule
