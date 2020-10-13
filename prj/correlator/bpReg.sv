@@ -26,8 +26,8 @@ module bpReg #(
   output wire [N_PAIR*$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]  o_reg_samplePeriodExp,
   output wire [N_PAIR*$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]  o_reg_sampleJitterExp,
   output wire [N_PAIR*3-1:0]                                o_reg_ledSource,
-  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_xSource,
-  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_ySource,
+  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_xSelect,
+  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_ySelect,
 
   output wire [N_PAIR*8-1:0]  o_jitterSeedByte,
   output wire [N_PAIR-1:0]    o_jitterSeedValid,
@@ -60,8 +60,8 @@ localparam ADDR_WINDOW_SHAPE              = 10; // RW
 localparam ADDR_SAMPLE_PERIOD_EXP         = 11; // RW
 localparam ADDR_SAMPLE_JITTER_EXP         = 12; // RW
 localparam ADDR_LED_SOURCE                = 13; // RW
-localparam ADDR_X_SOURCE                  = 14; // RW
-localparam ADDR_Y_SOURCE                  = 15; // RW
+localparam ADDR_X_SELECT                  = 14; // RW
+localparam ADDR_Y_SELECT                  = 15; // RW
 
 localparam ADDR_W = $clog2(ADDR_REG_HI); // Registers plus burst@0.
 
@@ -119,8 +119,8 @@ wire [N_PAIR-1:0] wr_windowShape;
 wire [N_PAIR-1:0] wr_samplePeriodExp;
 wire [N_PAIR-1:0] wr_sampleJitterExp;
 wire [N_PAIR-1:0] wr_ledSource;
-wire [N_PAIR-1:0] wr_xSource;
-wire [N_PAIR-1:0] wr_ySource;
+wire [N_PAIR-1:0] wr_xSelect;
+wire [N_PAIR-1:0] wr_ySelect;
 
 generate for (i = 0; i < N_PAIR; i=i+1) begin
   assign doWriteReg[i] = i_cg && doWrite && (addrPair == i);
@@ -130,8 +130,8 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
   assign wr_samplePeriodExp[i]  = doWriteReg[i] && (addrReg == ADDR_SAMPLE_PERIOD_EXP);
   assign wr_sampleJitterExp[i]  = doWriteReg[i] && (addrReg == ADDR_SAMPLE_JITTER_EXP);
   assign wr_ledSource[i]        = doWriteReg[i] && (addrReg == ADDR_LED_SOURCE);
-  assign wr_xSource[i]          = doWriteReg[i] && (addrReg == ADDR_X_SOURCE);
-  assign wr_ySource[i]          = doWriteReg[i] && (addrReg == ADDR_Y_SOURCE);
+  assign wr_xSelect[i]          = doWriteReg[i] && (addrReg == ADDR_X_SELECT);
+  assign wr_ySelect[i]          = doWriteReg[i] && (addrReg == ADDR_Y_SELECT);
 
   assign o_jitterSeedByte[i*8 +: 8] = i_bp_data;
   assign o_jitterSeedValid[i]       = doWriteReg[i] && (addrReg == ADDR_PRNG_SEED);
@@ -152,8 +152,8 @@ localparam LED_SOURCE_W             = 3;
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0], samplePeriodExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*SAMPLE_JITTER_EXP_W-1:0], sampleJitterExp, i_clk, i_rst, '0)
 `dff_nocg_srst(reg [N_PAIR*LED_SOURCE_W-1:0],        ledSource,       i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      xSource,         i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      ySource,         i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      xSelect,         i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      ySelect,         i_clk, i_rst, '0)
 generate for (i = 0; i < N_PAIR; i=i+1) begin
   always @* windowLengthExp_d[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W] =
     wr_windowLengthExp[i] ?
@@ -180,15 +180,15 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     i_bp_data[LED_SOURCE_W-1:0] :
     ledSource_q[i*LED_SOURCE_W +: LED_SOURCE_W];
 
-  always @* xSource_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
-    wr_xSource[i] ?
+  always @* xSelect_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
+    wr_xSelect[i] ?
     i_bp_data[PROBE_SELECT_W-1:0] :
-    xSource_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
+    xSelect_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
 
-  always @* ySource_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
-    wr_ySource[i] ?
+  always @* ySelect_d[i*PROBE_SELECT_W +: PROBE_SELECT_W] =
+    wr_ySelect[i] ?
     i_bp_data[PROBE_SELECT_W-1:0] :
-    ySource_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
+    ySelect_q[i*PROBE_SELECT_W +: PROBE_SELECT_W];
 end endgenerate
 
 // Expose non-static (RW) regs as wires.
@@ -197,8 +197,8 @@ assign o_reg_windowShape     = windowShape_q;
 assign o_reg_samplePeriodExp = samplePeriodExp_q;
 assign o_reg_sampleJitterExp = sampleJitterExp_q;
 assign o_reg_ledSource       = ledSource_q;
-assign o_reg_xSource         = xSource_q;
-assign o_reg_ySource         = ySource_q;
+assign o_reg_xSelect         = xSelect_q;
+assign o_reg_ySelect         = ySelect_q;
 
 `dff_cg_norst(reg [7:0], rdData, i_clk, i_cg && rd_d)
 always @*
@@ -219,8 +219,8 @@ always @*
       ADDR_SAMPLE_PERIOD_EXP:       rdData_d = samplePeriodExp_q[addrPair*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W];
       ADDR_SAMPLE_JITTER_EXP:       rdData_d = sampleJitterExp_q[addrPair*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W];
       ADDR_LED_SOURCE:              rdData_d = ledSource_q[addrPair*LED_SOURCE_W +: LED_SOURCE_W];
-      ADDR_X_SOURCE:                rdData_d = xSource_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
-      ADDR_Y_SOURCE:                rdData_d = ySource_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
+      ADDR_X_SELECT:                rdData_d = xSelect_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
+      ADDR_Y_SELECT:                rdData_d = ySelect_q[addrPair*PROBE_SELECT_W +: PROBE_SELECT_W];
                                                   /* verilator lint_on  WIDTH */
       default:                      rdData_d = '0;
     endcase

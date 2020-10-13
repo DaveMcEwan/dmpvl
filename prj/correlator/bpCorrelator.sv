@@ -42,8 +42,8 @@ wire [N_PAIR-1:0]                       windowShape;
 wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
 wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
 wire [N_PAIR*LED_SOURCE_W-1:0]          ledSource;
-wire [N_PAIR*PROBE_SELECT_W-1:0]        xSource;
-wire [N_PAIR*PROBE_SELECT_W-1:0]        ySource;
+wire [N_PAIR*PROBE_SELECT_W-1:0]        xSelect;
+wire [N_PAIR*PROBE_SELECT_W-1:0]        ySelect;
 
 wire [N_PAIR*8-1:0]                     pktfifo_o_data;
 wire [N_PAIR-1:0]                       pktfifo_o_empty;
@@ -76,8 +76,8 @@ bpReg #(
   .o_reg_samplePeriodExp  (samplePeriodExp),
   .o_reg_sampleJitterExp  (sampleJitterExp),
   .o_reg_ledSource        (ledSource),
-  .o_reg_xSource          (xSource),
-  .o_reg_ySource          (ySource),
+  .o_reg_xSelect          (xSelect),
+  .o_reg_ySelect          (ySelect),
 
   .o_jitterSeedByte       (jitterSeedByte),
   .o_jitterSeedValid      (jitterSeedValid),
@@ -101,15 +101,15 @@ generate for (i = 0; i < N_PAIR; i=i+1) begin
     .FF_IN      (1),
     .FF_OUT     (1),
     .FF_SELECT  (0)
-  ) u_probeDemux (
+  ) u_probeMux (
     .i_clk        (i_clk),
     .i_cg         (i_cg),
 
     .i_in         (i_probe),
     .o_out        ({probeY[i],
                     probeX[i]}),
-    .i_select     ({ySource[i*PROBE_SELECT_W +: PROBE_SELECT_W],
-                    xSource[i*PROBE_SELECT_W +: PROBE_SELECT_W]})
+    .i_select     ({ySelect[i*PROBE_SELECT_W +: PROBE_SELECT_W],
+                    xSelect[i*PROBE_SELECT_W +: PROBE_SELECT_W]})
   );
 
   correlator #(

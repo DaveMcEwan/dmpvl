@@ -29,8 +29,6 @@ module usbfsBpCorrelator #(
   output wire [N_PAIR-1:0]          o_ledPwm
 );
 
-genvar i;
-
 // USB serial pipeline to/from bpReg
 wire [7:0] devToHost_data;
 wire       devToHost_valid;
@@ -64,30 +62,6 @@ usbfsSerial #(
   .o_hostToDev_valid  (hostToDev_valid),
   .i_hostToDev_ready  (hostToDev_ready)
 );
-
-
-// bpReg registers to correlator
-localparam WINDOW_LENGTH_EXP_W      = $clog2(MAX_WINDOW_LENGTH_EXP+1);
-localparam SAMPLE_PERIOD_EXP_W      = $clog2(MAX_SAMPLE_PERIOD_EXP+1);
-localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
-localparam LED_SOURCE_W             = 3;
-localparam INPUT_SOURCE_W           = 8;
-
-wire [N_PAIR*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
-wire [N_PAIR-1:0]                       windowShape;
-wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
-wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
-wire [N_PAIR*LED_SOURCE_W-1:0]          ledSource;
-wire [N_PAIR*INPUT_SOURCE_W-1:0]        xSource;
-wire [N_PAIR*INPUT_SOURCE_W-1:0]        ySource;
-
-wire [N_PAIR*8-1:0]                     pktfifo_o_data;
-wire [N_PAIR-1:0]                       pktfifo_o_empty;
-wire [N_PAIR-1:0]                       pktfifo_i_pop;
-wire [N_PAIR-1:0]                       pktfifo_i_flush;
-
-wire [N_PAIR*8-1:0]                     jitterSeedByte;
-wire [N_PAIR-1:0]                       jitterSeedValid;
 
 bpCorrelator #(
   .N_PROBE                  (N_PROBE),
