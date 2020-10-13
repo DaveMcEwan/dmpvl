@@ -10,7 +10,7 @@ module correlator_tb (
 );
 
 localparam N_PROBE                = 4;
-localparam N_PAIR                 = 2;
+localparam N_ENGINE               = 2;
 localparam MAX_WINDOW_LENGTH_EXP  = 16;
 localparam MAX_SAMPLE_PERIOD_EXP  = 15;
 localparam MAX_SAMPLE_JITTER_EXP  = 8;
@@ -55,11 +55,11 @@ ptyBytePipe #(
   .o_bpDnstream_ready (bp0_dnstream_ready)
 ); // }}}
 
-wire [N_PAIR-1:0] resultPwm;
+wire [N_ENGINE-1:0] resultPwm;
 
 bpCorrelator #(
   .N_PROBE                  (N_PROBE),
-  .N_PAIR                   (N_PAIR),
+  .N_ENGINE                 (N_ENGINE),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),

@@ -5,7 +5,7 @@ Unpack the register map to wires.
 */
 module bpReg #(
   parameter N_PROBE               = 4, // 2..64
-  parameter N_PAIR                = 2, // 1..8
+  parameter N_ENGINE              = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 32,
   parameter MAX_SAMPLE_PERIOD_EXP = 32,
   parameter MAX_SAMPLE_JITTER_EXP = 32,
@@ -16,21 +16,21 @@ module bpReg #(
   input wire          i_rst,
   input wire          i_cg,
 
-  input  wire [N_PAIR*8-1:0]  i_pktfifo_data,
-  input  wire [N_PAIR-1:0]    i_pktfifo_empty, // !valid
-  output wire [N_PAIR-1:0]    o_pktfifo_pop, // ready
-  output wire [N_PAIR-1:0]    o_pktfifo_flush,
+  input  wire [N_ENGINE*8-1:0]  i_pktfifo_data,
+  input  wire [N_ENGINE-1:0]    i_pktfifo_empty, // !valid
+  output wire [N_ENGINE-1:0]    o_pktfifo_pop, // ready
+  output wire [N_ENGINE-1:0]    o_pktfifo_flush,
 
-  output wire [N_PAIR*$clog2(MAX_WINDOW_LENGTH_EXP+1)-1:0]  o_reg_windowLengthExp,
-  output wire [N_PAIR-1:0]                                  o_reg_windowShape,
-  output wire [N_PAIR*$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]  o_reg_samplePeriodExp,
-  output wire [N_PAIR*$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]  o_reg_sampleJitterExp,
-  output wire [N_PAIR*3-1:0]                                o_reg_pwmSelect,
-  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_xSelect,
-  output wire [N_PAIR*$clog2(N_PROBE)-1:0]                  o_reg_ySelect,
+  output wire [N_ENGINE*$clog2(MAX_WINDOW_LENGTH_EXP+1)-1:0]  o_reg_windowLengthExp,
+  output wire [N_ENGINE-1:0]                                  o_reg_windowShape,
+  output wire [N_ENGINE*$clog2(MAX_SAMPLE_PERIOD_EXP+1)-1:0]  o_reg_samplePeriodExp,
+  output wire [N_ENGINE*$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]  o_reg_sampleJitterExp,
+  output wire [N_ENGINE*3-1:0]                                o_reg_pwmSelect,
+  output wire [N_ENGINE*$clog2(N_PROBE)-1:0]                  o_reg_xSelect,
+  output wire [N_ENGINE*$clog2(N_PROBE)-1:0]                  o_reg_ySelect,
 
-  output wire [N_PAIR*8-1:0]  o_jitterSeedByte,
-  output wire [N_PAIR-1:0]    o_jitterSeedValid,
+  output wire [N_ENGINE*8-1:0]  o_jitterSeedByte,
+  output wire [N_ENGINE-1:0]    o_jitterSeedValid,
 
   input  wire [8-1:0] i_bp_data,
   input  wire         i_bp_valid,
@@ -44,8 +44,8 @@ module bpReg #(
 genvar i;
 
 // Address for all regs per pair.
-localparam STRIDE_PER_PAIR = 16;
-localparam ADDR_REG_HI = N_PAIR*STRIDE_PER_PAIR - 1;
+localparam ENGINE_ADDR_STRIDE = 16;
+localparam ADDR_REG_HI = N_ENGINE*ENGINE_ADDR_STRIDE - 1;
 // 0th address of each pair is unused, except on pair0 which is burst@0.
 localparam ADDR_PKTFIFO_RD                = 1;  // Rfifo
 localparam ADDR_PKTFIFO_FLUSH             = 2;  // WO
@@ -113,16 +113,16 @@ always @*
   else                burst_d = burst_q;
 
 // Write-enable for RW regs.
-wire [N_PAIR-1:0] doWriteReg;
-wire [N_PAIR-1:0] wr_windowLengthExp;
-wire [N_PAIR-1:0] wr_windowShape;
-wire [N_PAIR-1:0] wr_samplePeriodExp;
-wire [N_PAIR-1:0] wr_sampleJitterExp;
-wire [N_PAIR-1:0] wr_pwmSelect;
-wire [N_PAIR-1:0] wr_xSelect;
-wire [N_PAIR-1:0] wr_ySelect;
+wire [N_ENGINE-1:0] doWriteReg;
+wire [N_ENGINE-1:0] wr_windowLengthExp;
+wire [N_ENGINE-1:0] wr_windowShape;
+wire [N_ENGINE-1:0] wr_samplePeriodExp;
+wire [N_ENGINE-1:0] wr_sampleJitterExp;
+wire [N_ENGINE-1:0] wr_pwmSelect;
+wire [N_ENGINE-1:0] wr_xSelect;
+wire [N_ENGINE-1:0] wr_ySelect;
 
-generate for (i = 0; i < N_PAIR; i=i+1) begin
+generate for (i = 0; i < N_ENGINE; i=i+1) begin
   assign doWriteReg[i] = i_cg && doWrite && (addrPair == i);
 
   assign wr_windowLengthExp[i]  = doWriteReg[i] && (addrReg == ADDR_WINDOW_LENGTH_EXP);
@@ -147,14 +147,14 @@ localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam PROBE_SELECT_W           = $clog2(N_PROBE);
 localparam PWM_SELECT_W             = 3;
 
-`dff_nocg_srst(reg [N_PAIR*WINDOW_LENGTH_EXP_W-1:0], windowLengthExp, i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR-1:0],                     windowShape,     i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0], samplePeriodExp, i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*SAMPLE_JITTER_EXP_W-1:0], sampleJitterExp, i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*PWM_SELECT_W-1:0],        pwmSelect,       i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      xSelect,         i_clk, i_rst, '0)
-`dff_nocg_srst(reg [N_PAIR*PROBE_SELECT_W-1:0],      ySelect,         i_clk, i_rst, '0)
-generate for (i = 0; i < N_PAIR; i=i+1) begin
+`dff_nocg_srst(reg [N_ENGINE*WINDOW_LENGTH_EXP_W-1:0], windowLengthExp, i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE-1:0],                     windowShape,     i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE*SAMPLE_PERIOD_EXP_W-1:0], samplePeriodExp, i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE*SAMPLE_JITTER_EXP_W-1:0], sampleJitterExp, i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE*PWM_SELECT_W-1:0],        pwmSelect,       i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE*PROBE_SELECT_W-1:0],      xSelect,         i_clk, i_rst, '0)
+`dff_nocg_srst(reg [N_ENGINE*PROBE_SELECT_W-1:0],      ySelect,         i_clk, i_rst, '0)
+generate for (i = 0; i < N_ENGINE; i=i+1) begin
   always @* windowLengthExp_d[i*WINDOW_LENGTH_EXP_W +: WINDOW_LENGTH_EXP_W] =
     wr_windowLengthExp[i] ?
     i_bp_data[WINDOW_LENGTH_EXP_W-1:0] :
@@ -227,7 +227,7 @@ always @*
   else
     rdData_d = '0;
 
-generate for (i = 0; i < N_PAIR; i=i+1) begin
+generate for (i = 0; i < N_ENGINE; i=i+1) begin
   assign o_pktfifo_pop[i] = rd_q && (addrReg == ADDR_PKTFIFO_RD) && (addrPair == i);
   assign o_pktfifo_flush[i] = doWriteReg[i] && (addrReg == ADDR_PKTFIFO_FLUSH);
 end endgenerate

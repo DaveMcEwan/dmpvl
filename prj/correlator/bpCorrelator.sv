@@ -1,7 +1,7 @@
 
 module bpCorrelator #(
   parameter N_PROBE               = 4, // 2..64
-  parameter N_PAIR                = 2, // 1..8
+  parameter N_ENGINE              = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
@@ -25,7 +25,7 @@ module bpCorrelator #(
 
   input  wire [N_PROBE-1:0]         i_probe,
 
-  output wire [N_PAIR-1:0]          o_pwm
+  output wire [N_ENGINE-1:0]        o_pwm
 );
 
 genvar i;
@@ -37,25 +37,25 @@ localparam SAMPLE_JITTER_EXP_W      = $clog2(MAX_SAMPLE_JITTER_EXP+1);
 localparam PWM_SELECT_W             = 3;
 localparam PROBE_SELECT_W           = $clog2(N_PROBE);
 
-wire [N_PAIR*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
-wire [N_PAIR-1:0]                       windowShape;
-wire [N_PAIR*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
-wire [N_PAIR*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
-wire [N_PAIR*PWM_SELECT_W-1:0]          pwmSelect;
-wire [N_PAIR*PROBE_SELECT_W-1:0]        xSelect;
-wire [N_PAIR*PROBE_SELECT_W-1:0]        ySelect;
+wire [N_ENGINE*WINDOW_LENGTH_EXP_W-1:0]   windowLengthExp;
+wire [N_ENGINE-1:0]                       windowShape;
+wire [N_ENGINE*SAMPLE_PERIOD_EXP_W-1:0]   samplePeriodExp;
+wire [N_ENGINE*SAMPLE_JITTER_EXP_W-1:0]   sampleJitterExp;
+wire [N_ENGINE*PWM_SELECT_W-1:0]          pwmSelect;
+wire [N_ENGINE*PROBE_SELECT_W-1:0]        xSelect;
+wire [N_ENGINE*PROBE_SELECT_W-1:0]        ySelect;
 
-wire [N_PAIR*8-1:0]                     pktfifo_o_data;
-wire [N_PAIR-1:0]                       pktfifo_o_empty;
-wire [N_PAIR-1:0]                       pktfifo_i_pop;
-wire [N_PAIR-1:0]                       pktfifo_i_flush;
+wire [N_ENGINE*8-1:0]                     pktfifo_o_data;
+wire [N_ENGINE-1:0]                       pktfifo_o_empty;
+wire [N_ENGINE-1:0]                       pktfifo_i_pop;
+wire [N_ENGINE-1:0]                       pktfifo_i_flush;
 
-wire [N_PAIR*8-1:0]                     jitterSeedByte;
-wire [N_PAIR-1:0]                       jitterSeedValid;
+wire [N_ENGINE*8-1:0]                     jitterSeedByte;
+wire [N_ENGINE-1:0]                       jitterSeedValid;
 
 bpReg #(
   .N_PROBE                  (N_PROBE),
-  .N_PAIR                   (N_PAIR),
+  .N_ENGINE                 (N_ENGINE),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),
@@ -92,8 +92,8 @@ bpReg #(
 );
 
 
-wire [N_PAIR-1:0] probeX, probeY;
-generate for (i = 0; i < N_PAIR; i=i+1) begin
+wire [N_ENGINE-1:0] probeX, probeY;
+generate for (i = 0; i < N_ENGINE; i=i+1) begin
   xbar #(
     .N_IN       (N_PROBE),
     .N_OUT      (2),

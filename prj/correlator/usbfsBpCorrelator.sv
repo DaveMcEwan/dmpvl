@@ -4,7 +4,7 @@ module usbfsBpCorrelator #(
   parameter USBFS_ACM_NOT_GENERIC = 0,
   parameter USBFS_MAX_PKT = 8,  // in {8,16,32,64}. wMaxPacketSize
   parameter N_PROBE               = 4, // 2..64
-  parameter N_PAIR                = 2, // 1..8
+  parameter N_ENGINE              = 2, // 1..8
   parameter MAX_WINDOW_LENGTH_EXP = 16,
   parameter MAX_SAMPLE_PERIOD_EXP = 15,
   parameter MAX_SAMPLE_JITTER_EXP = 8,
@@ -26,7 +26,7 @@ module usbfsBpCorrelator #(
 
   input  wire [N_PROBE-1:0]         i_probe,
 
-  output wire [N_PAIR-1:0]          o_pwm
+  output wire [N_ENGINE-1:0]        o_pwm
 );
 
 // USB serial pipeline to/from bpReg
@@ -65,7 +65,7 @@ usbfsSerial #(
 
 bpCorrelator #(
   .N_PROBE                  (N_PROBE),
-  .N_PAIR                   (N_PAIR),
+  .N_ENGINE                 (N_ENGINE),
   .PKTFIFO_DEPTH            (PKTFIFO_DEPTH), // Bytes, not packets.
   .MAX_WINDOW_LENGTH_EXP    (MAX_WINDOW_LENGTH_EXP),
   .WINDOW_PRECISION         (WINDOW_PRECISION),

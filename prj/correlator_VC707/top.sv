@@ -89,7 +89,7 @@ usbfsBpCorrelator #(
   .USBFS_ACM_NOT_GENERIC  (1),
   .USBFS_MAX_PKT          (16), // in {8,16,32,64}. wMaxPacketSize
   .N_PROBE                (4),
-  .N_PAIR                 (2),
+  .N_ENGINE               (2),
   .MAX_WINDOW_LENGTH_EXP  (16),
   .MAX_SAMPLE_PERIOD_EXP  (15),
   .MAX_SAMPLE_JITTER_EXP  (8),
