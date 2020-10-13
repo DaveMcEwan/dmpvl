@@ -44,7 +44,7 @@ genvar i;
 
 // Address for all regs per pair.
 localparam STRIDE_PER_PAIR = 16;
-localparam ADDR_REG_HI = N_PAIR*STRIDE_PER_PAIR;
+localparam ADDR_REG_HI = N_PAIR*STRIDE_PER_PAIR - 1;
 // 0th address of each pair is an alias to BytePipe burst@0.
 localparam ADDR_PKTFIFO_RD                = 1;  // Rfifo
 localparam ADDR_PKTFIFO_FLUSH             = 2;  // WO
