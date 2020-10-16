@@ -142,7 +142,8 @@ read_xdc vc707.xdc
 # The actual clock speed at runtime is set by the PLL settings.
 # Synthesizing with a lower value less just means the logic *could* function at
 # higher frequencies.
-synth_design -part ${part} -top top -include_dirs ${dirHdl}
+synth_design -part ${part} -top top -include_dirs ${dirHdl} \
+  -verilog_define VC707_FMC1_XM105=1
 create_clock -name clk48MHz -period 4 [get_nets clk_48MHz]
 set_property CONFIG_VOLTAGE 1.8 [current_design]
 set_property CFGBVS GND [current_design]
@@ -181,7 +182,7 @@ if $REPORT {
 # Write out netlist and constraints.
 if $NETLIST {
   write_verilog -force ${dirBuild}/netlist.v
-  write_xdc -no_fixed_only -force ${dirBuild}/impl.v
+  write_xdc -no_fixed_only -force ${dirBuild}/constraints.xdc
 }
 
 # Write out a bitstream.

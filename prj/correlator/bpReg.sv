@@ -73,7 +73,9 @@ localparam ADDR_W = $clog2(ADDR_REG_HI); // Registers plus burst@0.
 wire [ADDR_W-1:0] rdAddr = addr_q[ADDR_W-1:0];
 wire [3:0] addrReg = addr_q[3:0];
 wire [2:0] addrPair = addr_q[6:4];
+                                                  /* verilator lint_off CMPCONST */
 wire addrInRange = (ADDR_REG_HI[6:4] >= addrPair);
+                                                  /* verilator lint_on  CMPCONST */
 
 // IO aliases
 wire in_accepted = i_bp_valid && o_bp_ready;
