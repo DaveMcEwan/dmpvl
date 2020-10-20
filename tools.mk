@@ -38,6 +38,7 @@ apt_prereqs:
 			cmake \
 			zlib1g-dev \
 			libeigen3-dev \
+			libxaw7-dev \
 			time
 
 
@@ -143,3 +144,25 @@ nextpnr-ice40:
 tinyprog:
 	python3 -m pip install tinyprog==1.0.21
 
+BUILD_NGSPICE := $(TOOLBUILD)/ngspice
+#URL_NGSPICE := https://sourceforge.net/projects/ngspice/files/ng-spice-rework/33/ngspice-33.tar.gz/download
+URL_NGSPICE := https://git.code.sf.net/p/ngspice/ngspice
+#COMMIT_NGSPICE := ngspice-33
+COMMIT_NGSPICE := 371ad3496c684c620e9ad6fb34f6a4bca10f7bac
+ngspice:
+	mkdir -p $(BUILD_NGSPICE)
+	git clone $(URL_NGSPICE) $(BUILD_NGSPICE)
+	cd $(BUILD_NGSPICE); git checkout $(COMMIT_NGSPICE)
+	cd $(BUILD_NGSPICE); ./autogen.sh
+	cd $(BUILD_NGSPICE); ./configure \
+		--prefix=$(TOOLS) \
+		--with-x \
+		--enable-xspice \
+		--enable-cider \
+		--with-readline=yes \
+		--enable-openmp \
+		--disable-debug \
+		CFLAGS="-m64 -O2" \
+		LDFLAGS="-m64 -s"
+	cd $(BUILD_NGSPICE); make -j$(N_JOBS)
+	cd $(BUILD_NGSPICE); make install
