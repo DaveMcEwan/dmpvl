@@ -1,0 +1,4 @@
+
+# Data dumps and plots from ngspice
+*.tran.*
+*.ac.*
