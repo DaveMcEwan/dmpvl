@@ -3,13 +3,17 @@ module top (
   input  SYSCLK_P, // (E19 LVDS VC707.U51.4)
   input  SYSCLK_N, // (E18 LVDS VC707.U51.5)
 
-  inout  USER_SMA_GPIO_P, // USB d+ (AN31 LVCMOS18 VC707.J33.1)
-  inout  USER_SMA_GPIO_N, // USB d- (AP31 LVCMOS18 VC707.J34.1)
 
 `ifdef VC707_FMC1_XM105
-  // VC707 with XM105 in FMC1.
+  // VC707 with XM105 in FMC1 with external USB electrical conversion board.
   // probes: J1 pins in order, overflowing onto J2
   // pwm: J20 odd numbered pins.
+  // {{{ usb electrical conversion VC707.*
+  inout  FMC1_HPC_LA28_P, // USB d+ (L29 LVCMOS18 VC707.J17.XX XM105.J16.5)
+  inout  FMC1_HPC_LA28_N, // USB d- (L30 LVCMOS18 VC707.J17.XX XM105.J16.7)
+  output FMC1_HPC_LA29_P, // usbpu  (T29 LVCMOS18 VC707.J17.XX XM105.J16.9)
+  output FMC1_HPC_LA29_N, // rstn   (T30 LVCMOS18 VC707.J17.XX XM105.J16.11)
+  // }}} usb electrical conversion VC707.*
   // {{{ probes XM105.J1 odd
   input  FMC1_HPC_LA00_CC_P,  // (K39 LVCMOS18 VC707.J17.XX XM105.J1.1)
   input  FMC1_HPC_LA00_CC_N,  // (K40 LVCMOS18 VC707.J17.XX XM105.J1.3)
@@ -113,23 +117,36 @@ module top (
   output FMC1_HPC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
   // }}} pwm XM105.J20 odd
 `else
-  // VC707 with pushbuttons as probes, and LEDs as PWM outputs.
+  // {{{ usb electrical conversion VC707.*
+  inout  USER_SMA_GPIO_P, // USB d+ (AN31 LVCMOS18 VC707.J33.1)
+  inout  USER_SMA_GPIO_N, // USB d- (AP31 LVCMOS18 VC707.J34.1)
+  // }}} usb electrical conversion VC707.*
+  // {{{ probes VC707.SW* pushbuttons
   input  GPIO_SW_N,  // probe[0] (AR40 LVCMOS18 VC707.SW3.3)
   input  GPIO_SW_E,  // probe[1] (AU38 LVCMOS18 VC707.SW4.3)
   input  GPIO_SW_S,  // probe[2] (AP40 LVCMOS18 VC707.SW5.3)
   input  GPIO_SW_W,  // probe[3] (AW40 LVCMOS18 VC707.SW7.3)
-
+  // }}} probes VC707.SW* pushbuttons
+  // {{{ pwm VC707.LEDs
   output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
   output GPIO_LED_1  // (AN39 LVCMOS18 VC707.DS3.2)
+  // }}} pwm VC707.LEDs
 `endif
 );
 wire i_pin_sysclk_p_200MHz = SYSCLK_P;
 wire i_pin_sysclk_n_200MHz = SYSCLK_N;
-wire b_pin_usb_p = USER_SMA_GPIO_P;
-wire b_pin_usb_n = USER_SMA_GPIO_N;
+wire b_pin_usb_p;
+wire b_pin_usb_n;
+wire o_pin_usbpu = 1'b1;
+wire o_pin_rstn; // Signal to TXB0104 that power is stable.
 `ifdef VC707_FMC1_XM105
   localparam N_PROBE  = 64;
   localparam N_ENGINE = 8;
+
+  assign b_pin_usb_p = FMC1_HPC_LA28_P;
+  assign b_pin_usb_n = FMC1_HPC_LA28_N;
+  assign FMC1_HPC_LA29_P = o_pin_usbpu;
+  assign FMC1_HPC_LA29_N = o_pin_rstn;
 
   wire [N_PROBE-1:0] i_pin_probe = {
   // {{{ XM105.J1
@@ -217,6 +234,11 @@ wire b_pin_usb_n = USER_SMA_GPIO_N;
   localparam N_PROBE  = 4;
   localparam N_ENGINE = 2;
 
+  assign b_pin_usb_p = USER_SMA_GPIO_P;
+  assign b_pin_usb_n = USER_SMA_GPIO_N;
+  assign FMC1_HPC_LA29_P = o_pin_usbpu;
+  assign FMC1_HPC_LA29_N = o_pin_rstn;
+
   wire [N_PROBE-1:0] i_pin_probe = {
     GPIO_SW_W,
     GPIO_SW_S,
@@ -246,6 +268,7 @@ fpgaReset u_rst (
   .i_pllLocked  (pllLocked),
   .o_rst        (rst)
 );
+assign o_pin_rstn = !rst;
 
 
 wire usb_p;

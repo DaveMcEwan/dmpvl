@@ -76,8 +76,9 @@
 
 # Correlator registers removed via Cross Boundary and Area Optimization.
 .* \[Synth 8-6014\] Unused sequential element countIsect_q_reg was removed\.\s+\[.*/correlator\.sv:\d+\]
-.* \[Synth 8-6014\] Unused sequential element genblk\d+\[\d+\]\.u_probeDemux/inFF_q_reg was removed\.\s+\[.*/hdl/xbar\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element u_usbfsBpCorrelator/u_dev/u_txn/frameNumber_q_reg was removed\.\s+\[.*/hdl/usbfsTxn\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element genblk\d+\[\d+\]\.u_probeDemux/inFF_q_reg was removed\.\s+\[.*/hdl/xbar\.sv:\d+\]
+.* \[Synth 8-6014\] Unused sequential element genblk\d+\[\d+\]\.u_probeMux/inFF_q_reg was removed.\s+\[.*/hdl/xbar\.sv:\d+\]
 # Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
 .* \[Synth 8-6014\] Unused sequential element u_winRect/countY_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
 .* \[Synth 8-6014\] Unused sequential element u_winRect/countIsect_q_reg was removed\.\s+\[.*/hdl/corrCountRect\.sv:\d+\]
@@ -88,9 +89,13 @@
 # High-level (hierarchically) register merging.
 .* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module top\.
 .* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module correlator\.
+.* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module usbfsSerial\.
 # Vivado 2017.1 to 2018.1 give some extra warnings which 2018.2 doesn't.
 .* \[Synth 8-3332\] Sequential element \(.*\) is unused and will be removed from module corrCountLogdrop\.
 
 # Power analysis gets some signal types wrong.
 .* \[Power 33-332\] Found switching activity that implies high-fanout reset nets being asserted for excessive periods of time which may result in inaccurate power analysis\.
+
+# Pullup/pulldown
+.* \[Synth 8-3917\] design top has port .* driven by constant \d+
 
