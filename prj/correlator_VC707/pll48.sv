@@ -9,7 +9,7 @@ module pll48 (
 
 // Buffer differential pair to single ended signal.
 wire clk_200MHz;
-IBUFDS clkin1_ibufgds (
+IBUFDS u_ibufgds_clkin1 (
   .I  (i_clk_p_200MHz),
   .IB (i_clk_n_200MHz),
   .O  (clk_200MHz)
@@ -44,8 +44,8 @@ PLLE2_ADV #(
   .CLKOUT0_DIVIDE     (20),
   .CLKOUT0_PHASE      (0.000),
   .CLKOUT0_DUTY_CYCLE (0.500),
-  .CLKIN1_PERIOD      (5.000))
-u_plle2_adv (
+  .CLKIN1_PERIOD      (5.000)
+) u_plle2_adv (
   .CLKIN1             (clk_200MHz),
   .CLKIN2             (1'b0),
   .CLKINSEL           (1'b1),

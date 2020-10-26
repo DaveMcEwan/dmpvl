@@ -59,7 +59,7 @@ set part "xc7vx485tffg1761-2"
 # VCU118 (Virtex UltraScale+)
 #set part "xcvu9p-flga2104-2L-e"
 
-# ZC702 (Zynq)
+# ZC702,Zedboard (Zynq)
 #set part "xc7z020clg484-1"
 
 # ZCU102 (Zynq UltraScale+)

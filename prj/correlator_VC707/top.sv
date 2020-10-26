@@ -120,6 +120,7 @@ module top (
   // {{{ usb electrical conversion VC707.*
   inout  USER_SMA_GPIO_P, // USB d+ (AN31 LVCMOS18 VC707.J33.1)
   inout  USER_SMA_GPIO_N, // USB d- (AP31 LVCMOS18 VC707.J34.1)
+  // TODO: usbpu,rstn
   // }}} usb electrical conversion VC707.*
   // {{{ probes VC707.SW* pushbuttons
   input  GPIO_SW_N,  // probe[0] (AR40 LVCMOS18 VC707.SW3.3)
