@@ -35,7 +35,7 @@ SRC_TOP := \
 	pll48.sv \
 	$(PROJ).sv
 
-default: lint synth
+default: lint signoff
 
 synth: $(BUILD)/correlator.bit
 
