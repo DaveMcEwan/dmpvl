@@ -1,0 +1,22 @@
+
+# Python temporary files.
+*/__pycache__/*
+*.pyc
+*.pyo
+**/.mypy_cache/*
+
+# Spyder IDE
+.spyproject/*
+
+# Hidden directories, created by Vivado.
+.*/*
+
+# Vivado logs and TCL journals.
+vivado*.log
+vivado*.jou
+usage_statistics*
+
+# Untracked config for Vivado experiments
+# E.g. disabling REPORT, CHECKPOINT, NETLIST.
+untracked.tcl
+
