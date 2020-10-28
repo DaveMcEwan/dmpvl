@@ -4,6 +4,7 @@ module top (
 
   inout  b_pin_usb_p,     // USB d+
   inout  b_pin_usb_n,     // USB d-
+  output o_pin_usb_oe,    // Direction control for optional USB levelshifters
   output o_pin_pu,        // USB host-detect pull-up
 
   output o_pin_led
@@ -79,7 +80,7 @@ wire       hostToDev_ready;
 // NOTE: Setting MAX_PKT to 8 will actually *increase* LUT usage as yosys will
 // convert all the memories to flops instead of using BRAMs.
 usbfsSerial #(
-  .ACM_NOT_GENERIC  (0),
+  .ACM_NOT_GENERIC  (1),
   .MAX_PKT  (16) // in {8,16,32,64} TODO: Split RX/TX_MAX_PKT
 ) u_dev (
   .i_clk_48MHz        (clk_48MHz),
@@ -100,6 +101,7 @@ usbfsSerial #(
   .o_hostToDev_valid  (hostToDev_valid),
   .i_hostToDev_ready  (hostToDev_ready)
 );
+assign o_pin_usb_oe = usbOutputEnable;
 
 // Loopback data, changing case bit.
 assign devToHost_valid = hostToDev_valid;
