@@ -1,0 +1,310 @@
+EESchema Schematic File Version 4
+LIBS:extUsb-cache
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Device:R R1
+U 1 1 5F99AD9D
+P 8600 5350
+F 0 "R1" V 8500 5300 50  0000 C CNN
+F 1 "33" V 8600 5350 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 8530 5350 50  0001 C CNN
+F 3 "~" H 8600 5350 50  0001 C CNN
+	1    8600 5350
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 5F99B134
+P 8600 5950
+F 0 "R2" V 8700 5900 50  0000 C CNN
+F 1 "33" V 8600 5950 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 8530 5950 50  0001 C CNN
+F 3 "~" H 8600 5950 50  0001 C CNN
+	1    8600 5950
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 5F99B487
+P 8000 5200
+F 0 "R3" H 8050 5250 50  0000 L CNN
+F 1 "1k5" V 8000 5150 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 7930 5200 50  0001 C CNN
+F 3 "~" H 8000 5200 50  0001 C CNN
+F 4 "R" H 8000 5200 50  0001 C CNN "Spice_Primitive"
+F 5 "" H 8000 5200 50  0001 C CNN "Spice_Model"
+F 6 "Y" H 8000 5200 50  0001 C CNN "Spice_Netlist_Enabled"
+	1    8000 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR01
+U 1 1 5F99B78B
+P 7150 5800
+F 0 "#PWR01" H 7150 5550 50  0001 C CNN
+F 1 "GND" H 7155 5627 50  0000 C CNN
+F 2 "" H 7150 5800 50  0001 C CNN
+F 3 "" H 7150 5800 50  0001 C CNN
+	1    7150 5800
+	1    0    0    -1  
+$EndComp
+$Comp
+L extUsb-rescue:USB_B_Micro-Connector J1
+U 1 1 5F998976
+P 7250 5350
+F 0 "J1" H 7020 5247 50  0000 R CNN
+F 1 "USB_B_Micro" H 7450 5700 50  0000 R CNN
+F 2 "Connector_USB:USB_Micro-B_Molex-105017-0001" H 7400 5300 50  0001 C CNN
+F 3 "~" H 7400 5300 50  0001 C CNN
+	1    7250 5350
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR02
+U 1 1 5F9A2222
+P 9250 6000
+F 0 "#PWR02" H 9250 5750 50  0001 C CNN
+F 1 "GND" H 9255 5827 50  0000 C CNN
+F 2 "" H 9250 6000 50  0001 C CNN
+F 3 "" H 9250 6000 50  0001 C CNN
+	1    9250 6000
+	1    0    0    -1  
+$EndComp
+NoConn ~ 7550 5550
+Wire Wire Line
+	9250 5950 9250 6000
+Wire Wire Line
+	7150 5750 7150 5800
+Wire Wire Line
+	7250 5750 7250 5800
+Wire Wire Line
+	7250 5800 7150 5800
+Connection ~ 7150 5800
+Wire Wire Line
+	8750 5550 8850 5550
+$Comp
+L power:GND #PWR03
+U 1 1 5F9ABD67
+P 10850 5700
+F 0 "#PWR03" H 10850 5450 50  0001 C CNN
+F 1 "GND" H 10855 5527 50  0000 C CNN
+F 2 "" H 10850 5700 50  0001 C CNN
+F 3 "" H 10850 5700 50  0001 C CNN
+	1    10850 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10850 5650 10850 5700
+$Comp
+L Connector_Generic:Conn_01x05 J2
+U 1 1 5F9A8B50
+P 11050 5450
+F 0 "J2" H 10968 5025 50  0000 C CNN
+F 1 "Conn_01x05" H 10968 5116 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Horizontal" H 11050 5450 50  0001 C CNN
+F 3 "~" H 11050 5450 50  0001 C CNN
+	1    11050 5450
+	1    0    0    1   
+$EndComp
+$Comp
+L extUsb-rescue:SN74LVC2T45DCUR-Logic_LevelTranslator U1
+U 1 1 5F998087
+P 9250 5450
+F 0 "U1" H 9250 4769 50  0000 C CNN
+F 1 "SN74LVC2T45" H 9250 5000 50  0000 C CNN
+F 2 "Package_SO:SSOP-8_2.95x2.8mm_P0.65mm" H 9300 4900 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/sn74lvc2t45.pdf" H 8350 4900 50  0001 C CNN
+	1    9250 5450
+	-1   0    0    -1  
+$EndComp
+Text GLabel 10800 5550 0    50   BiDi ~ 0
+Vext
+Text GLabel 9700 4950 2    50   BiDi ~ 0
+Vext
+Text GLabel 9700 5350 2    50   BiDi ~ 0
+pin_usb_p
+Text GLabel 9700 5550 2    50   BiDi ~ 0
+pin_usb_n
+Text GLabel 9700 5750 2    50   BiDi ~ 0
+pin_usb_oe
+Text GLabel 10800 5450 0    50   BiDi ~ 0
+pin_usb_p
+Text GLabel 10800 5350 0    50   BiDi ~ 0
+pin_usb_n
+Text GLabel 10800 5250 0    50   BiDi ~ 0
+pin_usb_oe
+Wire Wire Line
+	9650 5350 9700 5350
+Wire Wire Line
+	9650 5550 9700 5550
+Wire Wire Line
+	9650 5750 9700 5750
+Wire Wire Line
+	10850 5250 10800 5250
+Wire Wire Line
+	10800 5350 10850 5350
+Wire Wire Line
+	10800 5450 10850 5450
+Wire Wire Line
+	10800 5550 10850 5550
+Text GLabel 7550 4900 1    50   BiDi ~ 0
+Vusb
+Text GLabel 8400 6000 3    50   BiDi ~ 0
+usb_n
+Text GLabel 8400 5400 3    50   BiDi ~ 0
+usb_p
+Wire Wire Line
+	8850 5350 8750 5350
+Wire Wire Line
+	8400 6000 8400 5950
+Wire Wire Line
+	8400 5950 8450 5950
+$Comp
+L Device:C C2
+U 1 1 5F9AE03E
+P 8000 6100
+F 0 "C2" H 8115 6146 50  0000 L CNN
+F 1 "18pF" H 8115 6055 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 8038 5950 50  0001 C CNN
+F 3 "~" H 8000 6100 50  0001 C CNN
+	1    8000 6100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C1
+U 1 1 5F9AE0C5
+P 8000 5500
+F 0 "C1" H 8115 5546 50  0000 L CNN
+F 1 "18pF" H 8115 5455 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 8038 5350 50  0001 C CNN
+F 3 "~" H 8000 5500 50  0001 C CNN
+	1    8000 5500
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0101
+U 1 1 5F9AE17C
+P 8000 5650
+F 0 "#PWR0101" H 8000 5400 50  0001 C CNN
+F 1 "GND" H 8005 5477 50  0000 C CNN
+F 2 "" H 8000 5650 50  0001 C CNN
+F 3 "" H 8000 5650 50  0001 C CNN
+	1    8000 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 5F9AE5F9
+P 8000 6250
+F 0 "#PWR0102" H 8000 6000 50  0001 C CNN
+F 1 "GND" H 8005 6077 50  0000 C CNN
+F 2 "" H 8000 6250 50  0001 C CNN
+F 3 "" H 8000 6250 50  0001 C CNN
+	1    8000 6250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C3
+U 1 1 5F9AEC65
+P 8650 4800
+F 0 "C3" H 8765 4846 50  0000 L CNN
+F 1 "100nF" H 8765 4755 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 8688 4650 50  0001 C CNN
+F 3 "~" H 8650 4800 50  0001 C CNN
+	1    8650 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8650 4950 9150 4950
+$Comp
+L Device:C C4
+U 1 1 5F9AECDC
+P 9350 4800
+F 0 "C4" H 9465 4846 50  0000 L CNN
+F 1 "100nF" H 9465 4755 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 9388 4650 50  0001 C CNN
+F 3 "~" H 9350 4800 50  0001 C CNN
+	1    9350 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0103
+U 1 1 5F9AEDF2
+P 8400 4650
+F 0 "#PWR0103" H 8400 4400 50  0001 C CNN
+F 1 "GND" H 8405 4477 50  0000 C CNN
+F 2 "" H 8400 4650 50  0001 C CNN
+F 3 "" H 8400 4650 50  0001 C CNN
+	1    8400 4650
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0104
+U 1 1 5F9AF31F
+P 10000 4650
+F 0 "#PWR0104" H 10000 4400 50  0001 C CNN
+F 1 "GND" H 10005 4477 50  0000 C CNN
+F 2 "" H 10000 4650 50  0001 C CNN
+F 3 "" H 10000 4650 50  0001 C CNN
+	1    10000 4650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8400 4650 8650 4650
+Connection ~ 9350 4950
+Wire Wire Line
+	9350 4650 10000 4650
+Wire Wire Line
+	9350 4950 9700 4950
+Wire Wire Line
+	7550 4900 7550 5150
+Text GLabel 8000 4900 1    50   BiDi ~ 0
+V3.3
+Wire Wire Line
+	8750 5550 8750 5950
+Wire Wire Line
+	8400 5950 8000 5950
+Connection ~ 8400 5950
+Wire Wire Line
+	8000 5950 7800 5950
+Wire Wire Line
+	7800 5950 7800 5450
+Wire Wire Line
+	7800 5450 7550 5450
+Connection ~ 8000 5950
+Wire Wire Line
+	8400 5400 8400 5350
+Wire Wire Line
+	8400 5350 8450 5350
+Wire Wire Line
+	8000 4900 8000 4950
+Wire Wire Line
+	7550 5350 8000 5350
+Connection ~ 8000 5350
+Wire Wire Line
+	8000 5350 8400 5350
+Connection ~ 8400 5350
+Wire Wire Line
+	8650 4950 8000 4950
+Connection ~ 8650 4950
+Connection ~ 8000 4950
+Wire Wire Line
+	8000 4950 8000 5050
+Text Notes 7150 4500 0    50   ~ 0
+TODO:MIC5504-3.3YM5 regulator
+Text Notes 7050 6650 0    50   ~ 0
+R1,C1 and R2,C2 form LPFs and absorb transients.
+$EndSCHEMATC
