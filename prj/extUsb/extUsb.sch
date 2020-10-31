@@ -171,7 +171,7 @@ U 1 1 5F9C5271
 P 2900 1900
 F 0 "U2" H 2900 2267 50  0000 C CNN
 F 1 "MIC5504-3.3YM5" H 2900 2176 50  0000 C CNN
-F 2 "Package_TO_SOT_SMD:SOT-23-5" H 2900 1500 50  0001 C CNN
+F 2 "Package_TO_SOT_SMD:SOT-23-5_HandSoldering" H 2900 1500 50  0001 C CNN
 F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/MIC550X.pdf" H 2650 2150 50  0001 C CNN
 	1    2900 1900
 	1    0    0    -1  
