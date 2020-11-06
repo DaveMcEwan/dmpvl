@@ -68,29 +68,29 @@ module top (
   output FMC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
   // }}} pwm XM105.J20 odd
 `else
-  // {{{ usb electrical conversion VC707.*
-  inout  JA1, // USB d+ (Y11 LVCMOS18 Zedboard.Pmod.JA)
-  inout  JA2, // USB d- (AA11 LVCMOS18 Zedboard.Pmod.JA)
-  output JA3, // usbpu  (Y10 LVCMOS18 Zedboard.Pmod.JA)
-  output JA4, // rstn   (AA9 LVCMOS18 Zedboard.Pmod.JA)
-  // }}} usb electrical conversion VC707.*
-  // {{{ probes VC707.SW* pushbuttons
+  // {{{ usb electrical conversion (extUsb face down in JA)
+  inout  JA1, // USB OE       (Y11  LVCMOS18  Zedboard.Pmod.JA)
+  inout  JA2, // USB d-       (AA11 LVCMOS18  Zedboard.Pmod.JA)
+  output JA3, // USB d+       (Y10  LVCMOS18  Zedboard.Pmod.JA)
+  output JA4, // usbpu/Vext   (AA9  LVCMOS18  Zedboard.Pmod.JA)
+  // }}} usb electrical conversion
+  // {{{ probes (Zedboard.SW* pushbuttons)
   input  BTNU,  // probe[0] (T18 LVCMOS18 Zedboard.BTNU)
   input  BTNR,  // probe[1] (R18 LVCMOS18 Zedboard.BTNR)
   input  BTND,  // probe[2] (R16 LVCMOS18 Zedboard.BTND)
   input  BTNL,  // probe[3] (N15 LVCMOS18 Zedboard.BTNL)
-  // }}} probes VC707.SW* pushbuttons
-  // {{{ pwm VC707.LEDs
+  // }}} probe
+  // {{{ result pwm (Zedboard.LD* LEDs)
   output LD0, // (T22 LVCMOS18 Zedboard.LD0)
   output LD1  // (T21 LVCMOS18 Zedboard.LD1)
-  // }}} pwm VC707.LEDs
+  // }}} result pwm
 `endif
 );
 wire i_pin_gclk_100MHz = GCLK;
+wire o_pin_usbpu = 1'b1;
 wire b_pin_usb_p;
 wire b_pin_usb_n;
-wire o_pin_usbpu = 1'b1;
-wire o_pin_rstn; // Signal to TXB0104 that power is stable.
+wire o_pin_usb_oe;
 `ifdef ZEDBOARD_FMC_XM105
   localparam N_PROBE  = 40;
   localparam N_ENGINE = 8;
@@ -98,7 +98,6 @@ wire o_pin_rstn; // Signal to TXB0104 that power is stable.
   assign b_pin_usb_p = FMC_LA28_P;
   assign b_pin_usb_n = FMC_LA28_N;
   assign FMC_LA29_P = o_pin_usbpu;
-  assign FMC_LA29_N = o_pin_rstn;
 
   wire [N_PROBE-1:0] i_pin_probe = {
   // {{{ XM105.J1
@@ -160,10 +159,10 @@ wire o_pin_rstn; // Signal to TXB0104 that power is stable.
   localparam N_PROBE  = 4;
   localparam N_ENGINE = 2;
 
-  assign b_pin_usb_p = JA1;
+  assign JA1 = o_pin_usb_oe;
   assign b_pin_usb_n = JA2;
-  assign JA3 = o_pin_usbpu;
-  assign JA4 = o_pin_rstn;
+  assign b_pin_usb_p = JA3;
+  assign JA4 = o_pin_usbpu;
 
   wire [N_PROBE-1:0] i_pin_probe = {
     BTNL,
@@ -193,7 +192,6 @@ fpgaReset u_rst (
   .i_pllLocked  (pllLocked),
   .o_rst        (rst)
 );
-assign o_pin_rstn = !rst;
 
 
 wire usb_p;
@@ -262,6 +260,7 @@ usbfsBpCorrelator #(
 
   .o_pwm              (resultPwm)
 );
+assign o_pin_usb_oe = usbOutputEnable;
 
 assign o_pin_pwm = resultPwm;
 
