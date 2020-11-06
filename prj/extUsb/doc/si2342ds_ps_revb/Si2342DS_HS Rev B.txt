@@ -1,0 +1,37 @@
+********************************
+* Copyright:                   *
+* Vishay Intertechnology, Inc. *
+********************************
+*Jul 14, 2014
+*ECN S14-1392, Rev. B
+*This document is intended as a SPICE modeling guideline and does not
+*constitute a commercial product datasheet. Designers should refer to the
+*appropriate datasheet of the same number for guaranteed specification
+*limits.
+.SUBCKT Si2342DS D G S 
+M1 3 GX S S NMOS W= 1027974u L= 0.25u 
+M2 S GX S D PMOS W= 1027974u L= 0.20u 
+R1 D 3 1.200e-02 -2.382e-03 -6.970e-06 
+CGS GX S 6.472e-10 
+CGD GX D 4.264e-11 
+RG G GY 12
+RTCV 100 S 1e6 3.450e-04 -1.960e-06 
+ETCV GX GY 100 200 1 
+ITCV S 100 1u 
+VTCV 200 S 1 
+DBD S D DBD 
+**************************************************************** 
+.MODEL NMOS NMOS ( LEVEL = 3 TOX = 1.3e-8 
++ RS = 1.000e-06 KP = 2.945e-05 NSUB = 1.401e+17 
++ KAPPA = 3.825e-02 ETA = 1e-4 NFS = 1.284e+12 
++ LD = 0 IS = 0 TPG = 1) 
+*************************************************************** 
+.MODEL PMOS PMOS ( LEVEL = 3 TOX = 1.3e-8 
++NSUB = 3.025e+17 IS = 0 TPG = -1 ) 
+**************************************************************** 
+.MODEL DBD D ( 
++FC = 0.1 TT = 2.000e-08 TREF = 25 BV = 9 
++RS = 2.095e-02 N = 1.219e+00 IS = 2.430e-08 
++EG = 6.956e-01 XTI = 4.409e+00 TRS = 7.225e-04 
++CJO = 4.104e-10 VJ = 6.798e-01 M = 3.059e-01 ) 
+.ENDS 
