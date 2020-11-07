@@ -250,12 +250,12 @@ Wire Wire Line
 $Comp
 L power:+3.3V #PWR01
 U 1 1 5FA00B0B
-P 1700 5100
-F 0 "#PWR01" H 1700 4950 50  0001 C CNN
-F 1 "+3.3V" H 1715 5273 50  0000 C CNN
-F 2 "" H 1700 5100 50  0001 C CNN
-F 3 "" H 1700 5100 50  0001 C CNN
-	1    1700 5100
+P 1050 5000
+F 0 "#PWR01" H 1050 4850 50  0001 C CNN
+F 1 "+3.3V" H 1065 5173 50  0000 C CNN
+F 2 "" H 1050 5000 50  0001 C CNN
+F 3 "" H 1050 5000 50  0001 C CNN
+	1    1050 5000
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -366,51 +366,40 @@ $EndComp
 Wire Wire Line
 	1950 1800 2200 1800
 $Comp
-L Device:Q_NMOS_GSD Q1
-U 1 1 5FA2F162
-P 1600 5300
-F 0 "Q1" H 1804 5346 50  0000 L CNN
-F 1 "Q_NMOS_GSD" H 1804 5255 50  0000 L CNN
-F 2 "Package_TO_SOT_SMD:SOT-23_Handsoldering" H 1800 5400 50  0001 C CNN
-F 3 "https://www.vishay.com/docs/63302/si2342ds.pdf" H 1600 5300 50  0001 C CNN
-	1    1600 5300
-	1    0    0    -1  
-$EndComp
-$Comp
 L Device:R R4
 U 1 1 5FA4650C
-P 1350 5450
-F 0 "R4" H 1400 5400 50  0000 L CNN
-F 1 "10k" V 1350 5350 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 1280 5450 50  0001 C CNN
-F 3 "~" H 1350 5450 50  0001 C CNN
-	1    1350 5450
+P 1000 5550
+F 0 "R4" H 1050 5500 50  0000 L CNN
+F 1 "10k" V 1000 5450 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder" V 930 5550 50  0001 C CNN
+F 3 "~" H 1000 5550 50  0001 C CNN
+	1    1000 5550
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	1300 6100 1700 6100
-Text GLabel 1300 5300 0    50   Input ~ 0
+Text GLabel 950  5400 0    50   Input ~ 0
 Vext
 $Comp
 L power:GND #PWR0103
 U 1 1 5FA4C220
-P 1350 5600
-F 0 "#PWR0103" H 1350 5350 50  0001 C CNN
-F 1 "GND" H 1355 5427 50  0000 C CNN
-F 2 "" H 1350 5600 50  0001 C CNN
-F 3 "" H 1350 5600 50  0001 C CNN
-	1    1350 5600
+P 1000 5700
+F 0 "#PWR0103" H 1000 5450 50  0001 C CNN
+F 1 "GND" H 1005 5527 50  0000 C CNN
+F 2 "" H 1000 5700 50  0001 C CNN
+F 3 "" H 1000 5700 50  0001 C CNN
+	1    1000 5700
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	1700 5800 1700 6100
 Wire Wire Line
-	1300 5300 1350 5300
-Connection ~ 1350 5300
+	950  5400 1000 5400
+Connection ~ 1000 5400
 Wire Wire Line
-	1350 5300 1400 5300
+	1000 5400 1050 5400
 Text Notes 1000 4800 0    50   ~ 0
-R3 pullup to 3.3V indicates USB-FullSpeed to host, enabled by connecting Vext.\nWhen Vext is unconnected, R4 pulldown on Q1 disables the R3 pullup, indicating "no device" to host.
+R3 pullup to 3.3V indicates USB-FullSpeed to host, enabled by connecting Vext.\nWhen Vext is unconnected, R4 pulldown on U3 disables the R3 pullup, indicating "no device" to host.
 Text Notes 1000 7450 0    50   ~ 0
 R1 and R2 series termination protect D+,D- transmission lines against device-to-host transient voltage spikes.\nOptionally (with C1,C2) include low-pass filtering.
 Text Notes 1000 1350 0    50   ~ 0
@@ -425,4 +414,29 @@ Text Notes 8150 7650 0    50   ~ 0
 2020-10-31
 Text Notes 10600 7650 0    50   ~ 0
 1.0.0
+$Comp
+L Analog_Switch:TS5A3166DBVR U3
+U 1 1 5FA73056
+P 1350 5300
+F 0 "U3" H 1250 5450 50  0000 L CNN
+F 1 "TS5A3166DBVR" H 1150 5200 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SOT-23-5" H 1300 5150 50  0001 C CNN
+F 3 " http://www.ti.com/lit/ds/symlink/ts5a3166.pdf" H 1350 5400 50  0001 C CNN
+	1    1350 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1450 5600 1450 5700
+Wire Wire Line
+	1450 5700 1000 5700
+Connection ~ 1000 5700
+Wire Wire Line
+	1050 5300 1050 5000
+Wire Wire Line
+	1050 5000 1450 5000
+Connection ~ 1050 5000
+Wire Wire Line
+	1650 5300 1700 5300
+Wire Wire Line
+	1700 5300 1700 5500
 $EndSCHEMATC
