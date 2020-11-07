@@ -43,7 +43,7 @@ F 0 "Q1" H 3404 4046 50  0000 L CNN
 F 1 "Q_NMOS_GSD" H 3404 3955 50  0000 L CNN
 F 2 "" H 3400 4100 50  0001 C CNN
 F 3 "~" H 3200 4000 50  0001 C CNN
-F 4 "M" H 3200 4000 50  0001 C CNN "Spice_Primitive"
+F 4 "X" H 3200 4000 50  0001 C CNN "Spice_Primitive"
 F 5 "Q_NMOS_GSD" H 3200 4000 50  0001 C CNN "Spice_Model"
 F 6 "Y" H 3200 4000 50  0001 C CNN "Spice_Netlist_Enabled"
 F 7 "doc/si2342ds_ps_revb/Si2342DS_PS Rev B.LIB" H 3200 4000 50  0001 C CNN "Spice_Lib_File"
@@ -75,16 +75,17 @@ Connection ~ 3300 4400
 Wire Wire Line
 	3300 4400 3300 4450
 $Comp
-L Device:Q_PMOS_GDS Q2
+L Device:Q_PMOS_GSD Q2
 U 1 1 5FA63344
 P 3950 3750
 F 0 "Q2" H 4155 3704 50  0000 L CNN
-F 1 "Q_PMOS_GDS" H 4155 3795 50  0000 L CNN
+F 1 "Q_PMOS_GSD" H 4155 3795 50  0000 L CNN
 F 2 "" H 4150 3850 50  0001 C CNN
 F 3 "~" H 3950 3750 50  0001 C CNN
-F 4 "M" H 3950 3750 50  0001 C CNN "Spice_Primitive"
-F 5 "Q_PMOS_GDS" H 3950 3750 50  0001 C CNN "Spice_Model"
+F 4 "X" H 3950 3750 50  0001 C CNN "Spice_Primitive"
+F 5 "Q_PMOS_GSD" H 3950 3750 50  0001 C CNN "Spice_Model"
 F 6 "Y" H 3950 3750 50  0001 C CNN "Spice_Netlist_Enabled"
+F 7 "doc/si2329ds_ps_revb/si2329ds_ps Rev B.lib" H 3950 3750 50  0001 C CNN "Spice_Lib_File"
 	1    3950 3750
 	1    0    0    1   
 $EndComp
