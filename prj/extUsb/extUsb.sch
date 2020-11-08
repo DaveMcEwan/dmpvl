@@ -104,11 +104,11 @@ Text GLabel 10100 5600 0    50   BiDi ~ 0
 Vext
 Text GLabel 3500 5450 2    50   BiDi ~ 0
 Vext
-Text GLabel 3050 6100 2    50   BiDi ~ 0
+Text GLabel 3750 6100 2    50   BiDi ~ 0
 pin_usb_p
-Text GLabel 3050 6300 2    50   BiDi ~ 0
+Text GLabel 4250 6300 2    50   BiDi ~ 0
 pin_usb_n
-Text GLabel 3050 6500 2    50   BiDi ~ 0
+Text GLabel 3750 6500 2    50   BiDi ~ 0
 pin_usb_oe
 Text GLabel 10100 5500 0    50   BiDi ~ 0
 pin_usb_p
@@ -116,12 +116,6 @@ Text GLabel 10100 5400 0    50   BiDi ~ 0
 pin_usb_n
 Text GLabel 10100 5300 0    50   BiDi ~ 0
 pin_usb_oe
-Wire Wire Line
-	3000 6100 3050 6100
-Wire Wire Line
-	3000 6300 3050 6300
-Wire Wire Line
-	3000 6500 3050 6500
 Wire Wire Line
 	10150 5300 10100 5300
 Wire Wire Line
@@ -200,8 +194,6 @@ F 3 "" H 2900 2450 50  0001 C CNN
 	1    2900 2450
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	3300 1800 3550 1800
 Connection ~ 3550 1800
 $Comp
 L power:+3.3V #PWR08
@@ -214,8 +206,6 @@ F 3 "" H 3550 1800 50  0001 C CNN
 	1    3550 1800
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2200 1800 2500 1800
 Connection ~ 2500 1800
 Wire Wire Line
 	1350 2450 2200 2450
@@ -281,8 +271,6 @@ F 3 "" H 3400 5750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3400 5450 2700 5450
-Wire Wire Line
 	2700 5450 2700 5700
 $Comp
 L Device:C C1
@@ -339,8 +327,6 @@ Connection ~ 1700 6100
 Connection ~ 1700 6700
 Wire Wire Line
 	1700 6700 1850 6700
-Wire Wire Line
-	1300 6700 1700 6700
 $Comp
 L Logic_LevelTranslator:SN74LVC2T45DCUR U1
 U 1 1 5F998087
@@ -376,8 +362,6 @@ F 3 "~" H 1000 5550 50  0001 C CNN
 	1    1000 5550
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	1300 6100 1700 6100
 Text GLabel 950  5400 0    50   Input ~ 0
 Vext
 $Comp
@@ -414,17 +398,6 @@ Text Notes 8150 7650 0    50   ~ 0
 2020-10-31
 Text Notes 10600 7650 0    50   ~ 0
 1.0.0
-$Comp
-L Analog_Switch:TS5A3166DBVR U3
-U 1 1 5FA73056
-P 1350 5300
-F 0 "U3" H 1250 5450 50  0000 L CNN
-F 1 "TS5A3166DBVR" H 1150 5200 50  0000 L CNN
-F 2 "Package_TO_SOT_SMD:SOT-23-5" H 1300 5150 50  0001 C CNN
-F 3 " http://www.ti.com/lit/ds/symlink/ts5a3166.pdf" H 1350 5400 50  0001 C CNN
-	1    1350 5300
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	1450 5600 1450 5700
 Wire Wire Line
@@ -439,4 +412,134 @@ Wire Wire Line
 	1650 5300 1700 5300
 Wire Wire Line
 	1700 5300 1700 5500
+$Comp
+L Analog_Switch:TS5A3166DBVR U3
+U 1 1 5FA73056
+P 1350 5300
+F 0 "U3" H 1250 5450 50  0000 L CNN
+F 1 "TS5A3166DBVR" H 1150 5200 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SOT-23-5_HandSoldering" H 1300 5150 50  0001 C CNN
+F 3 " http://www.ti.com/lit/ds/symlink/ts5a3166.pdf" H 1350 5400 50  0001 C CNN
+	1    1350 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3400 5450 3050 5450
+Wire Wire Line
+	3300 1800 3550 1800
+Wire Wire Line
+	2200 1800 2500 1800
+$Comp
+L Connector:TestPoint TP2
+U 1 1 5FA881AA
+P 4250 6300
+F 0 "TP2" H 4308 6418 50  0000 L CNN
+F 1 "TestPoint" H 4308 6327 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 4450 6300 50  0001 C CNN
+F 3 "~" H 4450 6300 50  0001 C CNN
+	1    4250 6300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:TestPoint TP1
+U 1 1 5FA87D46
+P 3750 6100
+F 0 "TP1" H 3808 6218 50  0000 L CNN
+F 1 "TestPoint" H 3808 6127 50  0000 L CNN
+F 2 "" H 3950 6100 50  0001 C CNN
+F 3 "~" H 3950 6100 50  0001 C CNN
+	1    3750 6100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3000 6100 3750 6100
+Wire Wire Line
+	1300 6700 1700 6700
+Wire Wire Line
+	1300 6100 1700 6100
+Wire Wire Line
+	3000 6300 4250 6300
+$Comp
+L Connector:TestPoint TP4
+U 1 1 5FAA3783
+P 10100 3900
+F 0 "TP4" H 10158 4018 50  0000 L CNN
+F 1 "TestPoint" H 10158 3927 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 10300 3900 50  0001 C CNN
+F 3 "~" H 10300 3900 50  0001 C CNN
+	1    10100 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:TestPoint TP5
+U 1 1 5FAA3DCC
+P 10100 4150
+F 0 "TP5" H 10158 4268 50  0000 L CNN
+F 1 "TestPoint" H 10158 4177 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 10300 4150 50  0001 C CNN
+F 3 "~" H 10300 4150 50  0001 C CNN
+	1    10100 4150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:TestPoint TP6
+U 1 1 5FAA4E02
+P 10100 4400
+F 0 "TP6" H 10158 4518 50  0000 L CNN
+F 1 "TestPoint" H 10158 4427 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 10300 4400 50  0001 C CNN
+F 3 "~" H 10300 4400 50  0001 C CNN
+	1    10100 4400
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:TestPoint TP3
+U 1 1 5FAA52CF
+P 3750 6500
+F 0 "TP3" H 3808 6618 50  0000 L CNN
+F 1 "TestPoint" H 3808 6527 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 3950 6500 50  0001 C CNN
+F 3 "~" H 3950 6500 50  0001 C CNN
+	1    3750 6500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3000 6500 3750 6500
+$Comp
+L power:GND #PWR0104
+U 1 1 5FAA8E6F
+P 10000 4400
+F 0 "#PWR0104" H 10000 4150 50  0001 C CNN
+F 1 "GND" H 10005 4227 50  0000 C CNN
+F 2 "" H 10000 4400 50  0001 C CNN
+F 3 "" H 10000 4400 50  0001 C CNN
+	1    10000 4400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10000 4400 10100 4400
+Wire Wire Line
+	10000 4400 10000 4150
+Wire Wire Line
+	10000 3900 10100 3900
+Connection ~ 10000 4400
+Wire Wire Line
+	10100 4150 10000 4150
+Connection ~ 10000 4150
+Wire Wire Line
+	10000 4150 10000 3900
+$Comp
+L Connector:TestPoint TP7
+U 1 1 5FAB2342
+P 3050 5450
+F 0 "TP7" H 3108 5568 50  0000 L CNN
+F 1 "TestPoint" H 3108 5477 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 3250 5450 50  0001 C CNN
+F 3 "~" H 3250 5450 50  0001 C CNN
+	1    3050 5450
+	1    0    0    -1  
+$EndComp
+Connection ~ 3050 5450
+Wire Wire Line
+	3050 5450 2700 5450
 $EndSCHEMATC
