@@ -270,8 +270,6 @@ F 3 "" H 3400 5750 50  0001 C CNN
 	1    3400 5750
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2700 5450 2700 5700
 $Comp
 L Device:C C1
 U 1 1 5FA1C049
@@ -328,17 +326,6 @@ Connection ~ 1700 6700
 Wire Wire Line
 	1700 6700 1850 6700
 $Comp
-L Logic_LevelTranslator:SN74LVC2T45DCUR U1
-U 1 1 5F998087
-P 2600 6200
-F 0 "U1" H 2800 5850 50  0000 C CNN
-F 1 "SN74LVC2T45" H 2600 6200 50  0000 C CNN
-F 2 "Package_SO:SSOP-8_2.95x2.8mm_P0.65mm" H 2650 5650 50  0001 C CNN
-F 3 "http://www.ti.com/lit/ds/symlink/sn74lvc2t45.pdf" H 1700 5650 50  0001 C CNN
-	1    2600 6200
-	-1   0    0    -1  
-$EndComp
-$Comp
 L Device:Ferrite_Bead FB1
 U 1 1 5FA2AD34
 P 1800 1800
@@ -350,7 +337,7 @@ F 3 "~" H 1800 1800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	1950 1800 2200 1800
+	1950 1800 2100 1800
 $Comp
 L Device:R R4
 U 1 1 5FA4650C
@@ -382,8 +369,6 @@ Wire Wire Line
 Connection ~ 1000 5400
 Wire Wire Line
 	1000 5400 1050 5400
-Text Notes 1000 4800 0    50   ~ 0
-R3 pullup to 3.3V indicates USB-FullSpeed to host, enabled by connecting Vext.\nWhen Vext is unconnected, R4 pulldown on U3 disables the R3 pullup, indicating "no device" to host.
 Text Notes 1000 7450 0    50   ~ 0
 R1 and R2 series termination protect D+,D- transmission lines against device-to-host transient voltage spikes.\nOptionally (with C1,C2) include low-pass filtering.
 Text Notes 1000 1350 0    50   ~ 0
@@ -404,25 +389,7 @@ Wire Wire Line
 	1450 5700 1000 5700
 Connection ~ 1000 5700
 Wire Wire Line
-	1050 5300 1050 5000
-Wire Wire Line
-	1050 5000 1450 5000
-Connection ~ 1050 5000
-Wire Wire Line
 	1650 5300 1700 5300
-Wire Wire Line
-	1700 5300 1700 5500
-$Comp
-L Analog_Switch:TS5A3166DBVR U3
-U 1 1 5FA73056
-P 1350 5300
-F 0 "U3" H 1250 5450 50  0000 L CNN
-F 1 "TS5A3166DBVR" H 1150 5200 50  0000 L CNN
-F 2 "Package_TO_SOT_SMD:SOT-23-5_HandSoldering" H 1300 5150 50  0001 C CNN
-F 3 " http://www.ti.com/lit/ds/symlink/ts5a3166.pdf" H 1350 5400 50  0001 C CNN
-	1    1350 5300
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	3400 5450 3050 5450
 Wire Wire Line
@@ -452,13 +419,9 @@ F 3 "~" H 3950 6100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3000 6100 3750 6100
-Wire Wire Line
 	1300 6700 1700 6700
 Wire Wire Line
 	1300 6100 1700 6100
-Wire Wire Line
-	3000 6300 4250 6300
 $Comp
 L Connector:TestPoint TP4
 U 1 1 5FAA3783
@@ -541,5 +504,70 @@ F 3 "~" H 3250 5450 50  0001 C CNN
 $EndComp
 Connection ~ 3050 5450
 Wire Wire Line
+	3000 6100 3750 6100
+Wire Wire Line
+	3000 6300 4250 6300
+$Comp
+L Logic_LevelTranslator:SN74LVC2T45DCUR U1
+U 1 1 5F998087
+P 2600 6200
+F 0 "U1" H 2800 5850 50  0000 C CNN
+F 1 "SN74LVC2T45" H 2600 6200 50  0000 C CNN
+F 2 "Package_SO:SSOP-8_2.95x2.8mm_P0.65mm" H 2650 5650 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/sn74lvc2t45.pdf" H 1700 5650 50  0001 C CNN
+	1    2600 6200
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	1700 5300 1700 5500
+Text Notes 1000 4800 0    50   ~ 0
+R3 pullup to 3.3V indicates USB-FullSpeed to host, enabled by connecting Vext.\nWhen Vext is disconnected, R4 pulldown on U3 disables the R3 pullup, indicating "no device" to host.
+Connection ~ 1050 5000
+Wire Wire Line
+	1050 5300 1050 5000
+Wire Wire Line
+	1050 5000 1450 5000
+$Comp
+L Analog_Switch:TS5A3166DBVR U3
+U 1 1 5FA73056
+P 1350 5300
+F 0 "U3" H 1250 5450 50  0000 L CNN
+F 1 "TS5A3166DBVR" H 1150 5200 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SOT-23-5_HandSoldering" H 1300 5150 50  0001 C CNN
+F 3 " http://www.ti.com/lit/ds/symlink/ts5a3166.pdf" H 1350 5400 50  0001 C CNN
+	1    1350 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2700 5450 2700 5700
+Wire Wire Line
 	3050 5450 2700 5450
+$Comp
+L power:PWR_FLAG #FLG0101
+U 1 1 5FA98ACB
+P 2100 1600
+F 0 "#FLG0101" H 2100 1675 50  0001 C CNN
+F 1 "PWR_FLAG" H 2100 1773 50  0000 C CNN
+F 2 "" H 2100 1600 50  0001 C CNN
+F 3 "~" H 2100 1600 50  0001 C CNN
+	1    2100 1600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2100 1600 2100 1800
+Connection ~ 2100 1800
+Wire Wire Line
+	2100 1800 2200 1800
+$Comp
+L power:PWR_FLAG #FLG0102
+U 1 1 5FA9C183
+P 2700 5450
+F 0 "#FLG0102" H 2700 5525 50  0001 C CNN
+F 1 "PWR_FLAG" H 2700 5623 50  0000 C CNN
+F 2 "" H 2700 5450 50  0001 C CNN
+F 3 "~" H 2700 5450 50  0001 C CNN
+	1    2700 5450
+	1    0    0    -1  
+$EndComp
+Connection ~ 2700 5450
 $EndSCHEMATC

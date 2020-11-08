@@ -1,26 +1,29 @@
 References  Quantity  Manufacturer  Model             Package   Description
 J1          1         Molex         105017-0001       SMT       Micro-USB B socket
+J2          1         ?             ?                 0.1in     Right-angle header pins
 FB1         1         ?             ?                 0603      Ferrite Bead
-U2          1         Micrel        MIC5504-3.3YM5    SOT-23-5  LDO voltage regulator
+C1,C2       2         ?             18pF              0603      Ceramic capacitor
+C3,C4       2         ?             100nF             0603      Ceramic capacitor
 C5          1         ?             10uF              0603      Ceramic capacitor
-C4,C3       2         ?             100nF             0603      Ceramic capacitor
-C2,C1       2         ?             18pF              0603      Ceramic capacitor
 R2,R1       2         ?             33Ω               0603      Chip resistor
-Q1          1         Vishay        Si2342DS          SOT-23    N-Channel Enhancement 8V MOSFET
+R3          1         ?             1.5kΩ             0603      Chip resistor
+R4          1         ?             10kΩ              0603      Chip resistor
 U1          1         TI            SN74LVC2T45DCT    MSOP-8    2-bit levelshift bus transceiver
-J1          1         ?             ?                 0.1in     Right-angle header pins
+U2          1         Micrel        MIC5504-3.3YM5    SOT-23-5  LDO voltage regulator
+U3          1         TI            TS5A3166DBVR      SOT-23-5  Analog switch
 
-Order 2020-11-04
 Qty URL
 10  https://uk.farnell.com/molex/105017-0001/usb-conn-2-0-micro-usb-type-b/dp/2293836
-10  https://uk.farnell.com/vishay/ilbb0603er300v/ferrite-bead-0-09ohm-0-5a-0603/dp/2395876
-10  https://uk.farnell.com/microchip/mic5504-3-3ym5-t5/ldo-fixed-3-3v-0-3a-sot-23-5/dp/2810152
-10  https://uk.farnell.com/vishay/si2342ds-t1-ge3/mosfet-n-ch-8v-6a-sot-23/dp/2646367
-10  https://uk.farnell.com/texas-instruments/sn74lvc2t45dctt/ic-tranceiver-smd/dp/3119657
 10  https://uk.farnell.com/amp-te-connectivity/826949-5/btb-conn-header-5pos-1row-2-54mm/dp/1248179
+10  https://uk.farnell.com/vishay/ilbb0603er300v/ferrite-bead-0-09ohm-0-5a-0603/dp/2395876
+50  https://uk.farnell.com/avx/06035a180fat2a/cap-18pf-50v-mlcc-0603/dp/3288899
+100 https://uk.farnell.com/avx/06033c104kat2a/cap-0-1-f-25v-10-x7r-0603/dp/2530141
+50  https://uk.farnell.com/avx/0603zd106mat2a/cap-10-f-10v-20-x5r-0603/dp/1867954
 100 https://uk.farnell.com/multicomp-pro/mp003520/res-22r-1-0-1w-0603-thick-film/dp/3392694
 100 https://uk.farnell.com/multicomp-pro/mp003526/res-68r-1-0-1w-0603-thick-film/dp/3392701
 100 https://uk.farnell.com/multicomp-pro/mp003522/res-33r-1-0-1w-0603-thick-film/dp/3392696
-100 https://uk.farnell.com/avx/06033c104kat2a/cap-0-1-f-25v-10-x7r-0603/dp/2530141
-50  https://uk.farnell.com/avx/0603zd106mat2a/cap-10-f-10v-20-x5r-0603/dp/1867954
-50  https://uk.farnell.com/avx/06035a180fat2a/cap-18pf-50v-mlcc-0603/dp/3288899
+100 https://uk.farnell.com/multicomp-pro/mp003547/res-1k5-1-0-1w-0603-thick-film/dp/3392724
+100 https://uk.farnell.com/multicomp-pro/mp003561/res-10k-1-0-1w-0603-thick-film/dp/3392741
+10  https://uk.farnell.com/texas-instruments/sn74lvc2t45dctt/ic-tranceiver-smd/dp/3119657
+10  https://uk.farnell.com/microchip/mic5504-3-3ym5-t5/ldo-fixed-3-3v-0-3a-sot-23-5/dp/2810152
+10  https://uk.farnell.com/texas-instruments/ts5a3166dbvr/ic-switch-spst-sot23-5/dp/3118299
