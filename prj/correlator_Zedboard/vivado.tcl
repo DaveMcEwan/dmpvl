@@ -72,8 +72,8 @@ read_xdc zedboard_master_XDC_RevC_D_v3.xdc
 # The actual clock speed at runtime is set by the PLL settings.
 # Synthesizing with a lower value less just means the logic *could* function at
 # higher frequencies.
-synth_design -part ${part} -top top -include_dirs ${dirHdl}
-#  -verilog_define ZEDBOARD_FMC_XM105=1
+synth_design -part ${part} -top top -include_dirs ${dirHdl} \
+  -verilog_define ZEDBOARD_FMC_XM105=1 -verilog_define ZEDBOARD_LED=1
 
 create_clock -name clk48MHz -period 10 [get_nets clk_48MHz]
 set_property CONFIG_VOLTAGE 1.8 [current_design]

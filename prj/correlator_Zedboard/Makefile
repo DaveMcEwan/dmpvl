@@ -129,5 +129,5 @@ clean:
 	rm -rf webtalk*.jou
 
 .SECONDARY:
-.PHONY: default synth signoff clean
+.PHONY: default synth signoff prog clean
 .PHONY: lint lint_verilator lint_iverilog lint_yosys

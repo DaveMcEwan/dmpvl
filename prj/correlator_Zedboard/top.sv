@@ -8,10 +8,10 @@ module top (
   // probes: J1 pins in order
   // pwm: J20 odd numbered pins.
   // {{{ usb electrical conversion VC707.*
-  inout  FMC_LA28_P, // USB d+ (L29 LVCMOS18 Zedboard.J1.XX XM105.J16.5)
-  inout  FMC_LA28_N, // USB d- (L30 LVCMOS18 Zedboard.J1.XX XM105.J16.7)
-  output FMC_LA29_P, // usbpu  (T29 LVCMOS18 Zedboard.J1.XX XM105.J16.9)
-  output FMC_LA29_N, // rstn   (T30 LVCMOS18 Zedboard.J1.XX XM105.J16.11)
+  output FMC_LA29_N, // USB OE      (T30 LVCMOS18 Zedboard.J1.XX XM105.J16.11)
+  inout  FMC_LA29_P, // USB d-      (T29 LVCMOS18 Zedboard.J1.XX XM105.J16.9)
+  inout  FMC_LA28_N, // USB d+      (L30 LVCMOS18 Zedboard.J1.XX XM105.J16.7)
+  output FMC_LA28_P, // usbpu/Vext  (L29 LVCMOS18 Zedboard.J1.XX XM105.J16.5)
   // }}} usb electrical conversion VC707.*
   // {{{ probes XM105.J1 odd
   input  FMC_LA00_CC_P,  // (K39 LVCMOS18 VC707.J17.XX XM105.J1.1)
@@ -57,7 +57,20 @@ module top (
   input  FMC_LA19_P,     // (W30 LVCMOS18 VC707.J17.XX XM105.J1.38)
   input  FMC_LA19_N,     // (W31 LVCMOS18 VC707.J17.XX XM105.J1.40)
   // }}} probes XM105.J1 even
-  // {{{ pwm XM105.J20 odd
+  `ifdef ZEDBOARD_LED
+  // Just a temporary measure to see LEDs controllable.
+  // {{{ result pwm (Zedboard.LD* LEDs)
+  output LD0, // (T22 LVCMOS18 Zedboard.LD0)
+  output LD1, // (T21 LVCMOS18 Zedboard.LD1)
+  output LD2,
+  output LD3,
+  output LD4,
+  output LD5,
+  output LD6,
+  output LD7
+  // }}} result pwm
+  `else
+  // {{{ result pwm XM105.J20 odd
   output FMC_LA20_P, // (Y29 LVCMOS18 VC707.J17.G21 XM105.J20.1)
   output FMC_LA20_N, // (Y30 LVCMOS18 VC707.J17.G22 XM105.J20.3)
   output FMC_LA21_P, // (N28 LVCMOS18 VC707.J17.H25 XM105.J20.5)
@@ -66,7 +79,8 @@ module top (
   output FMC_LA22_N, // (P28 LVCMOS18 VC707.J17.G25 XM105.J20.11)
   output FMC_LA23_P, // (P30 LVCMOS18 VC707.J17.D23 XM105.J20.13)
   output FMC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
-  // }}} pwm XM105.J20 odd
+  // }}} result pwm
+  `endif
 `else
   // {{{ usb electrical conversion (extUsb face down in JA)
   output JA1, // USB OE       (Y11  LVCMOS18  Zedboard.Pmod.JA)
@@ -95,9 +109,10 @@ wire o_pin_usb_oe;
   localparam N_PROBE  = 40;
   localparam N_ENGINE = 8;
 
-  assign b_pin_usb_p = FMC_LA28_P;
-  assign b_pin_usb_n = FMC_LA28_N;
-  assign FMC_LA29_P = o_pin_usbpu;
+  assign FMC_LA29_N = o_pin_usb_oe;
+  assign b_pin_usb_p = FMC_LA28_N;
+  assign b_pin_usb_n = FMC_LA29_P;
+  assign FMC_LA28_P = o_pin_usbpu;
 
   wire [N_PROBE-1:0] i_pin_probe = {
   // {{{ XM105.J1
@@ -146,6 +161,16 @@ wire o_pin_usb_oe;
 
   wire [N_ENGINE-1:0] o_pin_pwm;
   assign {
+  `ifdef ZEDBOARD_LED
+    LD7,
+    LD6,
+    LD5,
+    LD4,
+    LD3,
+    LD2,
+    LD1,
+    LD0
+  `else
     FMC_LA23_N,
     FMC_LA23_P,
     FMC_LA22_N,
@@ -154,6 +179,7 @@ wire o_pin_usb_oe;
     FMC_LA21_P,
     FMC_LA20_N,
     FMC_LA20_P
+  `endif
   } = o_pin_pwm;
 `else
   localparam N_PROBE  = 4;
