@@ -102,12 +102,12 @@
 # PS7 from Vivado internal mechanisms.
 .* \[Synth 8-\d+\] .*processing_system7_v5_5_processing_system7.*
 .* \[Constraints 18-550\] Could not create 'IOSTANDARD' constraint because net 'ps7_u/.*' is not directly connected to top level port. 'IOSTANDARD' is ignored by Vivado but preserved for implementation tool\.\s+\[.*/ps7_ip.edf:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'iostandard', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'PACKAGE_PIN', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'PIO_DIRECTION', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'drive', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'pullup', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
-.* \[Netlist 29-160\] Cannot set property 'slew', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(iostandard|IOSTANDARD)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(package_pin|PACKAGE_PIN)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(pio_direction|PIO_DIRECTION)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(drive|DRIVE)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(pullup|PULLUP)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
+.* \[Netlist 29-160\] Cannot set property '(slew|SLEW)', because the property does not exist for objects of type 'pin'\.\s+\[.*/ps7_ip.xdc:\d+\]
 .* \[filemgmt 20-1702\] Unable to set property on the file: .*/build/ip/ps7_ip/hdl/verilog/sc_util_v\d+_\d+_\d+_structs.svh
 .* \[Project 1-498\] One or more constraints failed evaluation while reading constraint file \[.*/zedboard_master_XDC_RevC_D_v3.xdc\] .*
 
