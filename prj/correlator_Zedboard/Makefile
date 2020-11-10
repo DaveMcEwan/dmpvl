@@ -81,7 +81,7 @@ signoff: $(BUILD)/vivado.warnings
 
 prog: signoff
 	vivado -mode batch -source ../../tcl/vivado-program.tcl \
-		-tclargs --part xc7z020clg484-1 --bitstream $(BITFILE)
+		-tclargs --part $(PART) --bitstream $(BITFILE)
 
 
 # Read in design files with a variety of tools to ensure there's nothing too
