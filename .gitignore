@@ -15,6 +15,7 @@ prj/*/multipnr/*
 # Vivado journal and logs.
 vivado*.jou
 vivado*.log
+vivado*.str
 webtalk*.jou
 webtalk*.log
 
