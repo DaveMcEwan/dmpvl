@@ -2,10 +2,10 @@
 module top (
   input  i_pin_clk_16MHz, // TinyFPGA-BX oscillator
 
+  output o_pin_pu,        // USB host-detect pull-up
   inout  b_pin_usb_p,     // USB d+
   inout  b_pin_usb_n,     // USB d-
   output o_pin_usb_oe,    // Direction control for optional USB levelshifters
-  output o_pin_pu,        // USB host-detect pull-up
 
   output o_pin_led
 );

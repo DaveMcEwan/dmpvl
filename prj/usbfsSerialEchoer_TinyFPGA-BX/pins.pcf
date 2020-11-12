@@ -4,14 +4,15 @@
 # TH: Through Hole
 
 set_io i_pin_clk_16MHz  B2 # bottom SMR clk
+set_io o_pin_led        B3 # bottom SMR led
+set_io o_pin_pu         A3 # bottom SMR usb_pu
 set_io b_pin_usb_p      B4 # bottom SMR usb_p
 set_io b_pin_usb_n      A4 # bottom SMR usb_n
-set_io o_pin_pu         A3 # bottom SMR usb_pu
-set_io o_pin_led        B3 # bottom SMR led
 
 # USB interface using external electrical conversion board "extUsb".
 # D+/- connected to levelshifters which use outputEnable for direction control.
 # Pullup D+ to Vusb, and termination resistors must be on extUsb.
-#set_io b_pin_usb_p      D8 # top TH pin16
-#set_io b_pin_usb_n      D9 # top TH pin15
+#set_io o_pin_pu         A6 # top TH pin24
+#set_io b_pin_usb_p      A9 # top TH pin18
+#set_io b_pin_usb_n      D8 # top TH pin16
 set_io o_pin_usb_oe     H9 # top TH pin14
