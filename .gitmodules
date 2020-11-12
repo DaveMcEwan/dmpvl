@@ -1,0 +1,3 @@
+[submodule "prj/corrOPA/openpiton"]
+	path = prj/corrOPA/openpiton
+	url = https://github.com/PrincetonUniversity/openpiton.git

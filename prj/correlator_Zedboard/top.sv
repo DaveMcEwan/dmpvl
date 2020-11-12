@@ -8,71 +8,85 @@ module top (
   // probes: J1 pins in order
   // pwm: J20 odd numbered pins.
   // {{{ usb electrical conversion VC707.*
-  inout  FMC_LA28_P, // USB d+ (L29 LVCMOS18 Zedboard.J1.XX XM105.J16.5)
-  inout  FMC_LA28_N, // USB d- (L30 LVCMOS18 Zedboard.J1.XX XM105.J16.7)
-  output FMC_LA29_P, // usbpu  (T29 LVCMOS18 Zedboard.J1.XX XM105.J16.9)
-  output FMC_LA29_N, // rstn   (T30 LVCMOS18 Zedboard.J1.XX XM105.J16.11)
+  output FMC_LA29_N, // USB OE      (C18 LVCMOS18 Zedboard.XX XM105.J16.11)
+  inout  FMC_LA29_P, // USB d-      (C17 LVCMOS18 Zedboard.XX XM105.J16.9)
+  inout  FMC_LA28_N, // USB d+      (A17 LVCMOS18 Zedboard.XX XM105.J16.7)
+  output FMC_LA28_P, // usbpu/Vext  (A16 LVCMOS18 Zedboard.XX XM105.J16.5)
   // }}} usb electrical conversion VC707.*
   // {{{ probes XM105.J1 odd
-  input  FMC_LA00_CC_P,  // (K39 LVCMOS18 VC707.J17.XX XM105.J1.1)
-  input  FMC_LA00_CC_N,  // (K40 LVCMOS18 VC707.J17.XX XM105.J1.3)
-  input  FMC_LA01_CC_P,  // (J41 LVCMOS18 VC707.J17.XX XM105.J1.5)
-  input  FMC_LA01_CC_N,  // (J40 LVCMOS18 VC707.J17.XX XM105.J1.7)
-  input  FMC_LA02_P,     // (P41 LVCMOS18 VC707.J17.XX XM105.J1.9)
-  input  FMC_LA02_N,     // (N41 LVCMOS18 VC707.J17.XX XM105.J1.11)
-  input  FMC_LA03_P,     // (M42 LVCMOS18 VC707.J17.XX XM105.J1.13)
-  input  FMC_LA03_N,     // (L42 LVCMOS18 VC707.J17.XX XM105.J1.15)
-  input  FMC_LA04_P,     // (H40 LVCMOS18 VC707.J17.XX XM105.J1.17)
-  input  FMC_LA04_N,     // (H41 LVCMOS18 VC707.J17.XX XM105.J1.19)
-  input  FMC_LA05_P,     // (M41 LVCMOS18 VC707.J17.XX XM105.J1.21)
-  input  FMC_LA05_N,     // (L41 LVCMOS18 VC707.J17.XX XM105.J1.23)
-  input  FMC_LA06_P,     // (K42 LVCMOS18 VC707.J17.XX XM105.J1.25)
-  input  FMC_LA06_N,     // (J42 LVCMOS18 VC707.J17.XX XM105.J1.27)
-  input  FMC_LA07_P,     // (G41 LVCMOS18 VC707.J17.XX XM105.J1.29)
-  input  FMC_LA07_N,     // (G42 LVCMOS18 VC707.J17.XX XM105.J1.31)
-  input  FMC_LA08_P,     // (M37 LVCMOS18 VC707.J17.XX XM105.J1.33)
-  input  FMC_LA08_N,     // (M38 LVCMOS18 VC707.J17.XX XM105.J1.35)
-  input  FMC_LA09_P,     // (R42 LVCMOS18 VC707.J17.XX XM105.J1.37)
-  input  FMC_LA09_N,     // (P42 LVCMOS18 VC707.J17.XX XM105.J1.39)
+  input  FMC_LA00_CC_P,  // (M19 LVCMOS18 Zedboard.XX XM105.J1.1)
+  input  FMC_LA00_CC_N,  // (M20 LVCMOS18 Zedboard.XX XM105.J1.3)
+  input  FMC_LA01_CC_P,  // (N19 LVCMOS18 Zedboard.XX XM105.J1.5)
+  input  FMC_LA01_CC_N,  // (N20 LVCMOS18 Zedboard.XX XM105.J1.7)
+  input  FMC_LA02_P,     // (P17 LVCMOS18 Zedboard.XX XM105.J1.9)
+  input  FMC_LA02_N,     // (P18 LVCMOS18 Zedboard.XX XM105.J1.11)
+  input  FMC_LA03_P,     // (N22 LVCMOS18 Zedboard.XX XM105.J1.13)
+  input  FMC_LA03_N,     // (P22 LVCMOS18 Zedboard.XX XM105.J1.15)
+  input  FMC_LA04_P,     // (M21 LVCMOS18 Zedboard.XX XM105.J1.17)
+  input  FMC_LA04_N,     // (M22 LVCMOS18 Zedboard.XX XM105.J1.19)
+  input  FMC_LA05_P,     // (J18 LVCMOS18 Zedboard.XX XM105.J1.21)
+  input  FMC_LA05_N,     // (K18 LVCMOS18 Zedboard.XX XM105.J1.23)
+  input  FMC_LA06_P,     // (L21 LVCMOS18 Zedboard.XX XM105.J1.25)
+  input  FMC_LA06_N,     // (L22 LVCMOS18 Zedboard.XX XM105.J1.27)
+  input  FMC_LA07_P,     // (T16 LVCMOS18 Zedboard.XX XM105.J1.29)
+  input  FMC_LA07_N,     // (T17 LVCMOS18 Zedboard.XX XM105.J1.31)
+  input  FMC_LA08_P,     // (J21 LVCMOS18 Zedboard.XX XM105.J1.33)
+  input  FMC_LA08_N,     // (J22 LVCMOS18 Zedboard.XX XM105.J1.35)
+  input  FMC_LA09_P,     // (R20 LVCMOS18 Zedboard.XX XM105.J1.37)
+  input  FMC_LA09_N,     // (R21 LVCMOS18 Zedboard.XX XM105.J1.39)
   // }}} probes XM105.J1 odd
   // {{{ probes XM105.J1 even
-  input  FMC_LA10_P,     // (N38 LVCMOS18 VC707.J17.XX XM105.J1.2)
-  input  FMC_LA10_N,     // (M39 LVCMOS18 VC707.J17.XX XM105.J1.4)
-  input  FMC_LA11_P,     // (F40 LVCMOS18 VC707.J17.XX XM105.J1.6)
-  input  FMC_LA11_N,     // (F41 LVCMOS18 VC707.J17.XX XM105.J1.8)
-  input  FMC_LA12_P,     // (R40 LVCMOS18 VC707.J17.XX XM105.J1.10)
-  input  FMC_LA12_N,     // (P40 LVCMOS18 VC707.J17.XX XM105.J1.12)
-  input  FMC_LA13_P,     // (H39 LVCMOS18 VC707.J17.XX XM105.J1.14)
-  input  FMC_LA13_N,     // (G39 LVCMOS18 VC707.J17.XX XM105.J1.16)
-  input  FMC_LA14_P,     // (N39 LVCMOS18 VC707.J17.XX XM105.J1.18)
-  input  FMC_LA14_N,     // (N40 LVCMOS18 VC707.J17.XX XM105.J1.20)
-  input  FMC_LA15_P,     // (M36 LVCMOS18 VC707.J17.XX XM105.J1.22)
-  input  FMC_LA15_N,     // (L37 LVCMOS18 VC707.J17.XX XM105.J1.24)
-  input  FMC_LA16_P,     // (K37 LVCMOS18 VC707.J17.XX XM105.J1.26)
-  input  FMC_LA16_N,     // (K38 LVCMOS18 VC707.J17.XX XM105.J1.28)
-  input  FMC_LA17_CC_P,  // (L31 LVCMOS18 VC707.J17.XX XM105.J1.30)
-  input  FMC_LA17_CC_N,  // (K32 LVCMOS18 VC707.J17.XX XM105.J1.32)
-  input  FMC_LA18_CC_P,  // (M32 LVCMOS18 VC707.J17.XX XM105.J1.34)
-  input  FMC_LA18_CC_N,  // (L32 LVCMOS18 VC707.J17.XX XM105.J1.36)
-  input  FMC_LA19_P,     // (W30 LVCMOS18 VC707.J17.XX XM105.J1.38)
-  input  FMC_LA19_N,     // (W31 LVCMOS18 VC707.J17.XX XM105.J1.40)
+  input  FMC_LA10_P,     // (R19 LVCMOS18 Zedboard.XX XM105.J1.2)
+  input  FMC_LA10_N,     // (T19 LVCMOS18 Zedboard.XX XM105.J1.4)
+  input  FMC_LA11_P,     // (N17 LVCMOS18 Zedboard.XX XM105.J1.6)
+  input  FMC_LA11_N,     // (N18 LVCMOS18 Zedboard.XX XM105.J1.8)
+  input  FMC_LA12_P,     // (P20 LVCMOS18 Zedboard.XX XM105.J1.10)
+  input  FMC_LA12_N,     // (P21 LVCMOS18 Zedboard.XX XM105.J1.12)
+  input  FMC_LA13_P,     // (L17 LVCMOS18 Zedboard.XX XM105.J1.14)
+  input  FMC_LA13_N,     // (M17 LVCMOS18 Zedboard.XX XM105.J1.16)
+  input  FMC_LA14_P,     // (K19 LVCMOS18 Zedboard.XX XM105.J1.18)
+  input  FMC_LA14_N,     // (K20 LVCMOS18 Zedboard.XX XM105.J1.20)
+  input  FMC_LA15_P,     // (J16 LVCMOS18 Zedboard.XX XM105.J1.22)
+  input  FMC_LA15_N,     // (J17 LVCMOS18 Zedboard.XX XM105.J1.24)
+  input  FMC_LA16_P,     // (J20 LVCMOS18 Zedboard.XX XM105.J1.26)
+  input  FMC_LA16_N,     // (K21 LVCMOS18 Zedboard.XX XM105.J1.28)
+  input  FMC_LA17_CC_P,  // (B19 LVCMOS18 Zedboard.XX XM105.J1.30)
+  input  FMC_LA17_CC_N,  // (B20 LVCMOS18 Zedboard.XX XM105.J1.32)
+  input  FMC_LA18_CC_P,  // (D20 LVCMOS18 Zedboard.XX XM105.J1.34)
+  input  FMC_LA18_CC_N,  // (C20 LVCMOS18 Zedboard.XX XM105.J1.36)
+  input  FMC_LA19_P,     // (G15 LVCMOS18 Zedboard.XX XM105.J1.38)
+  input  FMC_LA19_N,     // (G16 LVCMOS18 Zedboard.XX XM105.J1.40)
   // }}} probes XM105.J1 even
-  // {{{ pwm XM105.J20 odd
-  output FMC_LA20_P, // (Y29 LVCMOS18 VC707.J17.G21 XM105.J20.1)
-  output FMC_LA20_N, // (Y30 LVCMOS18 VC707.J17.G22 XM105.J20.3)
-  output FMC_LA21_P, // (N28 LVCMOS18 VC707.J17.H25 XM105.J20.5)
-  output FMC_LA21_N, // (N29 LVCMOS18 VC707.J17.H26 XM105.J20.7)
-  output FMC_LA22_P, // (R28 LVCMOS18 VC707.J17.G24 XM105.J20.9)
-  output FMC_LA22_N, // (P28 LVCMOS18 VC707.J17.G25 XM105.J20.11)
-  output FMC_LA23_P, // (P30 LVCMOS18 VC707.J17.D23 XM105.J20.13)
-  output FMC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
-  // }}} pwm XM105.J20 odd
+  `ifdef ZEDBOARD_LED
+  // Just a temporary measure to see LEDs controllable.
+  // {{{ result pwm (Zedboard.LD* LEDs)
+  output LD0, // (T22 LVCMOS18 Zedboard.LD0)
+  output LD1, // (T21 LVCMOS18 Zedboard.LD1)
+  output LD2,
+  output LD3,
+  output LD4,
+  output LD5,
+  output LD6,
+  output LD7
+  // }}} result pwm
+  `else
+  // {{{ result pwm XM105.J20 odd
+  output FMC_LA20_P, // (G20 LVCMOS18 Zedboard.XX XM105.J20.1)
+  output FMC_LA20_N, // (G21 LVCMOS18 Zedboard.XX XM105.J20.3)
+  output FMC_LA21_P, // (E19 LVCMOS18 Zedboard.XX XM105.J20.5)
+  output FMC_LA21_N, // (E20 LVCMOS18 Zedboard.XX XM105.J20.7)
+  output FMC_LA22_P, // (G19 LVCMOS18 Zedboard.XX XM105.J20.9)
+  output FMC_LA22_N, // (F19 LVCMOS18 Zedboard.XX XM105.J20.11)
+  output FMC_LA23_P, // (E15 LVCMOS18 Zedboard.XX XM105.J20.13)
+  output FMC_LA23_N  // (D15 LVCMOS18 Zedboard.XX XM105.J20.15)
+  // }}} result pwm
+  `endif
 `else
   // {{{ usb electrical conversion (extUsb face down in JA)
-  inout  JA1, // USB OE       (Y11  LVCMOS18  Zedboard.Pmod.JA)
-  inout  JA2, // USB d-       (AA11 LVCMOS18  Zedboard.Pmod.JA)
-  output JA3, // USB d+       (Y10  LVCMOS18  Zedboard.Pmod.JA)
-  output JA4, // usbpu/Vext   (AA9  LVCMOS18  Zedboard.Pmod.JA)
+  output JA1, // USB OE       (Y11  LVCMOS18  Zedboard.Pmod.JA.1)
+  inout  JA2, // USB d-       (AA11 LVCMOS18  Zedboard.Pmod.JA.2)
+  inout  JA3, // USB d+       (Y10  LVCMOS18  Zedboard.Pmod.JA.3)
+  output JA4, // usbpu/Vext   (AA9  LVCMOS18  Zedboard.Pmod.JA.4)
   // }}} usb electrical conversion
   // {{{ probes (Zedboard.SW* pushbuttons)
   input  BTNU,  // probe[0] (T18 LVCMOS18 Zedboard.BTNU)
@@ -95,9 +109,10 @@ wire o_pin_usb_oe;
   localparam N_PROBE  = 40;
   localparam N_ENGINE = 8;
 
-  assign b_pin_usb_p = FMC_LA28_P;
-  assign b_pin_usb_n = FMC_LA28_N;
-  assign FMC_LA29_P = o_pin_usbpu;
+  assign FMC_LA29_N = o_pin_usb_oe;
+  assign b_pin_usb_p = FMC_LA28_N;
+  assign b_pin_usb_n = FMC_LA29_P;
+  assign FMC_LA28_P = o_pin_usbpu;
 
   wire [N_PROBE-1:0] i_pin_probe = {
   // {{{ XM105.J1
@@ -146,6 +161,16 @@ wire o_pin_usb_oe;
 
   wire [N_ENGINE-1:0] o_pin_pwm;
   assign {
+  `ifdef ZEDBOARD_LED
+    LD7,
+    LD6,
+    LD5,
+    LD4,
+    LD3,
+    LD2,
+    LD1,
+    LD0
+  `else
     FMC_LA23_N,
     FMC_LA23_P,
     FMC_LA22_N,
@@ -154,6 +179,7 @@ wire o_pin_usb_oe;
     FMC_LA21_P,
     FMC_LA20_N,
     FMC_LA20_P
+  `endif
   } = o_pin_pwm;
 `else
   localparam N_PROBE  = 4;
@@ -177,6 +203,264 @@ wire o_pin_usb_oe;
     LD0
   } = o_pin_pwm;
 `endif
+
+// PS7 is required in Zynq target, even though it's not used.
+  // {{{ ps7 wires
+  // ps7 IO, common to almost every Zynq project.
+  wire [14:0]   DDR_addr;
+  wire [2:0]    DDR_ba;
+  wire          DDR_cas_n;
+  wire          DDR_ck_n;
+  wire          DDR_ck_p;
+  wire          DDR_cke;
+  wire          DDR_cs_n;
+  wire [3:0]    DDR_dm;
+  wire [31:0]   DDR_dq;
+  wire [3:0]    DDR_dqs_n;
+  wire [3:0]    DDR_dqs_p;
+  wire          DDR_odt;
+  wire          DDR_ras_n;
+  wire          DDR_reset_n;
+  wire          DDR_we_n;
+  wire          FIXED_IO_ddr_vrn;
+  wire          FIXED_IO_ddr_vrp;
+  wire [53:0]   FIXED_IO_mio;
+  wire          FIXED_IO_ps_srstb;
+  wire          FIXED_IO_ps_clk;
+  wire          FIXED_IO_ps_porb;
+
+  wire          ps7_o_M_AXI_GP0_ARVALID;
+  wire          ps7_o_M_AXI_GP0_AWVALID;
+  wire          ps7_o_M_AXI_GP0_BREADY;
+  wire          ps7_o_M_AXI_GP0_RREADY;
+  wire          ps7_o_M_AXI_GP0_WLAST;
+  wire          ps7_o_M_AXI_GP0_WVALID;
+  wire [11:0]   ps7_o_M_AXI_GP0_ARID;
+  wire [11:0]   ps7_o_M_AXI_GP0_AWID;
+  wire [11:0]   ps7_o_M_AXI_GP0_WID;
+  wire [1:0]    ps7_o_M_AXI_GP0_ARBURST;
+  wire [1:0]    ps7_o_M_AXI_GP0_ARLOCK;
+  wire [2:0]    ps7_o_M_AXI_GP0_ARSIZE;
+  wire [1:0]    ps7_o_M_AXI_GP0_AWBURST;
+  wire [1:0]    ps7_o_M_AXI_GP0_AWLOCK;
+  wire [2:0]    ps7_o_M_AXI_GP0_AWSIZE;
+  wire [2:0]    ps7_o_M_AXI_GP0_ARPROT;
+  wire [2:0]    ps7_o_M_AXI_GP0_AWPROT;
+  wire [31:0]   ps7_o_M_AXI_GP0_ARADDR;
+  wire [31:0]   ps7_o_M_AXI_GP0_AWADDR;
+  wire [31:0]   ps7_o_M_AXI_GP0_WDATA;
+  wire [3:0]    ps7_o_M_AXI_GP0_ARCACHE;
+  wire [3:0]    ps7_o_M_AXI_GP0_ARLEN;
+  wire [3:0]    ps7_o_M_AXI_GP0_ARQOS;
+  wire [3:0]    ps7_o_M_AXI_GP0_AWCACHE;
+  wire [3:0]    ps7_o_M_AXI_GP0_AWLEN;
+  wire [3:0]    ps7_o_M_AXI_GP0_AWQOS;
+  wire [3:0]    ps7_o_M_AXI_GP0_WSTRB;
+
+  wire          ps7_i_M_AXI_GP0_ARREADY;
+  wire          ps7_i_M_AXI_GP0_AWREADY;
+  wire          ps7_i_M_AXI_GP0_BVALID;
+  wire          ps7_i_M_AXI_GP0_RLAST;
+  wire          ps7_i_M_AXI_GP0_RVALID;
+  wire          ps7_i_M_AXI_GP0_WREADY;
+  wire [11:0]   ps7_i_M_AXI_GP0_BID;
+  wire [11:0]   ps7_i_M_AXI_GP0_RID;
+  wire [1:0]    ps7_i_M_AXI_GP0_BRESP;
+  wire [1:0]    ps7_i_M_AXI_GP0_RRESP;
+  wire [31:0]   ps7_i_M_AXI_GP0_RDATA;
+
+  wire          ps7_o_M_AXI_GP1_ARVALID;
+  wire          ps7_o_M_AXI_GP1_AWVALID;
+  wire          ps7_o_M_AXI_GP1_BREADY;
+  wire          ps7_o_M_AXI_GP1_RREADY;
+  wire          ps7_o_M_AXI_GP1_WLAST;
+  wire          ps7_o_M_AXI_GP1_WVALID;
+  wire [11:0]   ps7_o_M_AXI_GP1_ARID;
+  wire [11:0]   ps7_o_M_AXI_GP1_AWID;
+  wire [11:0]   ps7_o_M_AXI_GP1_WID;
+  wire [1:0]    ps7_o_M_AXI_GP1_ARBURST;
+  wire [1:0]    ps7_o_M_AXI_GP1_ARLOCK;
+  wire [2:0]    ps7_o_M_AXI_GP1_ARSIZE;
+  wire [1:0]    ps7_o_M_AXI_GP1_AWBURST;
+  wire [1:0]    ps7_o_M_AXI_GP1_AWLOCK;
+  wire [2:0]    ps7_o_M_AXI_GP1_AWSIZE;
+  wire [2:0]    ps7_o_M_AXI_GP1_ARPROT;
+  wire [2:0]    ps7_o_M_AXI_GP1_AWPROT;
+  wire [31:0]   ps7_o_M_AXI_GP1_ARADDR;
+  wire [31:0]   ps7_o_M_AXI_GP1_AWADDR;
+  wire [31:0]   ps7_o_M_AXI_GP1_WDATA;
+  wire [3:0]    ps7_o_M_AXI_GP1_ARCACHE;
+  wire [3:0]    ps7_o_M_AXI_GP1_ARLEN;
+  wire [3:0]    ps7_o_M_AXI_GP1_ARQOS;
+  wire [3:0]    ps7_o_M_AXI_GP1_AWCACHE;
+  wire [3:0]    ps7_o_M_AXI_GP1_AWLEN;
+  wire [3:0]    ps7_o_M_AXI_GP1_AWQOS;
+  wire [3:0]    ps7_o_M_AXI_GP1_WSTRB;
+
+  wire          ps7_i_M_AXI_GP1_ARREADY;
+  wire          ps7_i_M_AXI_GP1_AWREADY;
+  wire          ps7_i_M_AXI_GP1_BVALID;
+  wire          ps7_i_M_AXI_GP1_RLAST;
+  wire          ps7_i_M_AXI_GP1_RVALID;
+  wire          ps7_i_M_AXI_GP1_WREADY;
+  wire [11:0]   ps7_i_M_AXI_GP1_BID;
+  wire [11:0]   ps7_i_M_AXI_GP1_RID;
+  wire [1:0]    ps7_i_M_AXI_GP1_BRESP;
+  wire [1:0]    ps7_i_M_AXI_GP1_RRESP;
+  wire [31:0]   ps7_i_M_AXI_GP1_RDATA;
+
+  wire          ps7_o_TTC0_WAVE0_OUT;
+  wire          ps7_o_TTC0_WAVE1_OUT;
+  wire          ps7_o_TTC0_WAVE2_OUT;
+
+  wire [1:0]    ps7_o_USB0_PORT_INDCTL;
+  wire          ps7_o_USB0_VBUS_PWRSELECT;
+  wire          ps7_o_FCLK_CLK0;
+  wire          ps7_o_FCLK_RESET0_N;
+  // }}} ps7 wires
+  // {{{ ps7 tieoffs
+  assign {
+    ps7_i_M_AXI_GP0_ARREADY,
+    ps7_i_M_AXI_GP0_AWREADY,
+    ps7_i_M_AXI_GP0_BVALID,
+    ps7_i_M_AXI_GP0_RLAST,
+    ps7_i_M_AXI_GP0_RVALID,
+    ps7_i_M_AXI_GP0_WREADY,
+    ps7_i_M_AXI_GP0_BID,
+    ps7_i_M_AXI_GP0_RID,
+    ps7_i_M_AXI_GP0_BRESP,
+    ps7_i_M_AXI_GP0_RRESP,
+    ps7_i_M_AXI_GP0_RDATA
+  } = '0;
+  assign {
+    ps7_i_M_AXI_GP1_ARREADY,
+    ps7_i_M_AXI_GP1_AWREADY,
+    ps7_i_M_AXI_GP1_BVALID,
+    ps7_i_M_AXI_GP1_RLAST,
+    ps7_i_M_AXI_GP1_RVALID,
+    ps7_i_M_AXI_GP1_WREADY,
+    ps7_i_M_AXI_GP1_BID,
+    ps7_i_M_AXI_GP1_RID,
+    ps7_i_M_AXI_GP1_BRESP,
+    ps7_i_M_AXI_GP1_RRESP,
+    ps7_i_M_AXI_GP1_RDATA
+  } = '0;
+  // }}} ps7 tieoffs
+  ps7_ip ps7_u ( // {{{
+    .M_AXI_GP0_ARVALID  (ps7_o_M_AXI_GP0_ARVALID),
+    .M_AXI_GP0_AWVALID  (ps7_o_M_AXI_GP0_AWVALID),
+    .M_AXI_GP0_BREADY   (ps7_o_M_AXI_GP0_BREADY),
+    .M_AXI_GP0_RREADY   (ps7_o_M_AXI_GP0_RREADY),
+    .M_AXI_GP0_WLAST    (ps7_o_M_AXI_GP0_WLAST),
+    .M_AXI_GP0_WVALID   (ps7_o_M_AXI_GP0_WVALID),
+    .M_AXI_GP0_ARID     (ps7_o_M_AXI_GP0_ARID),
+    .M_AXI_GP0_AWID     (ps7_o_M_AXI_GP0_AWID),
+    .M_AXI_GP0_WID      (ps7_o_M_AXI_GP0_WID),
+    .M_AXI_GP0_ARBURST  (ps7_o_M_AXI_GP0_ARBURST),
+    .M_AXI_GP0_ARLOCK   (ps7_o_M_AXI_GP0_ARLOCK),
+    .M_AXI_GP0_ARSIZE   (ps7_o_M_AXI_GP0_ARSIZE),
+    .M_AXI_GP0_AWBURST  (ps7_o_M_AXI_GP0_AWBURST),
+    .M_AXI_GP0_AWLOCK   (ps7_o_M_AXI_GP0_AWLOCK),
+    .M_AXI_GP0_AWSIZE   (ps7_o_M_AXI_GP0_AWSIZE),
+    .M_AXI_GP0_ARPROT   (ps7_o_M_AXI_GP0_ARPROT),
+    .M_AXI_GP0_AWPROT   (ps7_o_M_AXI_GP0_AWPROT),
+    .M_AXI_GP0_ARADDR   (ps7_o_M_AXI_GP0_ARADDR),
+    .M_AXI_GP0_AWADDR   (ps7_o_M_AXI_GP0_AWADDR),
+    .M_AXI_GP0_WDATA    (ps7_o_M_AXI_GP0_WDATA),
+    .M_AXI_GP0_ARCACHE  (ps7_o_M_AXI_GP0_ARCACHE),
+    .M_AXI_GP0_ARLEN    (ps7_o_M_AXI_GP0_ARLEN),
+    .M_AXI_GP0_ARQOS    (ps7_o_M_AXI_GP0_ARQOS),
+    .M_AXI_GP0_AWCACHE  (ps7_o_M_AXI_GP0_AWCACHE),
+    .M_AXI_GP0_AWLEN    (ps7_o_M_AXI_GP0_AWLEN),
+    .M_AXI_GP0_AWQOS    (ps7_o_M_AXI_GP0_AWQOS),
+    .M_AXI_GP0_WSTRB    (ps7_o_M_AXI_GP0_WSTRB),
+    .M_AXI_GP0_ACLK     (ps7_o_FCLK_CLK0),
+    .M_AXI_GP0_ARREADY  (ps7_i_M_AXI_GP0_ARREADY),
+    .M_AXI_GP0_AWREADY  (ps7_i_M_AXI_GP0_AWREADY),
+    .M_AXI_GP0_BVALID   (ps7_i_M_AXI_GP0_BVALID),
+    .M_AXI_GP0_RLAST    (ps7_i_M_AXI_GP0_RLAST),
+    .M_AXI_GP0_RVALID   (ps7_i_M_AXI_GP0_RVALID),
+    .M_AXI_GP0_WREADY   (ps7_i_M_AXI_GP0_WREADY),
+    .M_AXI_GP0_BID      (ps7_i_M_AXI_GP0_BID),
+    .M_AXI_GP0_RID      (ps7_i_M_AXI_GP0_RID),
+    .M_AXI_GP0_BRESP    (ps7_i_M_AXI_GP0_BRESP),
+    .M_AXI_GP0_RRESP    (ps7_i_M_AXI_GP0_RRESP),
+    .M_AXI_GP0_RDATA    (ps7_i_M_AXI_GP0_RDATA),
+
+    .M_AXI_GP1_ARVALID  (ps7_o_M_AXI_GP1_ARVALID),
+    .M_AXI_GP1_AWVALID  (ps7_o_M_AXI_GP1_AWVALID),
+    .M_AXI_GP1_BREADY   (ps7_o_M_AXI_GP1_BREADY),
+    .M_AXI_GP1_RREADY   (ps7_o_M_AXI_GP1_RREADY),
+    .M_AXI_GP1_WLAST    (ps7_o_M_AXI_GP1_WLAST),
+    .M_AXI_GP1_WVALID   (ps7_o_M_AXI_GP1_WVALID),
+    .M_AXI_GP1_ARID     (ps7_o_M_AXI_GP1_ARID),
+    .M_AXI_GP1_AWID     (ps7_o_M_AXI_GP1_AWID),
+    .M_AXI_GP1_WID      (ps7_o_M_AXI_GP1_WID),
+    .M_AXI_GP1_ARBURST  (ps7_o_M_AXI_GP1_ARBURST),
+    .M_AXI_GP1_ARLOCK   (ps7_o_M_AXI_GP1_ARLOCK),
+    .M_AXI_GP1_ARSIZE   (ps7_o_M_AXI_GP1_ARSIZE),
+    .M_AXI_GP1_AWBURST  (ps7_o_M_AXI_GP1_AWBURST),
+    .M_AXI_GP1_AWLOCK   (ps7_o_M_AXI_GP1_AWLOCK),
+    .M_AXI_GP1_AWSIZE   (ps7_o_M_AXI_GP1_AWSIZE),
+    .M_AXI_GP1_ARPROT   (ps7_o_M_AXI_GP1_ARPROT),
+    .M_AXI_GP1_AWPROT   (ps7_o_M_AXI_GP1_AWPROT),
+    .M_AXI_GP1_ARADDR   (ps7_o_M_AXI_GP1_ARADDR),
+    .M_AXI_GP1_AWADDR   (ps7_o_M_AXI_GP1_AWADDR),
+    .M_AXI_GP1_WDATA    (ps7_o_M_AXI_GP1_WDATA),
+    .M_AXI_GP1_ARCACHE  (ps7_o_M_AXI_GP1_ARCACHE),
+    .M_AXI_GP1_ARLEN    (ps7_o_M_AXI_GP1_ARLEN),
+    .M_AXI_GP1_ARQOS    (ps7_o_M_AXI_GP1_ARQOS),
+    .M_AXI_GP1_AWCACHE  (ps7_o_M_AXI_GP1_AWCACHE),
+    .M_AXI_GP1_AWLEN    (ps7_o_M_AXI_GP1_AWLEN),
+    .M_AXI_GP1_AWQOS    (ps7_o_M_AXI_GP1_AWQOS),
+    .M_AXI_GP1_WSTRB    (ps7_o_M_AXI_GP1_WSTRB),
+    .M_AXI_GP1_ACLK     (ps7_o_FCLK_CLK0),
+    .M_AXI_GP1_ARREADY  (ps7_i_M_AXI_GP1_ARREADY),
+    .M_AXI_GP1_AWREADY  (ps7_i_M_AXI_GP1_AWREADY),
+    .M_AXI_GP1_BVALID   (ps7_i_M_AXI_GP1_BVALID),
+    .M_AXI_GP1_RLAST    (ps7_i_M_AXI_GP1_RLAST),
+    .M_AXI_GP1_RVALID   (ps7_i_M_AXI_GP1_RVALID),
+    .M_AXI_GP1_WREADY   (ps7_i_M_AXI_GP1_WREADY),
+    .M_AXI_GP1_BID      (ps7_i_M_AXI_GP1_BID),
+    .M_AXI_GP1_RID      (ps7_i_M_AXI_GP1_RID),
+    .M_AXI_GP1_BRESP    (ps7_i_M_AXI_GP1_BRESP),
+    .M_AXI_GP1_RRESP    (ps7_i_M_AXI_GP1_RRESP),
+    .M_AXI_GP1_RDATA    (ps7_i_M_AXI_GP1_RDATA),
+
+    .MIO                (FIXED_IO_mio[53:0]),
+
+    .DDR_CAS_n          (DDR_cas_n),
+    .DDR_CKE            (DDR_cke),
+    .DDR_Clk_n          (DDR_ck_n),
+    .DDR_Clk            (DDR_ck_p),
+    .DDR_CS_n           (DDR_cs_n),
+    .DDR_DRSTB          (DDR_reset_n),
+    .DDR_ODT            (DDR_odt),
+    .DDR_RAS_n          (DDR_ras_n),
+    .DDR_WEB            (DDR_we_n),
+    .DDR_BankAddr       (DDR_ba[2:0]),
+    .DDR_Addr           (DDR_addr[14:0]),
+    .DDR_VRN            (FIXED_IO_ddr_vrn),
+    .DDR_VRP            (FIXED_IO_ddr_vrp),
+    .DDR_DM             (DDR_dm[3:0]),
+    .DDR_DQ             (DDR_dq[31:0]),
+    .DDR_DQS_n          (DDR_dqs_n[3:0]),
+    .DDR_DQS            (DDR_dqs_p[3:0]),
+
+    .TTC0_WAVE0_OUT     (ps7_o_TTC0_WAVE0_OUT),
+    .TTC0_WAVE1_OUT     (ps7_o_TTC0_WAVE1_OUT),
+    .TTC0_WAVE2_OUT     (ps7_o_TTC0_WAVE2_OUT),
+
+    .USB0_PORT_INDCTL   (ps7_o_USB0_PORT_INDCTL),
+    .USB0_VBUS_PWRSELECT(ps7_o_USB0_VBUS_PWRSELECT),
+    .USB0_VBUS_PWRFAULT (1'b0),
+
+    .FCLK_CLK0          (ps7_o_FCLK_CLK0),
+    .FCLK_RESET0_N      (ps7_o_FCLK_RESET0_N),
+    .PS_SRSTB           (FIXED_IO_ps_srstb),
+    .PS_CLK             (FIXED_IO_ps_clk),
+    .PS_PORB            (FIXED_IO_ps_porb)
+  ); // }}}
 
 wire clk_48MHz;
 wire pllLocked;

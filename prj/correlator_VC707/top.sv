@@ -9,10 +9,10 @@ module top (
   // probes: J1 pins in order, overflowing onto J2
   // pwm: J20 odd numbered pins.
   // {{{ usb electrical conversion VC707.*
-  inout  FMC1_HPC_LA28_P, // USB d+ (L29 LVCMOS18 VC707.J17.XX XM105.J16.5)
-  inout  FMC1_HPC_LA28_N, // USB d- (L30 LVCMOS18 VC707.J17.XX XM105.J16.7)
-  output FMC1_HPC_LA29_P, // usbpu  (T29 LVCMOS18 VC707.J17.XX XM105.J16.9)
-  output FMC1_HPC_LA29_N, // rstn   (T30 LVCMOS18 VC707.J17.XX XM105.J16.11)
+  output FMC1_HPC_LA29_N, // USB OE     (T30 LVCMOS18 VC707.J17.XX XM105.J16.11)
+  inout  FMC1_HPC_LA29_P, // USB d-     (T29 LVCMOS18 VC707.J17.XX XM105.J16.9)
+  inout  FMC1_HPC_LA28_N, // USB d+     (L30 LVCMOS18 VC707.J17.XX XM105.J16.7)
+  output FMC1_HPC_LA28_P, // usbpu/Vext (L29 LVCMOS18 VC707.J17.XX XM105.J16.5)
   // }}} usb electrical conversion VC707.*
   // {{{ probes XM105.J1 odd
   input  FMC1_HPC_LA00_CC_P,  // (K39 LVCMOS18 VC707.J17.XX XM105.J1.1)
@@ -106,7 +106,20 @@ module top (
   input  FMC1_HPC_HB19_N,     // (L26 LVCMOS18 VC707.J17.XX XM105.J2.40)
   */
   // }}} probes XM105.J2 even
-  // {{{ pwm XM105.J20 odd
+  `ifdef VC707_LED
+  // Just a temporary measure to see LEDs controllable.
+  // {{{ result pwm (VC707 LEDs)
+  output GPIO_LED_0,
+  output GPIO_LED_1,
+  output GPIO_LED_2,
+  output GPIO_LED_3,
+  output GPIO_LED_4,
+  output GPIO_LED_5,
+  output GPIO_LED_6,
+  output GPIO_LED_7
+  // }}} result pwm
+  `else
+  // {{{ result pwm XM105.J20 odd
   output FMC1_HPC_LA20_P, // (Y29 LVCMOS18 VC707.J17.G21 XM105.J20.1)
   output FMC1_HPC_LA20_N, // (Y30 LVCMOS18 VC707.J17.G22 XM105.J20.3)
   output FMC1_HPC_LA21_P, // (N28 LVCMOS18 VC707.J17.H25 XM105.J20.5)
@@ -115,12 +128,16 @@ module top (
   output FMC1_HPC_LA22_N, // (P28 LVCMOS18 VC707.J17.G25 XM105.J20.11)
   output FMC1_HPC_LA23_P, // (P30 LVCMOS18 VC707.J17.D23 XM105.J20.13)
   output FMC1_HPC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
-  // }}} pwm XM105.J20 odd
+  // }}} result pwm XM105.J20 odd
+  `endif
 `else
+  // Dummy configuration without a workable USB interface (not enough GPIO),
+  // just to get bitstream generating.
   // {{{ usb electrical conversion VC707.*
+  output FMC1_HPC_LA29_N, // USB OE     (T30 LVCMOS18 VC707.J17.XX XM105.J16.11)
   inout  USER_SMA_GPIO_P, // USB d+ (AN31 LVCMOS18 VC707.J33.1)
   inout  USER_SMA_GPIO_N, // USB d- (AP31 LVCMOS18 VC707.J34.1)
-  // TODO: usbpu,rstn
+  output FMC1_HPC_LA28_P, // usbpu/Vext (L29 LVCMOS18 VC707.J17.XX XM105.J16.5)
   // }}} usb electrical conversion VC707.*
   // {{{ probes VC707.SW* pushbuttons
   input  GPIO_SW_N,  // probe[0] (AR40 LVCMOS18 VC707.SW3.3)
@@ -136,18 +153,18 @@ module top (
 );
 wire i_pin_sysclk_p_200MHz = SYSCLK_P;
 wire i_pin_sysclk_n_200MHz = SYSCLK_N;
+wire o_pin_usbpu = 1'b1;
 wire b_pin_usb_p;
 wire b_pin_usb_n;
-wire o_pin_usbpu = 1'b1;
-wire o_pin_rstn; // Signal to TXB0104 that power is stable.
+wire o_pin_usb_oe;
 `ifdef VC707_FMC1_XM105
   localparam N_PROBE  = 64;
   localparam N_ENGINE = 8;
 
-  assign b_pin_usb_p = FMC1_HPC_LA28_P;
-  assign b_pin_usb_n = FMC1_HPC_LA28_N;
-  assign FMC1_HPC_LA29_P = o_pin_usbpu;
-  assign FMC1_HPC_LA29_N = o_pin_rstn;
+  assign FMC1_HPC_LA29_N = o_pin_usb_oe;
+  assign b_pin_usb_p = FMC1_HPC_LA28_N;
+  assign b_pin_usb_n = FMC1_HPC_LA29_P;
+  assign FMC1_HPC_LA28_P = o_pin_usbpu;
 
   wire [N_PROBE-1:0] i_pin_probe = {
   // {{{ XM105.J1
@@ -222,6 +239,16 @@ wire o_pin_rstn; // Signal to TXB0104 that power is stable.
 
   wire [N_ENGINE-1:0] o_pin_pwm;
   assign {
+  `ifdef VC707_LED
+    GPIO_LED_7,
+    GPIO_LED_6,
+    GPIO_LED_5,
+    GPIO_LED_4,
+    GPIO_LED_3,
+    GPIO_LED_2,
+    GPIO_LED_1,
+    GPIO_LED_0
+  `else
     FMC1_HPC_LA23_N,
     FMC1_HPC_LA23_P,
     FMC1_HPC_LA22_N,
@@ -230,15 +257,16 @@ wire o_pin_rstn; // Signal to TXB0104 that power is stable.
     FMC1_HPC_LA21_P,
     FMC1_HPC_LA20_N,
     FMC1_HPC_LA20_P
+  `endif
   } = o_pin_pwm;
 `else
   localparam N_PROBE  = 4;
   localparam N_ENGINE = 2;
 
-  assign b_pin_usb_p = USER_SMA_GPIO_P;
+  assign FMC1_HPC_LA29_N = o_pin_usb_oe;
   assign b_pin_usb_n = USER_SMA_GPIO_N;
-  assign FMC1_HPC_LA29_P = o_pin_usbpu;
-  assign FMC1_HPC_LA29_N = o_pin_rstn;
+  assign b_pin_usb_p = USER_SMA_GPIO_P;
+  assign FMC1_HPC_LA28_P = o_pin_usbpu;
 
   wire [N_PROBE-1:0] i_pin_probe = {
     GPIO_SW_W,
@@ -269,7 +297,6 @@ fpgaReset u_rst (
   .i_pllLocked  (pllLocked),
   .o_rst        (rst)
 );
-assign o_pin_rstn = !rst;
 
 
 wire usb_p;
@@ -338,6 +365,7 @@ usbfsBpCorrelator #(
 
   .o_pwm              (resultPwm)
 );
+assign o_pin_usb_oe = usbOutputEnable;
 
 assign o_pin_pwm = resultPwm;
 
