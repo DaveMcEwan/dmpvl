@@ -1,5 +1,6 @@
 EESchema Schematic File Version 4
-EELAYER 30 0
+LIBS:extUsb-cache
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -50,7 +51,7 @@ F 6 "Y" H 1700 5650 50  0001 C CNN "Spice_Netlist_Enabled"
 	1    0    0    -1  
 $EndComp
 $Comp
-L Connector:USB_B_Micro J1
+L extUsb-rescue:USB_B_Micro-Connector J1
 U 1 1 5F998976
 P 1350 2000
 F 0 "J1" H 1120 1897 50  0000 R CNN
@@ -270,50 +271,6 @@ F 3 "" H 3400 5750 50  0001 C CNN
 	1    3400 5750
 	1    0    0    -1  
 $EndComp
-$Comp
-L Device:C C1
-U 1 1 5FA1C049
-P 1700 6250
-F 0 "C1" H 1800 6250 50  0000 L CNN
-F 1 "18p" H 1700 6150 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 1738 6100 50  0001 C CNN
-F 3 "~" H 1700 6250 50  0001 C CNN
-	1    1700 6250
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:C C2
-U 1 1 5FA1CC20
-P 1700 6850
-F 0 "C2" H 1800 6850 50  0000 L CNN
-F 1 "18p" H 1700 6750 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder" H 1738 6700 50  0001 C CNN
-F 3 "~" H 1700 6850 50  0001 C CNN
-	1    1700 6850
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR0101
-U 1 1 5FA1D04B
-P 1700 7000
-F 0 "#PWR0101" H 1700 6750 50  0001 C CNN
-F 1 "GND" H 1705 6827 50  0000 C CNN
-F 2 "" H 1700 7000 50  0001 C CNN
-F 3 "" H 1700 7000 50  0001 C CNN
-	1    1700 7000
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR0102
-U 1 1 5FA1ECAC
-P 1700 6400
-F 0 "#PWR0102" H 1700 6150 50  0001 C CNN
-F 1 "GND" H 1705 6227 50  0000 C CNN
-F 2 "" H 1700 6400 50  0001 C CNN
-F 3 "" H 1700 6400 50  0001 C CNN
-	1    1700 6400
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	3500 5450 3400 5450
 Connection ~ 3400 5450
@@ -322,9 +279,6 @@ Wire Wire Line
 Wire Wire Line
 	2200 6700 2200 6300
 Connection ~ 1700 6100
-Connection ~ 1700 6700
-Wire Wire Line
-	1700 6700 1850 6700
 $Comp
 L Device:Ferrite_Bead FB1
 U 1 1 5FA2AD34
@@ -419,8 +373,6 @@ F 3 "~" H 3950 6100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1300 6700 1700 6700
-Wire Wire Line
 	1300 6100 1700 6100
 $Comp
 L Connector:TestPoint TP4
@@ -508,7 +460,7 @@ Wire Wire Line
 Wire Wire Line
 	3000 6300 4250 6300
 $Comp
-L Logic_LevelTranslator:SN74LVC2T45DCUR U1
+L extUsb-rescue:SN74LVC2T45DCUR-Logic_LevelTranslator U1
 U 1 1 5F998087
 P 2600 6200
 F 0 "U1" H 2800 5850 50  0000 C CNN
@@ -570,4 +522,6 @@ F 3 "~" H 2700 5450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 2700 5450
+Wire Wire Line
+	1300 6700 1850 6700
 $EndSCHEMATC
