@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..fdd8054 100644
+index 2e5244d..d2dbacd 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -239,7 +239,7 @@ module system(
@@ -289,7 +289,7 @@ index 2e5244d..fdd8054 100644
 +  } = o_pin_pwm;
 +  `endif
 +
-+wire clk_48MHz = TODO;
++wire clk_48MHz = chipset.clk_mmcm.corr_clk;
 +wire rst = chipset_rst_n;
 +
 +

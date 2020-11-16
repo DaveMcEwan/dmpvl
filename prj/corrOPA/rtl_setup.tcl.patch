@@ -1,0 +1,48 @@
+diff --git a/piton/tools/src/proto/common/rtl_setup.tcl b/piton/tools/src/proto/common/rtl_setup.tcl
+index 7064df6..2946754 100644
+--- a/piton/tools/src/proto/common/rtl_setup.tcl
++++ b/piton/tools/src/proto/common/rtl_setup.tcl
+@@ -49,10 +49,34 @@ set GLOBAL_DEFAULT_VERILOG_MACROS "NO_SCAN FPGA_SYN PITON_FPGA_SYNTH PITON_PROTO
+ # RTL implementation files
+ 
+ set SYSTEM_RTL_IMPL_FILES [list \
+-    "${DV_ROOT}/design/rtl/system.v" \
++    "${DV_ROOT}/../../../../hdl/usbfsPktRx.sv"           \
++    "${DV_ROOT}/../../../../hdl/usbfsPktTx.sv"           \
++    "${DV_ROOT}/../../../../hdl/usbfsTxn.sv"             \
++    "${DV_ROOT}/../../../../hdl/usbfsEndpRx.sv"          \
++    "${DV_ROOT}/../../../../hdl/usbfsEndpTx.sv"          \
++    "${DV_ROOT}/../../../../hdl/usbfsEndpCtrlSerial.sv"  \
++    "${DV_ROOT}/../../../../hdl/usbfsSerial.sv"          \
++    "${DV_ROOT}/../../../../hdl/fifo.sv"                 \
++    "${DV_ROOT}/../../../../hdl/fxcs.sv"                 \
++    "${DV_ROOT}/../../../../hdl/logdropWindow.sv"        \
++    "${DV_ROOT}/../../../../hdl/mssbIdx.sv"              \
++    "${DV_ROOT}/../../../../hdl/onehotIdx.sv"            \
++    "${DV_ROOT}/../../../../hdl/prngXoshiro128p.sv"      \
++    "${DV_ROOT}/../../../../hdl/strobe.sv"               \
++    "${DV_ROOT}/../../../../hdl/pwm.sv"                  \
++    "${DV_ROOT}/../../../../hdl/dividerFsm.sv"           \
++    "${DV_ROOT}/../../../../hdl/corrCountRect.sv"        \
++    "${DV_ROOT}/../../../../hdl/corrCountLogdrop.sv"     \
++    "${DV_ROOT}/../../../../hdl/xbar.sv"                 \
++    "${DV_ROOT}/../../correlator.sv"                     \
++    "${DV_ROOT}/../../bpReg.sv"                          \
++    "${DV_ROOT}/../../bpCorrelator.sv"                   \
++    "${DV_ROOT}/../../usbfsBpCorrelator.sv"              \
++    "${DV_ROOT}/design/rtl/system.v"                     \
+ ]
+ 
+ set SYSTEM_INCLUDE_FILES [list \
++    "${DV_ROOT}/../../../../hdl/dff.svh"                 \
+ ]
+ 
+ set SYSTEM_IP_FILE_PREFIXES [list \
+@@ -409,7 +433,6 @@ set CHIP_RTL_IMPL_FILES [list \
+     "${DV_ROOT}/design/chip/tile/ariane/src/util/axi_slave_connect.sv"                        \
+     "${DV_ROOT}/design/chip/tile/ariane/src/util/axi_slave_connect_rev.sv"                    \
+     "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/deprecated/rrarbiter.sv"         \
+-    "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/deprecated/fifo_v1.sv"           \
+     "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/deprecated/fifo_v2.sv"           \
+     "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/fifo_v3.sv"                      \
+     "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/shift_reg.sv"                    \
