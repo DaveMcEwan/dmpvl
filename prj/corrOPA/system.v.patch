@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..d2dbacd 100644
+index 2e5244d..62d31bd 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -239,7 +239,7 @@ module system(
@@ -164,7 +164,15 @@ index 2e5244d..d2dbacd 100644
  );
  
  ///////////////////////
-@@ -915,7 +1043,7 @@ chipset chipset(
+@@ -909,13 +1037,15 @@ passthru passthru(
+ );
+ `endif // endif PITONSYS_INC_PASSTHRU
+ 
++wire corr_clk;
+ // Piton chipset
+ chipset chipset(
++    .corr_clk(clk_48MHz),
+     // Only need oscillator clock if
      // chipset is generating its own clocks
  `ifdef F1_BOARD
      .sys_clk(sys_clk),
@@ -173,7 +181,7 @@ index 2e5244d..d2dbacd 100644
  
  `ifdef PITON_CHIPSET_CLKS_GEN
  `ifdef PITON_CHIPSET_DIFF_CLK
-@@ -1192,7 +1320,11 @@ chipset chipset(
+@@ -1192,7 +1322,11 @@ chipset chipset(
  `ifndef XUPP3R_BOARD
      .sw(sw),
  `endif
@@ -185,7 +193,7 @@ index 2e5244d..d2dbacd 100644
  
  `ifdef PITON_ARIANE
      ,
-@@ -1218,4 +1350,179 @@ chipset chipset(
+@@ -1218,4 +1352,179 @@ chipset chipset(
  
  );
  
@@ -289,7 +297,7 @@ index 2e5244d..d2dbacd 100644
 +  } = o_pin_pwm;
 +  `endif
 +
-+wire clk_48MHz = chipset.clk_mmcm.corr_clk;
++wire clk_48MHz = corr_clk;
 +wire rst = chipset_rst_n;
 +
 +
