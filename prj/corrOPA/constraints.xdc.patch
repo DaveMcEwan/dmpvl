@@ -1,5 +1,5 @@
 diff --git a/piton/design/xilinx/vc707/constraints.xdc b/piton/design/xilinx/vc707/constraints.xdc
-index db5d307..801c3a9 100644
+index db5d307..eb53d07 100644
 --- a/piton/design/xilinx/vc707/constraints.xdc
 +++ b/piton/design/xilinx/vc707/constraints.xdc
 @@ -11,7 +11,7 @@
@@ -11,7 +11,20 @@ index db5d307..801c3a9 100644
  # THIS SOFTWARE IS PROVIDED BY PRINCETON UNIVERSITY "AS IS" AND
  # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-@@ -154,6 +154,377 @@ set_input_delay -clock [get_clocks sd_clk_out_1] -clock_fall -max -add_delay 14.
+@@ -32,8 +32,10 @@ set_property IOSTANDARD LVDS [get_ports chipset_clk_osc_n]
+ set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets chipset/clk_mmcm/inst/clk_in1_clk_mmcm]
+ 
+ # Reset
+-set_property IOSTANDARD LVCMOS18 [get_ports sys_rst_n]
+-set_property PACKAGE_PIN AV40 [get_ports sys_rst_n]
++set_property IOSTANDARD LVCMOS18 [get_ports CPU_RESET]
++set_property PACKAGE_PIN AV40 [get_ports CPU_RESET]
++set_property IOSTANDARD LVCMOS18 [get_ports GPIO_SW_C]
++set_property PACKAGE_PIN AV39 [get_ports GPIO_SW_C]
+ 
+ # False paths
+ set_false_path -to [get_cells -hierarchical *afifo_ui_rst_r*]
+@@ -154,6 +156,377 @@ set_input_delay -clock [get_clocks sd_clk_out_1] -clock_fall -max -add_delay 14.
  set_input_delay -clock [get_clocks sd_clk_out_1] -clock_fall -min -add_delay -14.000 [get_ports {sd_dat[*]}]
  set_input_delay -clock [get_clocks sd_clk_out_1] -clock_fall -min -add_delay -14.000 [get_ports sd_cmd]
  
