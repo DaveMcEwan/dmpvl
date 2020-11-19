@@ -28,6 +28,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) prngXoshiro128pp.sv
 	verilator $(VERILATOR_FLAGS) prngXoshiro128p.sv
 	verilator $(VERILATOR_FLAGS) prngXoshiro256p.sv
+	verilator $(VERILATOR_FLAGS) pushbutton.sv
 	verilator $(VERILATOR_FLAGS) pwm.sv
 	verilator $(VERILATOR_FLAGS) resetDetect.sv
 	verilator $(VERILATOR_FLAGS) strobe.sv
@@ -65,6 +66,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) prngXoshiro128pp.sv
 	iverilog $(IVERILOG_FLAGS) prngXoshiro128p.sv
 	iverilog $(IVERILOG_FLAGS) prngXoshiro256p.sv
+	iverilog $(IVERILOG_FLAGS) pushbutton.sv
 	iverilog $(IVERILOG_FLAGS) pwm.sv
 	iverilog $(IVERILOG_FLAGS) resetDetect.sv
 	iverilog $(IVERILOG_FLAGS) -i strobe.sv
@@ -100,6 +102,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv prngXoshiro128pp.sv'
 	yosys -q -p 'read_verilog -sv prngXoshiro128p.sv'
 	yosys -q -p 'read_verilog -sv prngXoshiro256p.sv'
+	yosys -q -p 'read_verilog -sv pushbutton.sv'
 	yosys -q -p 'read_verilog -sv pwm.sv'
 	yosys -q -p 'read_verilog -sv resetDetect.sv'
 	yosys -q -p 'read_verilog -sv strobe.sv'
@@ -137,6 +140,7 @@ add_files \\
 	prngXoshiro128pp.sv \\
 	prngXoshiro128p.sv \\
 	prngXoshiro256p.sv \\
+	pushbutton.sv \\
 	pwm.sv \\
 	resetDetect.sv \\
 	strobe.sv \\
