@@ -109,14 +109,14 @@ module top (
   `ifdef VC707_LED
   // Just a temporary measure to see LEDs controllable.
   // {{{ result pwm (VC707 LEDs)
-  output GPIO_LED_0,
-  output GPIO_LED_1,
-  output GPIO_LED_2,
-  output GPIO_LED_3,
-  output GPIO_LED_4,
-  output GPIO_LED_5,
-  output GPIO_LED_6,
-  output GPIO_LED_7
+  output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
+  output GPIO_LED_1, // (AN39 LVCMOS18 VC707.DS3.2)
+  output GPIO_LED_2, // (AR37 LVCMOS18 VC707.DS3.2)
+  output GPIO_LED_3, // (AT37 LVCMOS18 VC707.DS3.2)
+  output GPIO_LED_4, // (AR35 LVCMOS18 VC707.DS3.2)
+  output GPIO_LED_5, // (AP41 LVCMOS18 VC707.DS3.2)
+  output GPIO_LED_6, // (AP42 LVCMOS18 VC707.DS2.2)
+  output GPIO_LED_7  // (AU39 LVCMOS18 VC707.DS2.2)
   // }}} result pwm
   `else
   // {{{ result pwm XM105.J20 odd
@@ -146,6 +146,8 @@ module top (
   input  GPIO_SW_W,  // probe[3] (AW40 LVCMOS18 VC707.SW7.3)
   // }}} probes VC707.SW* pushbuttons
   // {{{ pwm VC707.LEDs
+  output GPIO_LED_6, // (AP42 LVCMOS18 VC707.DS2.2)
+  output GPIO_LED_7, // (AU39 LVCMOS18 VC707.DS2.2)
   output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
   output GPIO_LED_1  // (AN39 LVCMOS18 VC707.DS3.2)
   // }}} pwm VC707.LEDs
@@ -153,7 +155,7 @@ module top (
 );
 wire i_pin_sysclk_p_200MHz = SYSCLK_P;
 wire i_pin_sysclk_n_200MHz = SYSCLK_N;
-wire o_pin_usbpu = 1'b1;
+wire o_pin_usbpu;
 wire b_pin_usb_p;
 wire b_pin_usb_n;
 wire o_pin_usb_oe;
@@ -297,6 +299,19 @@ fpgaReset u_rst (
   .i_pllLocked  (pllLocked),
   .o_rst        (rst)
 );
+assign o_pin_usbpu = !rst;
+
+`ifndef VC707_FMC1_XM105
+// Test debouncing.
+pushbutton u_btnW (
+  .i_clk        (clk_48MHz),
+  .i_cg         (1'b1),
+  .i_rst        (rst),
+  .i_button     (GPIO_SW_W),
+  .o_debounced  (GPIO_LED_6),
+  .o_toggle     (GPIO_LED_7)
+);
+`endif
 
 
 wire usb_p;

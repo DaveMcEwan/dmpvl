@@ -27,6 +27,7 @@ if {$SYNTH_YOSYS == 0} {
     ${dirHdl}/onehotIdx.sv \
     ${dirHdl}/prngXoshiro128p.sv \
     ${dirHdl}/strobe.sv \
+    ${dirHdl}/pushbutton.sv \
     ${dirHdl}/pwm.sv \
     ${dirHdl}/dividerFsm.sv \
     ${dirHdl}/corrCountRect.sv \
@@ -60,8 +61,8 @@ check_syntax
 read_xdc vc707.xdc
 
 # Synthesize design.
-synth_design -part ${part} -top top -include_dirs ${dirHdl} \
-  -verilog_define VC707_FMC1_XM105=1 -verilog_define VC707_LED=1
+synth_design -part ${part} -top top -include_dirs ${dirHdl}
+#  -verilog_define VC707_FMC1_XM105=1 -verilog_define VC707_LED=1
 
 # NOTE: The clock period only needs to be less than 20.833ns.
 # The actual clock speed at runtime is set by the PLL settings.
