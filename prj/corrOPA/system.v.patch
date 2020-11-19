@@ -1,18 +1,19 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..86be767 100644
+index 2e5244d..0272f2e 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
-@@ -142,7 +142,8 @@ module system(
+@@ -142,7 +142,9 @@ module system(
      input sys_clk,
  `endif
  
 -    input                                       sys_rst_n,
 +    input                                       CPU_RESET,
 +    input                                       GPIO_SW_C, // Don't boot until sw is pressed.
++    input                                       GPIO_SW_W, // Toggle/select LED source.
  
  `ifndef PITON_FPGA_SYNTH
      input                                       pll_rst_n,
-@@ -239,7 +240,7 @@ module system(
+@@ -239,7 +241,7 @@ module system(
      output [`DDR3_DM_WIDTH-1:0]                 ddr_dm,
      `endif // PITONSYS_DDR4
      output [`DDR3_ODT_WIDTH-1:0]                ddr_odt,
@@ -21,7 +22,7 @@ index 2e5244d..86be767 100644
      input                                        mc_clk,
      // AXI Write Address Channel Signals
      output wire [`AXI4_ID_WIDTH     -1:0]    m_axi_awid,
-@@ -306,8 +307,8 @@ module system(
+@@ -306,8 +308,8 @@ module system(
      output                                      uart_tx,
      input                                       uart_rx,
  `ifdef VCU118_BOARD
@@ -32,7 +33,7 @@ index 2e5244d..86be767 100644
  `endif // VCU118_BOARD
  `endif // endif PITONSYS_UART
  
-@@ -391,10 +392,138 @@ module system(
+@@ -391,15 +393,130 @@ module system(
  `endif
  
  `ifdef XUPP3R_BOARD
@@ -146,19 +147,6 @@ index 2e5244d..86be767 100644
 +  input  FMC1_HPC_HB19_N,     // (L26 LVCMOS18 VC707.J17.XX XM105.J2.40)
 +  */
 +  // }}} probes XM105.J2 even
-+  `ifdef VC707_LED
-+  // Just a temporary measure to see LEDs controllable.
-+  // {{{ result pwm (VC707 LEDs)
-+  output GPIO_LED_0,
-+  output GPIO_LED_1,
-+  output GPIO_LED_2,
-+  output GPIO_LED_3,
-+  output GPIO_LED_4,
-+  output GPIO_LED_5,
-+  output GPIO_LED_6,
-+  output GPIO_LED_7
-+  // }}} result pwm
-+  `else
 +  // {{{ result pwm XM105.J20 odd
 +  output FMC1_HPC_LA20_P, // (Y29 LVCMOS18 VC707.J17.G21 XM105.J20.1)
 +  output FMC1_HPC_LA20_N, // (Y30 LVCMOS18 VC707.J17.G22 XM105.J20.3)
@@ -169,12 +157,17 @@ index 2e5244d..86be767 100644
 +  output FMC1_HPC_LA23_P, // (P30 LVCMOS18 VC707.J17.D23 XM105.J20.13)
 +  output FMC1_HPC_LA23_N  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
 +  // }}} result pwm XM105.J20 odd
-+  `endif
 +  // }}} correlator
  );
  
  ///////////////////////
-@@ -553,6 +682,30 @@ assign rtc = rtc_div[6];
+ // Type declarations //
+ ///////////////////////
++wire [7:0] ledsChipset;
+ 
+ `ifndef PITON_CLKS_SIM
+ // If these are not provided from
+@@ -553,6 +670,30 @@ assign rtc = rtc_div[6];
  assign uart_rts = 1'b0;
  `endif // VCU118_BOARD
  
@@ -205,7 +198,7 @@ index 2e5244d..86be767 100644
  // Different reset active levels for different boards
  always @ *
  begin
-@@ -911,11 +1064,12 @@ passthru passthru(
+@@ -911,11 +1052,12 @@ passthru passthru(
  
  // Piton chipset
  chipset chipset(
@@ -219,24 +212,21 @@ index 2e5244d..86be767 100644
  
  `ifdef PITON_CHIPSET_CLKS_GEN
  `ifdef PITON_CHIPSET_DIFF_CLK
-@@ -1192,7 +1346,11 @@ chipset chipset(
+@@ -1192,7 +1334,7 @@ chipset chipset(
  `ifndef XUPP3R_BOARD
      .sw(sw),
  `endif
-+  `ifdef VC707_LED
-+    .leds() // LEDs controlled by correlator, not OPA.
-+  `else
-     .leds(leds)
-+  `endif
+-    .leds(leds)
++    .leds(ledsChipset)
  
  `ifdef PITON_ARIANE
      ,
-@@ -1218,4 +1376,175 @@ chipset chipset(
+@@ -1218,4 +1360,185 @@ chipset chipset(
  
  );
  
 +// {{{ correlator
-+wire o_pin_usbpu = 1'b1;
++wire o_pin_usbpu = !rst;
 +wire b_pin_usb_p;
 +wire b_pin_usb_n;
 +wire o_pin_usb_oe;
@@ -320,9 +310,6 @@ index 2e5244d..86be767 100644
 +  };
 +
 +  wire [N_ENGINE-1:0] o_pin_pwm;
-+  `ifdef VC707_LED
-+  assign leds = o_pin_pwm;
-+  `else
 +  assign {
 +    FMC1_HPC_LA23_N,
 +    FMC1_HPC_LA23_P,
@@ -333,7 +320,6 @@ index 2e5244d..86be767 100644
 +    FMC1_HPC_LA20_N,
 +    FMC1_HPC_LA20_P
 +  } = o_pin_pwm;
-+  `endif
 +
 +wire usb_p;
 +wire usb_n;
@@ -369,7 +355,21 @@ index 2e5244d..86be767 100644
 +  .I  (usbTx_n),
 +  .IO (b_pin_usb_n),
 +  .T  (!usbOutputEnable)
-+  );
++);
++
++wire ledSrc;
++pushbutton #(
++  .DEBOUNCE_CYCLES (240000) // 5ms at 48MHz
++) u_btnW (
++  .i_clk        (clk_48MHz),
++  .i_cg         (1'b1),
++  .i_rst        (rst),
++  .i_button     (GPIO_SW_W),
++  .o_debounced  (),
++  .o_toggle     (ledSrc)
++);
++
++assign leds = ledSrc ? resultPwm : ledsChipset;
 +
 +
 +wire [N_ENGINE-1:0] resultPwm;
