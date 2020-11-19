@@ -303,7 +303,9 @@ assign o_pin_usbpu = !rst;
 
 `ifndef VC707_FMC1_XM105
 // Test debouncing.
-pushbutton u_btnW (
+pushbutton #(
+  .DEBOUNCE_CYCLES (240000) // 5ms at 48MHz
+) u_btnW (
   .i_clk        (clk_48MHz),
   .i_cg         (1'b1),
   .i_rst        (rst),
