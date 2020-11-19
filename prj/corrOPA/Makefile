@@ -2,9 +2,18 @@
 apply:
 	cd openpiton; git apply ../*.patch
 
+PATCHSET =
+PATCHSET += clk_mmcm.xci.patch
+PATCHSET += chipset.v.patch
+PATCHSET += constraints.xdc.patch
+PATCHSET += rtl_setup.tcl.patch
+PATCHSET += system.v.patch
+
+patchset: $(PATCHSET)
 
 clk_mmcm.xci.patch:
 	cd openpiton; git diff piton/design/chipset/xilinx/vc707/ip_cores/clk_mmcm/clk_mmcm.xci > ../$@
+# NOTE: Rarely update clk_mmcm.xci.patch!
 
 chipset.v.patch:
 	cd openpiton; git diff piton/design/chipset/rtl/chipset.v > ../$@
@@ -21,12 +30,6 @@ rtl_setup.tcl.patch:
 system.v.patch:
 	cd openpiton; git diff piton/design/rtl/system.v > ../$@
 .PHONY: system.v.patch
-
-patchset: clk_mmcm.xci.patch
-patchset: chipset.v.patch
-patchset: constraints.xdc.patch
-patchset: rtl_setup.tcl.patch
-patchset: system.v.patch
 
 
 PART := xc7vx485tffg1761-2
@@ -48,4 +51,4 @@ clean:
 	cd openpiton: git checkout piton/tools/src/proto/common/rtl_setup.tcl
 	cd openpiton: git checkout piton/design/rtl/system.v
 
-.PHONY: patchset clean
+.PHONY: patchset prog clean
