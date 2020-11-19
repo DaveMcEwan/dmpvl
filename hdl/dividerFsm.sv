@@ -2,8 +2,7 @@
 `include "asrt.svh"
 `include "misc.svh"
 
-// WIP Divider based on FSM
-// TODO: Get this working before unrolled pipeline.
+// Divider based on FSM
 
 // www.ece.lsu.edu_ee3755_2012f_l07.v.html
 // (Patterson & Henessey, Computer Organization & Design, 4th Ed, Figure 4.41)
