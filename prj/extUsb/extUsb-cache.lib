@@ -161,11 +161,11 @@ X VOUT 5 400 100 100 L 50 50 1 1 w
 ENDDRAW
 ENDDEF
 #
-# extUsb-rescue_SN74LVC2T45DCUR-Logic_LevelTranslator
+# SN74LVC2T45DCUR-Logic_LevelTranslator
 #
-DEF extUsb-rescue_SN74LVC2T45DCUR-Logic_LevelTranslator U 0 20 Y Y 1 F N
+DEF SN74LVC2T45DCUR-Logic_LevelTranslator U 0 20 Y Y 1 F N
 F0 "U" -250 450 50 H V C CNN
-F1 "extUsb-rescue_SN74LVC2T45DCUR-Logic_LevelTranslator" 150 450 50 H V L CNN
+F1 "SN74LVC2T45DCUR-Logic_LevelTranslator" 150 450 50 H V L CNN
 F2 "Package_SO:VSSOP-8_2.4x2.1mm_P0.5mm" 50 -550 50 H I C CNN
 F3 "" -900 -550 50 H I C CNN
 $FPLIST
@@ -196,11 +196,11 @@ X VCCB 8 100 500 100 D 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# extUsb-rescue_USB_B_Micro-Connector
+# USB_B_Micro-Connector
 #
-DEF extUsb-rescue_USB_B_Micro-Connector J 0 40 Y Y 1 F N
+DEF USB_B_Micro-Connector J 0 40 Y Y 1 F N
 F0 "J" -200 450 50 H V L CNN
-F1 "extUsb-rescue_USB_B_Micro-Connector" -200 350 50 H V L CNN
+F1 "USB_B_Micro-Connector" -200 350 50 H V L CNN
 F2 "" 150 -50 50 H I C CNN
 F3 "" 150 -50 50 H I C CNN
 $FPLIST
