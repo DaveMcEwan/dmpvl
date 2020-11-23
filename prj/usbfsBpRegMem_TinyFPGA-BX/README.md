@@ -26,40 +26,40 @@ further actions, using `--no-prog` to avoid re-uploading the bitfile.
 Run another test, using the verbose option (`-v`) to get messages describing
 what's happening.
 ```
-bytePipe-utils -v --no-prog test
+bytePipe-utils -v test
 ```
 
 Sequentially read each address and dump the values.
 ```
-bytePipe-utils -v --no-prog dump
+bytePipe-utils dump
 ```
 
 Identify the writable bits.
 Write ones then zeros to each location and record the results.
 Any bits which flipped are considered writable.
 ```
-bytePipe-utils -v --no-prog bits
+bytePipe-utils bits
 ```
 
 Reset the BytePipe FSM in case of confusion.
 This performs a sequence of 256 single reads from address 0 (the burst counter)
 which are allowed to return no data,
 ```
-bytePipe-utils -v --no-prog reset
+bytePipe-utils -v reset
 ```
 
 Peek the value from a particular location.
 Decimal or hexadecimal formats are supported for address argument.
 ```
-bytePipe-utils -v --no-prog -a=55 peek
-bytePipe-utils -v --no-prog -a=0x37 peek
+bytePipe-utils -a=55 peek
+bytePipe-utils -a=0x37 peek
 ```
 
 Poke a particular value to a particular location.
 Decimal or hexadecimal formats are also supported for data argument.
 ```
-bytePipe-utils -v --no-prog -a=55 -d=123 poke
-bytePipe-utils -v --no-prog -a=0x37 -d=0x7b poke
+bytePipe-utils -a=55 -d=123 poke
+bytePipe-utils -a=0x37 -d=0x7b poke
 ```
 
 Get (read) an arbitrary number of bytes from an address to a file.
@@ -67,12 +67,12 @@ It is intended that some locations are backed by a FIFO or other stream of data
 so this uses the underlying bandwidth of the USB-FS channel efficiently to
 retreive a specified number of bytes.
 ```
-bytePipe-utils -v --no-prog -a=55 -f=myFile.bin -n=123 get
+bytePipe-utils -a=55 -f=myFile.bin -n=123 get
 ```
 
 Put (write) an arbitrary number of bytes to an address from a file.
 ```
-bytePipe-utils -v --no-prog -a=55 -f=myFile.bin -n=123 put
+bytePipe-utils -a=55 -f=myFile.bin -n=123 put
 ```
 
 Measure and record read bandwidth by reading a large number of bytes to nowhere.
@@ -81,8 +81,8 @@ anywhere.
 The `--record-time` option creates a CSV file `./bpRecordTime.csv` with two
 columns - number of bytes on the left, and time (ns since epoch) on the right.
 ```
-bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/null -n=99999999 get
-bytePipe-utils -v --no-prog --record-time -a=55 -f=/dev/urandom -n=99999999 put
+bytePipe-utils --record-time -a=55 -f=/dev/null -n=99999999 get
+bytePipe-utils --record-time -a=55 -f=/dev/urandom -n=99999999 put
 ```
 
 [bwRead]: ./img/BytePipe_bandwidth25s_read.png "Bandwidth over 25s Read"
@@ -110,13 +110,56 @@ BytePipe Protocol
 [rdBurst]: ./img/BytePipe_rdBurst.wavedrom.svg "BytePipe Read Burst"
 [wrBurst]: ./img/BytePipe_wrBurst.wavedrom.svg "BytePipe Write Burst"
 
-The BytePipe protocol is designed to be very low cost and simple to implement
-on top of any underlying protocol which sends and receives whole numbers of
-bytes.
-There are 17 mandatory bits of state (`addr:7b`, `burst:8b`, `rd:1b`, `wr:1b`),
-and flow control uses valid/ready handshaking with the same semantics as AXI.
+The purpose of the BytePipe protocol is to provide a memory map of up to 127B
+(127 bytes), using an underlying "base" protocol capable of 8b (8 bit) flits
+(flow control digits).
+Each byte on the 127B map may be individually accessed, and process both read
+and write requests.
+BytePipe is designed to be simple to implement and low-cost in terms of power
+and LUT/area using shallow logic with the assumption that the base protocol
+will source and sink bytes in order and use a handshaking mechanism to prevent
+dropped data.
+Common base protocols which are suitable include UART, USB, Unix TTY, and
+anything else which may be represented as a pair of 8b-wide FIFOs flowing in
+opposite directions.
 
-There ara a small number of simple rules foverning the internal state machine:
+Although BytePipe may be used to implement a 127B RAM, it is intended to be used
+for providing a structure and control mechanism for SoC peripheral registers.
+The behavior of each byte location is user-defined for addresses 1..127, and
+address 0 is reserved for use controlling burst behaviour.
+Each location may be used in any of the following suggested modes, although this
+is not an exhaustive list.
+
+- RW (Read and write)
+  - Single byte of RAM, where reads return the last value written.
+  - Reads and writes return and affect separate bits of state.
+  - Data pulled/pushed from/to FIFO.
+- R (Read-only)
+  Writing has no effect.
+  - Non-programmable constant, such as an ID like "core number 5"
+  - Non-constant value, such as a status like "number of entries currently in queue".
+  - Data pulled from FIFO.
+- W (Write-only)
+  Reading returns a constant, or an unspecified value.
+  - Initiation such as "begin processing when any value written here".
+  - Set alias or clear alias to another set of bits.
+  - Data pushed to FIFO.
+
+Flow control uses valid/ready handshaking with the same semantics as AXI.
+
+1. A byte has been transmitted when both `valid` and `ready` are asserted in
+  the same clock cycle.
+  The byte being "transmitted" means that the receiver has taken a valid sample
+  of `data` and the sender may move onto sending another byte.
+2. Sender may not change `data` until both `valid` and `ready` have been used to
+  indicate the byte has been transmitted.
+3. Sender must not wait for `ready` before asserting `valid` when there the
+  sender has data to send.
+4. Receiver must not wait for `valid` before asserting `ready`, so in a period
+  of inactivity `ready` will be asserted.
+
+There are a small number of simple rules governing the 17 mandatory bits of
+state comprising the protocol FSM (`addr:7b`, `burst:8b`, `rd:1b`, `wr:1b`).
 
 1. A transaction is initiated by the host sending the device 1 byte, while the
    device is not already processing a transaction.
