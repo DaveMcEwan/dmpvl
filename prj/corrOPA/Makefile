@@ -4,6 +4,7 @@ apply:
 
 PATCHSET =
 PATCHSET += clk_mmcm.xci.patch
+PATCHSET += chip.v.pyv.patch
 PATCHSET += chipset.v.patch
 PATCHSET += constraints.xdc.patch
 PATCHSET += rtl_setup.tcl.patch
@@ -14,6 +15,10 @@ patchset: $(PATCHSET)
 clk_mmcm.xci.patch:
 	cd openpiton; git diff piton/design/chipset/xilinx/vc707/ip_cores/clk_mmcm/clk_mmcm.xci > ../$@
 # NOTE: Rarely update clk_mmcm.xci.patch!
+
+chip.v.pyv.patch:
+	cd openpiton; git diff piton/design/chip/rtl/chip.v.pyv > ../$@
+.PHONY: chip.v.pyv.patch
 
 chipset.v.patch:
 	cd openpiton; git diff piton/design/chipset/rtl/chipset.v > ../$@
@@ -38,6 +43,9 @@ BITFILE ?= openpiton/build/vc707/system/vc707_system/vc707_system.runs/impl_1/sy
 $(BITFILE):
 	cd openpiton; protosyn --board=vc707 --core=ariane --uart-dmw=ddr --x_tiles=3
 
+rmbit:
+	rm -f $(BITFILE)
+
 prog: $(BITFILE)
 	vivado -mode batch -source ../../tcl/vivado-program.tcl \
 		-tclargs --part $(PART) --bitstream $(BITFILE)
@@ -51,4 +59,4 @@ clean:
 	cd openpiton: git checkout piton/tools/src/proto/common/rtl_setup.tcl
 	cd openpiton: git checkout piton/design/rtl/system.v
 
-.PHONY: patchset prog clean
+.PHONY: patchset rmbit prog clean
