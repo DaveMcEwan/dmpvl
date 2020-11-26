@@ -23,6 +23,8 @@ module correlator #(
   input  wire [$clog2(MAX_SAMPLE_JITTER_EXP+1)-1:0]   i_sampleJitterExp,
   input  wire [2:0]                                   i_pwmSelect,
 
+  input  wire         i_wr_samplePeriod,
+
   input  wire [7:0]   i_jitterSeedByte,
   input  wire         i_jitterSeedValid,
 
@@ -63,11 +65,12 @@ generate for (i = 0; i < MAX_SAMPLE_JITTER_EXP; i=i+1) begin
   assign ctrlJitter[i] = (i_sampleJitterExp == (i+1));
 end endgenerate
 
-wire sampleStrobe;
+wire sampleStrobeX, sampleStrobeY, counterStrobe;
 wire [31:0] _unused_sampleStrobe_xoshiro128p;
 strobe #(
   .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP),
   .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP),
+  .N_STROBE         (2),
   .ENABLE_JITTER    (1)
 ) u_sampleStrobe (
   .i_clk              (i_clk),
@@ -81,11 +84,42 @@ strobe #(
   .i_jitterSeedValid  (i_jitterSeedValid),
   .o_jitterPrng       (_unused_sampleStrobe_xoshiro128p),
 
-  .o_strobe           (sampleStrobe)
+  .o_strobe           ({sampleStrobeX,sampleStrobeY})
 );
 
+`dff_cg_srst(reg, antiPhase, i_clk, i_cg, i_rst, 1'b0)
+always @*
+  if (i_wr_samplePeriod)
+    antiPhase_d = 1'b1;
+  else if (antiPhase_q && counterStrobe)
+    antiPhase_d = 1'b0;
+  else
+    antiPhase_d = antiPhase_q;
+
+wire [31:0] _unused_counterStrobe_xoshiro128p;
+strobe #(
+  .CTRL_PERIOD_W    (MAX_SAMPLE_PERIOD_EXP),
+  .CTRL_JITTER_W    (MAX_SAMPLE_JITTER_EXP),
+  .N_STROBE         (1),
+  .ENABLE_JITTER    (0)
+) u_counterStrobe (
+  .i_clk              (i_clk),
+  .i_rst              (i_rst),
+  .i_cg               (i_cg),
+
+  .i_ctrlPeriodM1     (antiPhase_q ? (ctrlPeriodM1 >> 1) : ctrlPeriodM1),
+  .i_ctrlJitter       ('0),
+
+  .i_jitterSeedByte   ('0),
+  .i_jitterSeedValid  ('0),
+  .o_jitterPrng       (_unused_counterStrobe_xoshiro128p),
+
+  .o_strobe           (counterStrobe)
+);
+
+
 wire tDoWrap;
-`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && sampleStrobe, i_rst, '0)
+`dff_cg_srst(reg [TIME_W-1:0], t, i_clk, i_cg && counterStrobe, i_rst, '0)
 always @* t_d = tDoWrap ? '0 : t_q + 1;
 
 wire [MAX_WINDOW_LENGTH_EXP:0] tDoWrapVec;
@@ -96,7 +130,12 @@ generate for (i = 0; i <= MAX_WINDOW_LENGTH_EXP; i=i+1) begin
     assign tDoWrapVec[i] = (i_windowLengthExp == i) && (&t_q[0 +: i]);
   end
 end endgenerate
-assign tDoWrap = |tDoWrapVec && sampleStrobe;
+assign tDoWrap = |tDoWrapVec && counterStrobe;
+
+`dff_cg_norst(reg, x, i_clk, i_cg && sampleStrobeX)
+`dff_cg_norst(reg, y, i_clk, i_cg && sampleStrobeY)
+always @* y_d = i_y;
+always @* x_d = i_x;
 
 // }}} Generate sampling strobe
 
@@ -111,10 +150,10 @@ corrCountRect #(
 ) u_winRect (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (i_cg && sampleStrobe),
+  .i_cg           (i_cg && counterStrobe),
 
-  .i_x            (i_x),
-  .i_y            (i_y),
+  .i_x            (x_q),
+  .i_y            (y_q),
 
   .o_countX       (rect_countX),
   .o_countY       (rect_countY),
@@ -125,14 +164,6 @@ corrCountRect #(
 
   .i_zeroCounts   (tDoWrap)
 );
-
-// NOTE: Window coefficient is 1 sample out of of phase in order to meet timing.
-// Therefore the X and Y inputs are also flopped.
-// Okay <-- winNum is pushed into the fifo before any results.
-`dff_cg_norst(reg, x, i_clk, i_cg)
-`dff_cg_norst(reg, y, i_clk, i_cg)
-always @* y_d = i_y;
-always @* x_d = i_x;
 
 localparam WINDOW_TIME_W = WINDOW_PRECISION + TIME_W - 1;
 wire [WINDOW_TIME_W-1:0] logdrop_countX;
@@ -145,7 +176,7 @@ corrCountLogdrop #(
 ) u_winLogdrop (
   .i_clk          (i_clk),
   .i_rst          (i_rst),
-  .i_cg           (i_cg && sampleStrobe),
+  .i_cg           (i_cg && counterStrobe),
 
   .i_x            (x_q),
   .i_y            (y_q),

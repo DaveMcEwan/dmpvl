@@ -50,6 +50,8 @@ wire [N_ENGINE-1:0]                       pktfifo_o_empty;
 wire [N_ENGINE-1:0]                       pktfifo_i_pop;
 wire [N_ENGINE-1:0]                       pktfifo_i_flush;
 
+wire [N_ENGINE-1:0]                       wr_samplePeriod;
+
 wire [N_ENGINE*8-1:0]                     jitterSeedByte;
 wire [N_ENGINE-1:0]                       jitterSeedValid;
 
@@ -78,6 +80,8 @@ bpReg #(
   .o_reg_pwmSelect        (pwmSelect),
   .o_reg_xSelect          (xSelect),
   .o_reg_ySelect          (ySelect),
+
+  .o_wr_samplePeriod      (wr_samplePeriod),
 
   .o_jitterSeedByte       (jitterSeedByte),
   .o_jitterSeedValid      (jitterSeedValid),
@@ -134,6 +138,8 @@ generate for (i = 0; i < N_ENGINE; i=i+1) begin
     .i_samplePeriodExp      (samplePeriodExp[i*SAMPLE_PERIOD_EXP_W +: SAMPLE_PERIOD_EXP_W]),
     .i_sampleJitterExp      (sampleJitterExp[i*SAMPLE_JITTER_EXP_W +: SAMPLE_JITTER_EXP_W]),
     .i_pwmSelect            (pwmSelect[i*PWM_SELECT_W +: PWM_SELECT_W]),
+
+    .i_wr_samplePeriod      (wr_samplePeriod[i]),
 
     .i_jitterSeedByte       (jitterSeedByte[i*8 +: 8]),
     .i_jitterSeedValid      (jitterSeedValid[i]),

@@ -29,6 +29,8 @@ module bpReg #(
   output wire [N_ENGINE*$clog2(N_PROBE)-1:0]                  o_reg_xSelect,
   output wire [N_ENGINE*$clog2(N_PROBE)-1:0]                  o_reg_ySelect,
 
+  output wire [N_ENGINE-1:0]    o_wr_samplePeriod,
+
   output wire [N_ENGINE*8-1:0]  o_jitterSeedByte,
   output wire [N_ENGINE-1:0]    o_jitterSeedValid,
 
@@ -134,6 +136,8 @@ generate for (i = 0; i < N_ENGINE; i=i+1) begin
   assign wr_pwmSelect[i]        = doWriteReg[i] && (addrReg == ADDR_PWM_SELECT);
   assign wr_xSelect[i]          = doWriteReg[i] && (addrReg == ADDR_X_SELECT);
   assign wr_ySelect[i]          = doWriteReg[i] && (addrReg == ADDR_Y_SELECT);
+
+  assign o_wr_samplePeriod[i] = wr_samplePeriodExp[i];
 
   assign o_jitterSeedByte[i*8 +: 8] = i_bp_data;
   assign o_jitterSeedValid[i]       = doWriteReg[i] && (addrReg == ADDR_PRNG_SEED);
