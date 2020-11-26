@@ -5,6 +5,7 @@
 module strobe #(
   parameter CTRL_PERIOD_W = 16,
   parameter CTRL_JITTER_W = 8, // Must be <= 32
+  parameter N_STROBE = 1, // N_STROBE*(CTRL_JITTER_W+1) <= 24
   parameter ENABLE_JITTER = 1
 ) (
   input  wire                       i_clk,
@@ -16,15 +17,22 @@ module strobe #(
 
   input  wire [7:0]                 i_jitterSeedByte,
   input  wire                       i_jitterSeedValid,
-  output wire [31:0]                o_jitterPrng,
+  output wire [31:0]                o_jitterPrng, // PRNG_RESULT_W
 
-  output wire                       o_strobe
+  output wire [N_STROBE-1:0]        o_strobe
 );
 
-wire jitterThisCycle;
+genvar i;
+genvar b;
+
+wire [N_STROBE-1:0] extendNotShorten;
+wire [N_STROBE-1:0] jitterThisCycle;
+
 generate if (ENABLE_JITTER != '0) begin
-  wire [127:0] prngState;
-  wire [127:0] prngSeed_wr = {prngState[127-8:0], i_jitterSeedByte};
+  localparam PRNG_STATE_W = 128;
+  localparam PRNG_RESULT_W = 32;
+  wire [PRNG_STATE_W-1:0] prngState;
+  wire [PRNG_STATE_W-1:0] prngSeed_wr = {prngState[PRNG_STATE_W-9:0], i_jitterSeedByte};
   prngXoshiro128p u_prngJitter (
     .i_clk              (i_clk),
     .i_cg               (i_cg),
@@ -42,31 +50,48 @@ generate if (ENABLE_JITTER != '0) begin
     .o_result           (o_jitterPrng)
   );
 
-  wire [CTRL_JITTER_W-1:0] compare = o_jitterPrng[32-CTRL_JITTER_W +: CTRL_JITTER_W];
-  assign jitterThisCycle = (compare < i_ctrlJitter);
+  // Interleave compare and extendNotShorten bits to spread entropy as evenly
+  // as possible between strobes.
+  // - Strobe0 gets highest order bits, strobe1 gets next highest, etc.
+  // - extendNotShorten comes from top bits
+  // - compare comes from bits below extendNotShorten.
+  for (i = 0; i < N_STROBE; i=i+1) begin
+
+    wire [CTRL_JITTER_W-1:0] compare;
+    for (b = 0; b < CTRL_JITTER_W; b=b+1) begin
+      assign compare[b] = o_jitterPrng[PRNG_RESULT_W - N_STROBE*(CTRL_JITTER_W-b) + i - 1];
+    end
+
+    assign extendNotShorten[i] = o_jitterPrng[PRNG_RESULT_W - i - 1];
+    assign jitterThisCycle[i] = (compare < i_ctrlJitter);
+  end
 end else begin
   assign o_jitterPrng = '0;
-  assign jitterThisCycle = 1'b0;
+  assign jitterThisCycle = '0;
+  assign extendNotShorten = '0;
 end endgenerate
 
+wire [N_STROBE-1:0] jitterExtend = jitterThisCycle & extendNotShorten;
+wire [N_STROBE-1:0] jitterShorten = jitterThisCycle & ~extendNotShorten;
+
+// Counters can change by these values:
 // -0 <-- Extended period
 // -1 <-- Exact period
 // -2 <-- Shortened period
-wire extendNotShorten = o_jitterPrng[31-CTRL_JITTER_W];
-wire jitterExtend = jitterThisCycle && extendNotShorten;
-wire jitterShorten = jitterThisCycle && !extendNotShorten;
-`dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, i_cg && !jitterExtend)
-always @*
-  if (downCounter_q == '0)
-    downCounter_d = i_ctrlPeriodM1;
-  else if (jitterShorten && (downCounter_q != 'd1))
-    downCounter_d = downCounter_q - 'd2;
-  else
-    downCounter_d = downCounter_q - 'd1;
+generate for (i = 0; i < N_STROBE; i=i+1) begin
+  `dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, i_cg && !jitterExtend[i])
+  always @*
+    if (downCounter_q == '0)
+      downCounter_d = i_ctrlPeriodM1;
+    else if (jitterShorten[i] && (downCounter_q != 'd1))
+      downCounter_d = downCounter_q - 'd2;
+    else
+      downCounter_d = downCounter_q - 'd1;
 
-// Pulse output high only when downcounter restarts.
-`dff_cg_srst(reg, strobe, i_clk, i_cg, i_rst, 1'b0)
-always @* strobe_d = (downCounter_q == '0) && !jitterExtend;
-assign o_strobe = strobe_q;
+  // Pulse output high only when downcounter restarts.
+  `dff_cg_srst(reg, strobe, i_clk, i_cg, i_rst, 1'b0)
+  always @* strobe_d = (downCounter_q == '0) && !jitterExtend[i];
+  assign o_strobe[i] = strobe_q;
+end endgenerate
 
 endmodule
