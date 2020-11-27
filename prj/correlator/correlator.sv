@@ -197,7 +197,8 @@ corrCountLogdrop #(
 wire pktfifo_i_push;
 wire pktIdx_wrap;
 `dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
-assign pktIdx_wrap = ((pktIdx_q == 'd4) && pktfifo_i_push) || i_pktfifo_flush;
+assign pktIdx_wrap = i_cg &&
+  (((pktIdx_q == 'd4) && pktfifo_i_push) || i_pktfifo_flush);
 
 // {{{ Correlation metrics
 
