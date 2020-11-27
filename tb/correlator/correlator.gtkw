@@ -1,0 +1,99 @@
+[*]
+[*] GTKWave Analyzer v3.3.79 (w)1999-2017 BSI
+[*] Fri Nov 27 14:51:28 2020
+[*]
+[dumpfile] "/space/dmpvl/tb/correlator/build/correlator_tb.verilator.vcd"
+[dumpfile_mtime] "Fri Nov 27 14:29:56 2020"
+[dumpfile_size] 56167933
+[savefile] "/space/dmpvl/tb/correlator/correlator.gtkw"
+[timestart] 0
+[size] 1920 1031
+[pos] -451 -195
+*-16.201717 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.correlator_tb.
+[treeopen] TOP.correlator_tb.u_bpCorrelator.
+[treeopen] TOP.correlator_tb.u_bpCorrelator.genblk1(0).
+[treeopen] TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.
+[sst_width] 220
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 297
+@28
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.i_rst
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.i_cg
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.i_clk
+@800201
+-bp
+@29
+TOP.correlator_tb.u_bpCorrelator.i_bp_valid
+@23
+TOP.correlator_tb.u_bpCorrelator.i_bp_data[7:0]
+@29
+TOP.correlator_tb.u_bpCorrelator.o_bp_ready
+TOP.correlator_tb.u_bpCorrelator.o_bp_valid
+@23
+TOP.correlator_tb.u_bpCorrelator.o_bp_data[7:0]
+@29
+TOP.correlator_tb.u_bpCorrelator.i_bp_ready
+@1000201
+-bp
+@c00200
+-reg
+@22
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_pwmSelect[5:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_sampleJitterExp[7:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_samplePeriodExp[7:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_windowLengthExp[9:0]
+@28
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_windowShape[1:0]
+@22
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_xSelect[3:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.o_reg_ySelect[3:0]
+@28
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_pwmSelect[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_sampleJitterExp[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_samplePeriodExp[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_windowLengthExp[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_windowShape[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_xSelect[1:0]
+TOP.correlator_tb.u_bpCorrelator.u_bpReg.wr_ySelect[1:0]
+@1401200
+-reg
+@c00200
+-strobes
+@28
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.counterStrobe
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.sampleStrobeX
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.sampleStrobeY
+@1401200
+-strobes
+@c00200
+-xbar
+@22
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_probeMux.i_in[3:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_probeMux.i_select[3:0]
+@28
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_probeMux.o_out[1:0]
+@1401200
+-xbar
+@c00200
+-count
+@22
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.t_q[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.countX_q[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.countY_q[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.countIsect_q[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.countSymdiff_q[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.rect_countX[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.rect_countY[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.rect_countIsect[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.rect_countSymdiff[15:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.logdrop_countX[22:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.logdrop_countY[22:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.logdrop_countIsect[22:0]
+TOP.correlator_tb.u_bpCorrelator.genblk1(0).u_correlator.logdrop_countSymdiff[22:0]
+@1401200
+-count
+[pattern_trace] 1
+[pattern_trace] 0
