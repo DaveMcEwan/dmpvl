@@ -16,6 +16,8 @@ echo "frequency_Hz 2000" > tbCtrl
 echo "continue" > tbCtrl
 
 # Run the interactive application as a foreground process.
+# When doing interactive use the VCD will be very large unless the frequency is
+# kept low, say to 200Hz.
 #correlator-tui -v --device=ptyBytePipe_bp0
 
 # Run recording application as a (short-lived) foreground process.
@@ -24,12 +26,15 @@ correlator-record -v --device=ptyBytePipe_bp0 \
   --init-windowLengthExp=5 -n=200 \
   --timeout=10.0 -o ./build/data.txt
 
-# Plot recorded data.
-plotCsv --skiprows=1 -o ./build/plot ./build/data.txt
-
 # Now that the application has finished, stop the tb.
 echo "discontinue" > tbCtrl
 echo "step 10" > tbCtrl
 sleep 1
 echo "quit" > tbCtrl
+
+# Compress VCD to FST format for faster wave browsing.
+vcd2fst ./build/correlator_tb.verilator.vcd ./build/correlator_tb.verilator.fst
+
+# Plot recorded data.
+plotCsv --skiprows=1 --labels=X,Y,isect,symdiff -o ./build/plot ./build/data.txt
 
