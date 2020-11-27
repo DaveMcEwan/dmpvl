@@ -20,6 +20,7 @@ echo "continue" > tbCtrl
 
 # Run recording application as a (short-lived) foreground process.
 correlator-record -v --device=ptyBytePipe_bp0 \
+  --init-xSelect=1 --init-ySelect=2 \
   --init-windowLengthExp=5 -n=200 \
   --timeout=10.0 -o ./build/data.txt
 

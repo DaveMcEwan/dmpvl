@@ -27,9 +27,10 @@ end else begin
   assign inFF = i_in;
 end endgenerate
 
-wire [N_OUT*$clog2(N_IN)-1:0] selectFF;
+localparam SEL_W = $clog2(N_IN);
+wire [N_OUT*SEL_W-1:0] selectFF;
 generate if (FF_IN) begin
-  `dff_cg_norst_d(reg [N_OUT*$clog2(N_IN)-1:0], selectFF, i_clk, i_cg, i_select)
+  `dff_cg_norst_d(reg [N_OUT*SEL_W-1:0], selectFF, i_clk, i_cg, i_select)
   assign selectFF = selectFF_q;
 end else begin
   assign selectFF = i_select;
@@ -45,7 +46,8 @@ end endgenerate
 
 genvar i;
 generate for (i = 0; i < N_OUT; i=i+1) begin
-  assign outFF[i*WIDTH +: WIDTH] = inFF[selectFF*WIDTH +: WIDTH];
+  wire [SEL_W-1:0] sel = selectFF[i*SEL_W +: SEL_W];
+  assign outFF[i*WIDTH +: WIDTH] = inFF[sel*WIDTH +: WIDTH];
 end endgenerate
 
 endmodule

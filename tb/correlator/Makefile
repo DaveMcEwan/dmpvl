@@ -12,6 +12,7 @@ V_SRC := \
 	../../hdl/prngXoshiro128p.sv \
 	../../hdl/strobe.sv \
 	../../hdl/pwm.sv \
+	../../hdl/xbar.sv \
 	../../hdl/corrCountRect.sv \
 	../../hdl/corrCountLogdrop.sv \
 	../../prj/correlator/correlator.sv \
