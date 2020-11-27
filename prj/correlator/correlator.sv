@@ -111,7 +111,7 @@ strobe #(
   .i_ctrlJitter       ('0),
 
   .i_jitterSeedByte   ('0),
-  .i_jitterSeedValid  ('0),
+  .i_jitterSeedValid  (1'b0),
   .o_jitterPrng       (_unused_counterStrobe_xoshiro128p),
 
   .o_strobe           (counterStrobe)

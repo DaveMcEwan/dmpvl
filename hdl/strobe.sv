@@ -56,14 +56,28 @@ generate if (ENABLE_JITTER != '0) begin
   // - extendNotShorten comes from top bits
   // - compare comes from bits below extendNotShorten.
   for (i = 0; i < N_STROBE; i=i+1) begin
+    /* Indices check/confirm with Python.
+    N_STROBE = 2
+    PRNG_RESULT_W = 32
+    CTRL_JITTER_W = 8
+    for i in range(N_STROBE):
+        print("extendNotShorten", PRNG_RESULT_W - i - 1)
+        print("compare", [PRNG_RESULT_W - N_STROBE*(CTRL_JITTER_W-b) - i - 1
+                          for b in range(CTRL_JITTER_W)] )
+    */
 
     wire [CTRL_JITTER_W-1:0] compare;
     for (b = 0; b < CTRL_JITTER_W; b=b+1) begin
-      assign compare[b] = o_jitterPrng[PRNG_RESULT_W - N_STROBE*(CTRL_JITTER_W-b) + i - 1];
+      assign compare[b] = o_jitterPrng[PRNG_RESULT_W - N_STROBE*(CTRL_JITTER_W-b) - i - 1];
     end
 
     assign extendNotShorten[i] = o_jitterPrng[PRNG_RESULT_W - i - 1];
-    assign jitterThisCycle[i] = (compare < i_ctrlJitter);
+
+    // Only allow jitter when PRNG is running, otherwise the period will be
+    // half because the comparison will always be true, but jitterShorten will
+    // never assert.
+    `dff_cg_norst_d(reg, prngRunning, i_clk, i_cg, (o_jitterPrng != '0))
+    assign jitterThisCycle[i] = (compare < i_ctrlJitter) && prngRunning_q;
   end
 end else begin
   assign o_jitterPrng = '0;
