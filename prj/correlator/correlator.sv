@@ -333,15 +333,15 @@ always @*
   case (i_windowShape)
     WINDOW_SHAPE_LOGDROP: begin
       countX_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countY_d        = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countIsect_d    = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
-      countSymdiff_d  = logdrop_countX[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countY_d        = logdrop_countY[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countIsect_d    = logdrop_countIsect[WINDOW_TIME_W-TIME_W +: TIME_W];
+      countSymdiff_d  = logdrop_countSymdiff[WINDOW_TIME_W-TIME_W +: TIME_W];
     end
     default: begin // WINDOW_SHAPE_RECTANGULAR
       countX_d        = rect_countX;
-      countY_d        = rect_countX;
-      countIsect_d    = rect_countX;
-      countSymdiff_d  = rect_countX;
+      countY_d        = rect_countY;
+      countIsect_d    = rect_countIsect;
+      countSymdiff_d  = rect_countSymdiff;
     end
   endcase
 
