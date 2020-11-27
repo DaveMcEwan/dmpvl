@@ -48,42 +48,42 @@ Table created by looking at post-processed version of
 `piton/design/chip/rtl/chip.v.pyv` which is generated to
 `openpiton/piton/design/chip/rtl/chip.tmp.v`.
 
-Select  | Wire
-------  | ----
-36      | `system.chip.tile_0_2_out_W_noc3_valid`
-35      | `system.chip.tile_0_2_out_W_noc2_valid`
-34      | `system.chip.tile_0_2_out_W_noc1_valid`
-33      | `system.chip.tile_0_2_out_S_noc3_valid`
-32      | `system.chip.tile_0_2_out_S_noc2_valid`
-31      | `system.chip.tile_0_2_out_S_noc1_valid`
-30      | `system.chip.tile_0_2_out_E_noc3_valid`
-29      | `system.chip.tile_0_2_out_E_noc2_valid`
-28      | `system.chip.tile_0_2_out_E_noc1_valid`
-27      | `system.chip.tile_0_2_out_N_noc3_valid`
-26      | `system.chip.tile_0_2_out_N_noc2_valid`
-25      | `system.chip.tile_0_2_out_N_noc1_valid`
-24      | `system.chip.tile_0_1_out_W_noc3_valid`
-23      | `system.chip.tile_0_1_out_W_noc2_valid`
-22      | `system.chip.tile_0_1_out_W_noc1_valid`
-21      | `system.chip.tile_0_1_out_S_noc3_valid`
-20      | `system.chip.tile_0_1_out_S_noc2_valid`
-19      | `system.chip.tile_0_1_out_S_noc1_valid`
-18      | `system.chip.tile_0_1_out_E_noc3_valid`
-17      | `system.chip.tile_0_1_out_E_noc2_valid`
-16      | `system.chip.tile_0_1_out_E_noc1_valid`
-15      | `system.chip.tile_0_1_out_N_noc3_valid`
-14      | `system.chip.tile_0_1_out_N_noc2_valid`
-13      | `system.chip.tile_0_1_out_N_noc1_valid`
-12      | `system.chip.tile_0_0_out_W_noc3_valid`
-11      | `system.chip.tile_0_0_out_W_noc2_valid`
-10      | `system.chip.tile_0_0_out_W_noc1_valid`
-9       | `system.chip.tile_0_0_out_S_noc3_valid`
-8       | `system.chip.tile_0_0_out_S_noc2_valid`
-7       | `system.chip.tile_0_0_out_S_noc1_valid`
-6       | `system.chip.tile_0_0_out_E_noc3_valid`
-5       | `system.chip.tile_0_0_out_E_noc2_valid`
-4       | `system.chip.tile_0_0_out_E_noc1_valid`
-3       | `system.chip.tile_0_0_out_N_noc3_valid`
-2       | `system.chip.tile_0_0_out_N_noc2_valid`
-1       | `system.chip.tile_0_0_out_N_noc1_valid`
+Select  | Wire                                    | Interesting
+------  | ----                                    | -----------
+36      | `system.chip.tile_0_2_out_W_noc3_valid` | yes
+35      | `system.chip.tile_0_2_out_W_noc2_valid` | yes
+34      | `system.chip.tile_0_2_out_W_noc1_valid` | yes
+33      | `system.chip.tile_0_2_out_S_noc3_valid` | -
+32      | `system.chip.tile_0_2_out_S_noc2_valid` | -
+31      | `system.chip.tile_0_2_out_S_noc1_valid` | -
+30      | `system.chip.tile_0_2_out_E_noc3_valid` | -
+29      | `system.chip.tile_0_2_out_E_noc2_valid` | -
+28      | `system.chip.tile_0_2_out_E_noc1_valid` | -
+27      | `system.chip.tile_0_2_out_N_noc3_valid` | -
+26      | `system.chip.tile_0_2_out_N_noc2_valid` | -
+25      | `system.chip.tile_0_2_out_N_noc1_valid` | -
+24      | `system.chip.tile_0_1_out_W_noc3_valid` | yes
+23      | `system.chip.tile_0_1_out_W_noc2_valid` | yes
+22      | `system.chip.tile_0_1_out_W_noc1_valid` | yes
+21      | `system.chip.tile_0_1_out_S_noc3_valid` | -
+20      | `system.chip.tile_0_1_out_S_noc2_valid` | -
+19      | `system.chip.tile_0_1_out_S_noc1_valid` | -
+18      | `system.chip.tile_0_1_out_E_noc3_valid` | yes
+17      | `system.chip.tile_0_1_out_E_noc2_valid` | yes
+16      | `system.chip.tile_0_1_out_E_noc1_valid` | yes
+15      | `system.chip.tile_0_1_out_N_noc3_valid` | -
+14      | `system.chip.tile_0_1_out_N_noc2_valid` | -
+13      | `system.chip.tile_0_1_out_N_noc1_valid` | -
+12      | `system.chip.tile_0_0_out_W_noc3_valid` | yes
+11      | `system.chip.tile_0_0_out_W_noc2_valid` | yes
+10      | `system.chip.tile_0_0_out_W_noc1_valid` | yes
+9       | `system.chip.tile_0_0_out_S_noc3_valid` | -
+8       | `system.chip.tile_0_0_out_S_noc2_valid` | -
+7       | `system.chip.tile_0_0_out_S_noc1_valid` | -
+6       | `system.chip.tile_0_0_out_E_noc3_valid` | yes,offchip
+5       | `system.chip.tile_0_0_out_E_noc2_valid` | yes,offchip
+4       | `system.chip.tile_0_0_out_E_noc1_valid` | yes,offchip
+3       | `system.chip.tile_0_0_out_N_noc3_valid` | -
+2       | `system.chip.tile_0_0_out_N_noc2_valid` | -
+1       | `system.chip.tile_0_0_out_N_noc1_valid` | -
 0       | Fixed to GND/logical zero.
