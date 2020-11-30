@@ -1,0 +1,98 @@
+[*]
+[*] GTKWave Analyzer v3.3.79 (w)1999-2017 BSI
+[*] Mon Nov 30 16:43:45 2020
+[*]
+[dumpfile] "/space/dmpvl/tb/pushbutton/build/pushbutton_tb.iverilog.vcd"
+[dumpfile_mtime] "Mon Nov 30 16:36:01 2020"
+[dumpfile_size] 334024
+[savefile] "/space/dmpvl/tb/pushbutton/pushbutton.gtkw"
+[timestart] 0
+[size] 1920 1031
+[pos] -1 -1
+*-12.473739 17775 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] pushbutton_tb.
+[treeopen] pushbutton_tb.u_pushbutton_7.
+[treeopen] pushbutton_tb.u_pushbutton_8.
+[treeopen] pushbutton_tb.u_pushbutton_9.
+[sst_width] 220
+[signals_width] 238
+[sst_expanded] 1
+[sst_vpaned_height] 297
+@28
+pushbutton_tb.rst
+pushbutton_tb.cg
+@29
+pushbutton_tb.clk
+@22
+pushbutton_tb.nCycles_q[31:0]
+@28
+pushbutton_tb.common_i_button
+pushbutton_tb.pushbutton_7_debounced
+pushbutton_tb.pushbutton_8_debounced
+pushbutton_tb.pushbutton_9_debounced
+pushbutton_tb.pushbutton_7_toggleOnPress
+pushbutton_tb.pushbutton_8_toggleOnPress
+pushbutton_tb.pushbutton_9_toggleOnPress
+@800200
+-pb7
+@28
+pushbutton_tb.u_pushbutton_7.stableBit
+pushbutton_tb.u_pushbutton_7.changed
+pushbutton_tb.u_pushbutton_7.genblk2.inputToggle
+@8028
+pushbutton_tb.u_pushbutton_7.genblk2.cntr_q[2:0]
+@20000
+-
+@28
+pushbutton_tb.u_pushbutton_7.nEdge_q
+pushbutton_tb.u_pushbutton_7.nRise_q
+pushbutton_tb.u_pushbutton_7.nFall_q
+pushbutton_tb.u_pushbutton_7.o_edge
+pushbutton_tb.u_pushbutton_7.genblk2.debounced_q
+@1000200
+-pb7
+@800200
+-pb8
+@28
+pushbutton_tb.u_pushbutton_8.stableBit
+pushbutton_tb.u_pushbutton_8.changed
+pushbutton_tb.u_pushbutton_8.genblk2.inputToggle
+@8022
+pushbutton_tb.u_pushbutton_8.genblk2.cntr_q[3:0]
+@20000
+-
+@28
+pushbutton_tb.u_pushbutton_8.nEdge_q
+pushbutton_tb.u_pushbutton_8.nRise_q
+pushbutton_tb.u_pushbutton_8.nFall_q
+pushbutton_tb.u_pushbutton_8.o_edge
+pushbutton_tb.u_pushbutton_8.genblk2.debounced_q
+@1000200
+-pb8
+@800200
+-pb9
+@28
+pushbutton_tb.u_pushbutton_9.stableBit
+pushbutton_tb.u_pushbutton_9.changed
+pushbutton_tb.u_pushbutton_9.genblk2.inputToggle
+@c08022
+pushbutton_tb.u_pushbutton_9.genblk2.cntr_q[3:0]
+@28
+(0)pushbutton_tb.u_pushbutton_9.genblk2.cntr_q[3:0]
+(1)pushbutton_tb.u_pushbutton_9.genblk2.cntr_q[3:0]
+(2)pushbutton_tb.u_pushbutton_9.genblk2.cntr_q[3:0]
+(3)pushbutton_tb.u_pushbutton_9.genblk2.cntr_q[3:0]
+@1409200
+-group_end
+@20000
+-
+@28
+pushbutton_tb.u_pushbutton_9.nEdge_q
+pushbutton_tb.u_pushbutton_9.nRise_q
+pushbutton_tb.u_pushbutton_9.nFall_q
+pushbutton_tb.u_pushbutton_9.o_edge
+pushbutton_tb.u_pushbutton_9.genblk2.debounced_q
+@1000200
+-pb9
+[pattern_trace] 1
+[pattern_trace] 0

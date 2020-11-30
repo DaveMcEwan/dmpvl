@@ -5,7 +5,7 @@ N_CYCLES ?= 2000
 
 V_SRC := \
 	../../verif/generateClock.sv \
-	../../hdl/pushbutton.sv \
+	../../hdl/syncBit.sv \
 	../../hdl/pwm.sv \
 	$(TB).sv
 

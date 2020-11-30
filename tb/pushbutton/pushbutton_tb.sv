@@ -13,14 +13,14 @@ module pushbutton_tb (
 
   output wire           common_i_button,
 
-  output wire           pushbutton_7_o_debounced,
-  output wire           pushbutton_7_o_toggle,
+  output wire           pushbutton_7_debounced,
+  output wire           pushbutton_7_toggleOnPress,
 
-  output wire           pushbutton_8_o_debounced,
-  output wire           pushbutton_8_o_toggle,
+  output wire           pushbutton_8_debounced,
+  output wire           pushbutton_8_toggleOnPress,
 
-  output wire           pushbutton_9_o_debounced,
-  output wire           pushbutton_9_o_toggle
+  output wire           pushbutton_9_debounced,
+  output wire           pushbutton_9_toggleOnPress
 `endif
 );
 
@@ -94,43 +94,64 @@ pwm #(
 );
 
 
-pushbutton #(
-  .DEBOUNCE_CYCLES (7)
+syncBit #(
+  .DEBOUNCE_CYCLES (7),
+  .EDGECNTR_W (1),
+  .N_SYNC     (3)
 ) u_pushbutton_7 (
   .i_clk      (clk),
   .i_cg       (cg),
   .i_rst      (rst),
 
-  .i_button     (common_i_button),
+  .i_bit      (common_i_button),
 
-  .o_debounced  (pushbutton_7_o_debounced),
-  .o_toggle     (pushbutton_7_o_toggle)
+  .o_bit      (pushbutton_7_debounced),
+  .o_edge     (),
+  .o_rise     (),
+  .o_fall     (),
+  .o_nEdge    (),
+  .o_nRise    (pushbutton_7_toggleOnPress),
+  .o_nFall    ()
 );
 
-pushbutton #(
-  .DEBOUNCE_CYCLES (8)
+syncBit #(
+  .DEBOUNCE_CYCLES (8),
+  .EDGECNTR_W (1),
+  .N_SYNC     (3)
 ) u_pushbutton_8 (
   .i_clk      (clk),
   .i_cg       (cg),
   .i_rst      (rst),
 
-  .i_button     (common_i_button),
+  .i_bit      (common_i_button),
 
-  .o_debounced  (pushbutton_8_o_debounced),
-  .o_toggle     (pushbutton_8_o_toggle)
+  .o_bit      (pushbutton_8_debounced),
+  .o_edge     (),
+  .o_rise     (),
+  .o_fall     (),
+  .o_nEdge    (),
+  .o_nRise    (pushbutton_8_toggleOnPress),
+  .o_nFall    ()
 );
 
-pushbutton #(
-  .DEBOUNCE_CYCLES (9)
+syncBit #(
+  .DEBOUNCE_CYCLES (9),
+  .EDGECNTR_W (1),
+  .N_SYNC     (3)
 ) u_pushbutton_9 (
   .i_clk      (clk),
   .i_cg       (cg),
   .i_rst      (rst),
 
-  .i_button     (common_i_button),
+  .i_bit      (common_i_button),
 
-  .o_debounced  (pushbutton_9_o_debounced),
-  .o_toggle     (pushbutton_9_o_toggle)
+  .o_bit      (pushbutton_9_debounced),
+  .o_edge     (),
+  .o_rise     (),
+  .o_fall     (),
+  .o_nEdge    (),
+  .o_nRise    (pushbutton_9_toggleOnPress),
+  .o_nFall    ()
 );
 
 endmodule
