@@ -12,6 +12,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) axi4liteRandomMaster.sv
 	verilator $(VERILATOR_FLAGS) axi4liteRandomSlave.sv
 	verilator $(VERILATOR_FLAGS) bpRegMem.sv
+	verilator $(VERILATOR_FLAGS) cdcData.sv
 	verilator $(VERILATOR_FLAGS) corrCountLogdrop.sv
 	verilator $(VERILATOR_FLAGS) corrCountRect.sv
 	verilator $(VERILATOR_FLAGS) dividerFsm.sv
@@ -50,6 +51,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomMaster.sv
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomSlave.sv
 	iverilog $(IVERILOG_FLAGS) bpRegMem.sv
+	iverilog $(IVERILOG_FLAGS) -i cdcData.sv
 	iverilog $(IVERILOG_FLAGS) -i corrCountLogdrop.sv
 	iverilog $(IVERILOG_FLAGS) corrCountRect.sv
 	iverilog $(IVERILOG_FLAGS) dividerFsm.sv
@@ -86,6 +88,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv axi4liteRandomMaster.sv'
 	yosys -q -p 'read_verilog -sv axi4liteRandomSlave.sv'
 	yosys -q -p 'read_verilog -sv bpRegMem.sv'
+	yosys -q -p 'read_verilog -sv cdcData.sv'
 	yosys -q -p 'read_verilog -sv corrCountLogdrop.sv'
 	yosys -q -p 'read_verilog -sv corrCountRect.sv'
 	yosys -q -p 'read_verilog -sv dividerFsm.sv'
@@ -124,6 +127,7 @@ add_files \\
 	axi4liteRandomMaster.sv \\
 	axi4liteRandomSlave.sv \\
 	bpRegMem.sv \\
+	cdcData.sv \\
 	corrCountLogdrop.sv \\
 	corrCountRect.sv \\
 	dividerFsm.sv \\
