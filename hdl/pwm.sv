@@ -3,14 +3,14 @@
 /* Pulse Width Modulator
  *
  * Two architectures:
- * A. Comparator gives wide pulses with fixed period of 2**WIDTH cycles.
+ * 0. Comparator gives wide pulses with fixed period of 2**WIDTH cycles.
  *  - Use a wrapping free-running counter compared against i_x.
- * B. ΔΣ (delta-sigma) gives narrow pulses with variable period.
+ * 1. ΔΣ (delta-sigma) gives narrow pulses with variable period.
  *  - ΔΣ is not strictly a pulse-width-modulator but more like
  *    a pulse-frequency-modulator but the application areas overlap so having
  *    one module makes more sense for synthesis experiments.
  *
- * Comparator and ΣΔ implementations have same number of dff.
+ * Comparator and ΔΣ implementations have same number of dff.
  * State of all dffs is provided on outputs for either implementation.
  * Output is straight from dff for either implementation.
  *
@@ -37,7 +37,7 @@ module pwm #(
   output wire                         o_y
 );
 
-generate if (ARCH == 1) begin : b_sigmaDelta
+generate if (ARCH == 1) begin : b_deltaSigma
 
   `dff_cg_srst(reg [WIDTH:0], acc, i_clk, i_cg, i_rst, '0)
   always @* acc_d = {1'b0, acc_q[WIDTH-1:0]} + {1'b0, i_x};
@@ -46,7 +46,7 @@ generate if (ARCH == 1) begin : b_sigmaDelta
 
   assign o_y = acc_q[WIDTH];
 
-end : b_sigmaDelta else begin : b_comparator
+end : b_deltaSigma else begin : b_comparator
 
   `dff_upcounter(reg [WIDTH-1:0], acc, i_clk, i_cg, i_rst)
 
