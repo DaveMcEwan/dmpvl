@@ -5,12 +5,12 @@
  * Optional debouncing for highly metastable inputs, such as pushbutton.
  *
  * N_SYNC defines the number of resync flops (before debouncing), and should
- * generally be at least 3
+ * generally be at least 2
  * Diagram of non-debounce circuit:
  *
  *               Large        Regular         Regular
  *               sync[0]      sync[1]         sync[2]
- *               sync[0]      sync[N_SYNC-2]  sync[N_SYNC-1]
+ *               sync[0]      sync[N_SYNC-1]  sync[N_SYNC]
  *
  *               +---+        +---+           +---+
  *    i_bit ---> |   | ---->  |   | ----o---> |   | --+
@@ -29,7 +29,7 @@
  *    Driven by flop.
  * o_edge: Pulse for single cycle when synced+debounced bit changes value.
  *    Driven by logic.
- *    If unconnected and DEBOUNCE_CYCLES=0 then sync_q[N_SYNC-1] may be removed
+ *    If unconnected and DEBOUNCE_CYCLES=0 then sync_q[N_SYNC] may be removed
  *    by synthesis.
  * o_nEdge, o_nRise, o_nFall: Upcounters incrementing on edge, posedge, negedge.
  *    Driven by flops.
@@ -64,11 +64,11 @@ module syncBit #(
 
 // Higher order bits should be physically larger flops, if possible, to reduce
 // MTBF of metastability propagation by having shorter sample windows.
-`dff_cg_srst(reg [N_SYNC-1:0], sync, i_clk, i_cg, i_rst, '0)
-always @* sync_d = {sync_q[N_SYNC-2:0], i_bit};
+`dff_cg_srst(reg [N_SYNC:0], sync, i_clk, i_cg, i_rst, '0)
+always @* sync_d = {sync_q[N_SYNC-1:0], i_bit};
 
-wire stableBit = sync_q[N_SYNC-2];
-wire changed = (sync_q[N_SYNC-2] != sync_q[N_SYNC-1]);
+wire stableBit = sync_q[N_SYNC-1];
+wire changed = (sync_q[N_SYNC] != stableBit);
 
 generate if (DEBOUNCE_CYCLES == 0) begin
   assign o_bit = stableBit;

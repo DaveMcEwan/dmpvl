@@ -97,7 +97,7 @@ pwm #(
 syncBit #(
   .DEBOUNCE_CYCLES (7),
   .EDGECNTR_W (1),
-  .N_SYNC     (3)
+  .N_SYNC     (2)
 ) u_pushbutton_7 (
   .i_clk      (clk),
   .i_cg       (cg),
@@ -117,7 +117,7 @@ syncBit #(
 syncBit #(
   .DEBOUNCE_CYCLES (8),
   .EDGECNTR_W (1),
-  .N_SYNC     (3)
+  .N_SYNC     (2)
 ) u_pushbutton_8 (
   .i_clk      (clk),
   .i_cg       (cg),
@@ -137,7 +137,7 @@ syncBit #(
 syncBit #(
   .DEBOUNCE_CYCLES (9),
   .EDGECNTR_W (1),
-  .N_SYNC     (3)
+  .N_SYNC     (2)
 ) u_pushbutton_9 (
   .i_clk      (clk),
   .i_cg       (cg),
