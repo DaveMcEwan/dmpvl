@@ -20,6 +20,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) fifoW1R1.sv
 	verilator $(VERILATOR_FLAGS) fpgaReset.sv
 	verilator $(VERILATOR_FLAGS) fxcs.sv
+	verilator $(VERILATOR_FLAGS) grayCounter.sv
 	verilator $(VERILATOR_FLAGS) logdropWindow.sv
 	verilator $(VERILATOR_FLAGS) mssbIdx.sv
 	verilator $(VERILATOR_FLAGS) onehotIdx.sv
@@ -59,6 +60,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) fifoW1R1.sv
 	iverilog $(IVERILOG_FLAGS) fpgaReset.sv
 	iverilog $(IVERILOG_FLAGS) fxcs.sv
+	iverilog $(IVERILOG_FLAGS) grayCounter.sv
 	iverilog $(IVERILOG_FLAGS) -i logdropWindow.sv
 	iverilog $(IVERILOG_FLAGS) -i mssbIdx.sv
 	iverilog $(IVERILOG_FLAGS) onehotIdx.sv
@@ -96,6 +98,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv fifoW1R1.sv'
 	yosys -q -p 'read_verilog -sv fpgaReset.sv'
 	yosys -q -p 'read_verilog -sv fxcs.sv'
+	yosys -q -p 'read_verilog -sv grayCounter.sv'
 	yosys -q -p 'read_verilog -sv logdropWindow.sv'
 	yosys -q -p 'read_verilog -sv mssbIdx.sv'
 	yosys -q -p 'read_verilog -sv onehotIdx.sv'
@@ -135,6 +138,7 @@ add_files \\
 	fifoW1R1.sv \\
 	fpgaReset.sv \\
 	fxcs.sv \\
+	grayCounter.sv \\
 	logdropWindow.sv \\
 	mssbIdx.sv \\
 	onehotIdx.sv \\
