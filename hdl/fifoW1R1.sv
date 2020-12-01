@@ -123,15 +123,10 @@ generate if (FLOPS_NOT_MEM != 0) begin : useFlops
 
   for (i = 0; i < DEPTH; i=i+1) begin : entries_b
 
-    always @*
-      if (o_pushed && wr_vec[i])
-        entries_d[i] = i_data;
-      else
-        entries_d[i] = entries_q[i];
+    always @* entries_d[i] = (o_pushed && wr_vec[i]) ? i_data : entries_q[i];
 
-    always @ (posedge i_clk)
-      if (i_cg)
-        entries_q[i] <= entries_d[i];
+    always @ (posedge i_clk) if (i_cg)
+      entries_q[i] <= entries_d[i];
 
     assign o_entries[i*WIDTH +: WIDTH] = entries_q[i];
 
@@ -146,9 +141,8 @@ end : useFlops else begin : useMem
 
   reg [WIDTH-1:0] entries_m [DEPTH];
 
-  always @ (posedge i_clk)
-    if (i_cg && o_pushed)
-      entries_m[o_wptr] <= i_data;
+  always @ (posedge i_clk) if (i_cg && o_pushed)
+    entries_m[o_wptr] <= i_data;
 
   assign o_data = entries_m[o_rptr];
 

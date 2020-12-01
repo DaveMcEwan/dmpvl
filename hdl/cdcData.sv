@@ -144,8 +144,8 @@ end : topoLinear else begin : topoCircular
     always @* entries_d[1] = wptr_q ? i_wdata : entries_q[1];
 
     always @ (posedge i_wclk) if (i_wcg && doWrite) begin
-        entries_q[0] <= entries_d[0];
-        entries_q[1] <= entries_d[1];
+      entries_q[0] <= entries_d[0];
+      entries_q[1] <= entries_d[1];
     end
 
     assign o_rdata = rptr_q ? entries_q[1] : entries_q[0];
@@ -154,9 +154,8 @@ end : topoLinear else begin : topoCircular
 
     reg [WIDTH-1:0] entries_m [2];
 
-    always @ (posedge i_wclk)
-      if (i_wcg && doWrite)
-        entries_m[wptr_q] <= i_wdata;
+    always @ (posedge i_wclk) if (i_wcg && doWrite)
+      entries_m[wptr_q] <= i_wdata;
 
     assign o_rdata = entries_m[rptr_q];
 
