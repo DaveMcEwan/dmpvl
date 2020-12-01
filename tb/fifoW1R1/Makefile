@@ -1,11 +1,11 @@
 
-TB := fifo_tb
+TB := fifoW1R1_tb
 
 N_CYCLES ?= 1000000
 
 V_SRC := \
 	$(TB).sv \
-	../../hdl/fifo.sv
+	../../hdl/fifoW1R1.sv
 
 CC_SRC := \
 	fifo_model.cc \

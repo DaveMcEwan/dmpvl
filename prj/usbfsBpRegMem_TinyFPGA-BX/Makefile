@@ -11,7 +11,7 @@ BUILD := ./build
 
 SRC := \
 	../../hdl/bpRegMem.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fpgaReset.sv \
 	../../hdl/usbfsPktRx.sv \
 	../../hdl/usbfsPktTx.sv \

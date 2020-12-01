@@ -1,7 +1,8 @@
 `include "dff.svh"
 `include "misc.svh"
 
-module fifo #(
+// Standard FIFO (single write port and single read port)
+module fifoW1R1 #(
   parameter WIDTH = 8,  // Must be 1 or more.
   parameter DEPTH = 8,  // Must be 2 or more.
   parameter FLOPS_NOT_MEM = 0, // 0 -> RAM, 1 -> FFs

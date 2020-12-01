@@ -16,7 +16,7 @@ BUILD := ./build
 PART := xc7vx485tffg1761-2
 
 SRC := \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fxcs.sv \
 	../../hdl/logdropWindow.sv \
 	../../hdl/mssbIdx.sv \

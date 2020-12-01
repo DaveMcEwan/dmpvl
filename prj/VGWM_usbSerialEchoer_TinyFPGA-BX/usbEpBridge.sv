@@ -82,7 +82,7 @@ assign outEp_reqGranted = o_outEp_req && i_outEp_grant;
 // {{{ Host-to-consumer buffer
 wire fifoOut_notFull;
 wire fifoOut_notEmpty;
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (8),
   .FLOPS_NOT_MEM  (0)

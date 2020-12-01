@@ -195,7 +195,7 @@ assign do_rddata_corrupt = (i_pr_rddata_corrupt > rnd_rddata_corrupt);
 // }}} Pseudo Random controls
 
 // {{{ wfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(WFIFO_W),
   .DEPTH(8)
 ) u_wfifo (
@@ -227,7 +227,7 @@ fifo #(
 // }}} wfifo
 
 // {{{ bfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(BFIFO_W),
   .DEPTH(8)
 ) u_bfifo (
@@ -259,7 +259,7 @@ fifo #(
 // }}} bfifo
 
 // {{{ rfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(RFIFO_W),
   .DEPTH(8)
 ) u_rfifo (

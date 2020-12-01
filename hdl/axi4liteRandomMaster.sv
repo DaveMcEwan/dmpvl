@@ -177,7 +177,7 @@ assign do_r_stall  = (i_pr_r_stall  > rnd_r_stall);
 // }}} Pseudo Random controls
 
 // {{{ awfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(AWFIFO_W),
   .DEPTH(2)
 ) u_awfifo (
@@ -209,7 +209,7 @@ fifo #(
 // }}} awfifo
 
 // {{{ wfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(WFIFO_W),
   .DEPTH(2)
 ) u_wfifo (
@@ -241,7 +241,7 @@ fifo #(
 // }}} wfifo
 
 // {{{ arfifo
-fifo #(
+fifoW1R1 #(
   .WIDTH(ARFIFO_W),
   .DEPTH(2)
 ) u_arfifo_u (

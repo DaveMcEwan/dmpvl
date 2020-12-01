@@ -46,7 +46,7 @@ assign o_erRdEn = (rdNBytes_q != rdIdx_q);
 `dff_nocg_srst_d(reg, push, i_clk, i_rst, 1'b0, o_erRdEn)
 
 // {{{ fifo
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (MAX_PKT),
   .FLOPS_NOT_MEM  (0)

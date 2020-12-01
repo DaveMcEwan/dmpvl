@@ -5,7 +5,7 @@ V_SRC := \
 	../../hdl/resetDetect.sv \
 	../../verif/generateClock.sv \
 	../../verif/tristateBuffer.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../verif/usbFullSpeedPacketSender.sv \
 	../../verif/usbFullSpeedPacketReceiver.sv \
 	../../verif/usbFullSpeedTransactor.sv \

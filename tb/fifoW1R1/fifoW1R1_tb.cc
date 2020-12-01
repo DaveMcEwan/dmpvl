@@ -5,7 +5,7 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 #include "VerilatorTb.h"
-#include "Vfifo_tb.h"
+#include "VfifoW1R1_tb.h"
 #include "fifo_model.h"
 
 #ifndef N_CYCLES
@@ -15,7 +15,7 @@ const int N_CYCLES = 100;
 int main(int argc, char **argv, char **env) {
 
   Verilated::commandArgs(argc, argv);
-  VerilatorTb<Vfifo_tb> *tb = new VerilatorTb<Vfifo_tb>();
+  VerilatorTb<VfifoW1R1_tb> *tb = new VerilatorTb<VfifoW1R1_tb>();
   tb->opentrace("build/fifo_tb.verilator.vcd");
   tb->m_trace->dump(0); // Initialize waveform at beginning of time.
 

@@ -10,7 +10,7 @@ PROJ := top
 BUILD := ./build
 
 SRC := \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fpgaReset.sv \
 	../../verif/usbFullSpeedPacketReceiver.sv \
 	../../verif/usbFullSpeedPacketSender.sv \

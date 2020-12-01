@@ -17,7 +17,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) corrCountRect.sv
 	verilator $(VERILATOR_FLAGS) dividerFsm.sv
 	verilator $(VERILATOR_FLAGS) edgeDetect.sv
-	verilator $(VERILATOR_FLAGS) fifo.sv
+	verilator $(VERILATOR_FLAGS) fifoW1R1.sv
 	verilator $(VERILATOR_FLAGS) fpgaReset.sv
 	verilator $(VERILATOR_FLAGS) fxcs.sv
 	verilator $(VERILATOR_FLAGS) logdropWindow.sv
@@ -56,7 +56,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) corrCountRect.sv
 	iverilog $(IVERILOG_FLAGS) dividerFsm.sv
 	iverilog $(IVERILOG_FLAGS) edgeDetect.sv
-	iverilog $(IVERILOG_FLAGS) fifo.sv
+	iverilog $(IVERILOG_FLAGS) fifoW1R1.sv
 	iverilog $(IVERILOG_FLAGS) fpgaReset.sv
 	iverilog $(IVERILOG_FLAGS) fxcs.sv
 	iverilog $(IVERILOG_FLAGS) -i logdropWindow.sv
@@ -93,7 +93,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv corrCountRect.sv'
 	yosys -q -p 'read_verilog -sv dividerFsm.sv'
 	yosys -q -p 'read_verilog -sv edgeDetect.sv'
-	yosys -q -p 'read_verilog -sv fifo.sv'
+	yosys -q -p 'read_verilog -sv fifoW1R1.sv'
 	yosys -q -p 'read_verilog -sv fpgaReset.sv'
 	yosys -q -p 'read_verilog -sv fxcs.sv'
 	yosys -q -p 'read_verilog -sv logdropWindow.sv'
@@ -132,7 +132,7 @@ add_files \\
 	corrCountRect.sv \\
 	dividerFsm.sv \\
 	edgeDetect.sv \\
-	fifo.sv \\
+	fifoW1R1.sv \\
 	fpgaReset.sv \\
 	fxcs.sv \\
 	logdropWindow.sv \\

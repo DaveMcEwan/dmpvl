@@ -28,7 +28,7 @@ if {$SYNTH_YOSYS == 0} {
     ${dirHdl}/usbfsEndpTx.sv \
     ${dirHdl}/usbfsEndpCtrlSerial.sv \
     ${dirHdl}/usbfsSerial.sv \
-    ${dirHdl}/fifo.sv \
+    ${dirHdl}/fifoW1R1.sv \
     ${dirHdl}/fxcs.sv \
     ${dirHdl}/logdropWindow.sv \
     ${dirHdl}/mssbIdx.sv \

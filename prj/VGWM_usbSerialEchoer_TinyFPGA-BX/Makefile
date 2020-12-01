@@ -9,7 +9,7 @@ BUILD := ./build
 
 SRC := \
 	../../hdl/edgeDetect.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fpgaReset.sv \
 	usbPktTxMux.sv \
 	usbPktTx.sv \

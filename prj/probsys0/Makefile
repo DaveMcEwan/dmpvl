@@ -15,7 +15,7 @@ SRC = \
 	$(PROJ).sv \
 	../../hdl/resetDetect.sv \
 	../../hdl/prngXoroshiro128p.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/axi4liteMonitor.sv \
 	../../hdl/axi4liteRandomSlave.sv \
 	../../hdl/axi4liteRandomMaster.sv

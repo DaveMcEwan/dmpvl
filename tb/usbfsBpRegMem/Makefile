@@ -3,7 +3,7 @@ TB := usbfsBpRegMem_tb
 
 V_SRC := \
 	../../hdl/resetDetect.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../verif/generateClock.sv \
 	../../verif/tristateBuffer.sv \
 	../../verif/usbFullSpeedPacketSender.sv \

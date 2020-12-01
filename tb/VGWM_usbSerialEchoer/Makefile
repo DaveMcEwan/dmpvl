@@ -6,7 +6,7 @@ V_SRC := \
 	../../verif/tristateBuffer.sv \
 	../../hdl/resetDetect.sv \
 	../../hdl/edgeDetect.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTxMux.sv \
 	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktTx.sv \
 	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.sv \

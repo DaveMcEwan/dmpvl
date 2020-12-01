@@ -20,7 +20,7 @@ SRC := \
 	../../hdl/onehotIdx.sv \
 	../../hdl/mssbIdx.sv \
 	../../hdl/logdropWindow.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fpgaReset.sv \
 	../../hdl/usbfsPktRx.sv \
 	../../hdl/usbfsPktTx.sv \

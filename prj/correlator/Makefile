@@ -18,7 +18,7 @@ SRC := \
 	../../hdl/usbfsEndpTx.sv \
 	../../hdl/usbfsEndpCtrlSerial.sv \
 	../../hdl/usbfsSerial.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fxcs.sv \
 	../../hdl/logdropWindow.sv \
 	../../hdl/mssbIdx.sv \

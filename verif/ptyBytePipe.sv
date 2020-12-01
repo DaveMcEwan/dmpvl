@@ -72,7 +72,7 @@ assign fifoDnstream_i_valid = i_bpDnstream_valid && o_bpDnstream_ready;
 // NOTE: DPI ptyBytePipe_putByte drives fifoDnstream_i_ready
 
 
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (8),
   .FLOPS_NOT_MEM  (0)
@@ -103,7 +103,7 @@ fifo #(
   .o_entries  (fifoUpstream_o_entries)
 ); // }}}
 
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (8),
   .FLOPS_NOT_MEM  (0)

@@ -1,9 +1,9 @@
-/** fifo_tb.v - Testbench for fifo
+/** fifoW1R1_tb
  * Instance multiple fifos with different parameters.
  * Instance name should be u_fifo_<WIDTH>_<DEPTH>_(mem|flops)
  * Connecting wires should be <instance>_<port>
  */
-module fifo_tb (
+module fifoW1R1_tb (
 
   // {{{ Default parameters.
   output wire [ 7:0]    fifo_8_8_mem_i_data,
@@ -86,7 +86,7 @@ assign fifo_5_5_mem_i_data = common_data[4:0];
 assign fifo_8_2_flops_i_data = common_data[7:0];
 
 // {{{ Default parameters.
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (8),
   .FLOPS_NOT_MEM  (0)
@@ -119,7 +119,7 @@ fifo #(
 // }}} Default parameters.
 
 // {{{ Minimal width and depth.
-fifo #(
+fifoW1R1 #(
   .WIDTH          (1),
   .DEPTH          (2),
   .FLOPS_NOT_MEM  (0)
@@ -152,7 +152,7 @@ fifo #(
 // }}} Minimal width and depth.
 
 // {{{ Non-pow2 width and depth.
-fifo #(
+fifoW1R1 #(
   .WIDTH          (5),
   .DEPTH          (5),
   .FLOPS_NOT_MEM  (0)
@@ -185,7 +185,7 @@ fifo #(
 // }}} Non-pow2 width and depth.
 
 // {{{ Flops, not memory block.
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (2),
   .FLOPS_NOT_MEM  (1)

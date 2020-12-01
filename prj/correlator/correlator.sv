@@ -296,7 +296,7 @@ wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rptr;
 wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_validEntries;
 wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
 wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (PKTFIFO_DEPTH),
   .FLOPS_NOT_MEM  (0)

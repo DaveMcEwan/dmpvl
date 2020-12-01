@@ -4,7 +4,7 @@ TB := correlator_tb
 V_SRC := \
 	$(TB).sv \
 	../../verif/ptyBytePipe.sv \
-	../../hdl/fifo.sv \
+	../../hdl/fifoW1R1.sv \
 	../../hdl/fxcs.sv \
 	../../hdl/logdropWindow.sv \
 	../../hdl/mssbIdx.sv \

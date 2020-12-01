@@ -40,7 +40,7 @@ wire [15:0] _unused_fifo_o_entries;
 
 `dff_nocg_srst(reg, writing, i_clk, i_rst, 1'b0)
 
-fifo #(
+fifoW1R1 #(
   .WIDTH          (8),
   .DEPTH          (2),
   .FLOPS_NOT_MEM  (1)
