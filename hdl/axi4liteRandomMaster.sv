@@ -83,34 +83,28 @@ wire do_b_stall;
 wire do_ar_stall;
 wire do_r_stall;
 
-wire awfifo_i_push;
-wire awfifo_i_pop;
-wire awfifo_o_empty;
-wire awfifo_o_full;
-wire awfifo_o_pushed;
-wire awfifo_o_popped;
 wire [AWFIFO_W-1:0] awfifo_i_data;
+wire awfifo_i_valid;
+wire awfifo_o_ready;
 wire [AWFIFO_W-1:0] awfifo_o_data;
+wire awfifo_o_valid;
+wire awfifo_i_ready;
 `dff_nocg_srst(reg, awkeepvld, i_clk, i_rst, 1'b0)
 
-wire wfifo_i_push;
-wire wfifo_i_pop;
-wire wfifo_o_empty;
-wire wfifo_o_full;
-wire wfifo_o_pushed;
-wire wfifo_o_popped;
 wire [WFIFO_W-1:0] wfifo_i_data;
+wire wfifo_i_valid;
+wire wfifo_o_ready;
 wire [WFIFO_W-1:0] wfifo_o_data;
+wire wfifo_o_valid;
+wire wfifo_i_ready;
 `dff_nocg_srst(reg, wkeepvld, i_clk, i_rst, 1'b0)
 
-wire arfifo_i_push;
-wire arfifo_i_pop;
-wire arfifo_o_empty;
-wire arfifo_o_full;
-wire arfifo_o_pushed;
-wire arfifo_o_popped;
 wire [ARFIFO_W-1:0] arfifo_i_data;
+wire arfifo_i_valid;
+wire arfifo_o_ready;
 wire [ARFIFO_W-1:0] arfifo_o_data;
+wire arfifo_o_valid;
+wire arfifo_i_ready;
 `dff_nocg_srst(reg, arkeepvld, i_clk, i_rst, 1'b0)
 
 // {{{ Pseudo Random controls
@@ -192,23 +186,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (awfifo_i_push),
-  .i_pop      (awfifo_i_pop),
 
   .i_data     (awfifo_i_data),
+  .i_valid    (awfifo_i_valid),
+  .o_ready    (awfifo_o_ready),
+
   .o_data     (awfifo_o_data),
+  .o_valid    (awfifo_o_valid),
+  .i_ready    (awfifo_i_ready),
 
-  .o_empty    (awfifo_o_empty),
-  .o_full     (awfifo_o_full),
-
-  .o_pushed   (awfifo_o_pushed),
-  .o_popped   (awfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -224,23 +218,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (wfifo_i_push),
-  .i_pop      (wfifo_i_pop),
 
   .i_data     (wfifo_i_data),
+  .i_valid    (wfifo_i_valid),
+  .o_ready    (wfifo_o_ready),
+
   .o_data     (wfifo_o_data),
+  .o_valid    (wfifo_o_valid),
+  .i_ready    (wfifo_i_ready),
 
-  .o_empty    (wfifo_o_empty),
-  .o_full     (wfifo_o_full),
-
-  .o_pushed   (wfifo_o_pushed),
-  .o_popped   (wfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -256,23 +250,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (arfifo_i_push),
-  .i_pop      (arfifo_i_pop),
 
   .i_data     (arfifo_i_data),
+  .i_valid    (arfifo_i_valid),
+  .o_ready    (arfifo_o_ready),
+
   .o_data     (arfifo_o_data),
+  .o_valid    (arfifo_o_valid),
+  .i_ready    (arfifo_i_ready),
 
-  .o_empty    (arfifo_o_empty),
-  .o_full     (arfifo_o_full),
-
-  .o_pushed   (arfifo_o_pushed),
-  .o_popped   (arfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -286,45 +280,45 @@ assign {o_axi_WDATA, o_axi_WSTRB} = wfifo_o_data;
 
 // Prevent write addr/data fifos from getting out of sync by always doing
 // concurrent pushes to AW and W queues.
-assign awfifo_i_push = !awfifo_o_full && !wfifo_o_full;
-assign wfifo_i_push = awfifo_i_push;
+assign awfifo_i_valid = awfifo_o_ready && wfifo_o_ready;
+assign wfifo_i_valid = awfifo_i_valid;
 
-assign awfifo_i_pop = o_axi_AWVALID && i_axi_AWREADY;
+assign awfifo_i_ready = o_axi_AWVALID && i_axi_AWREADY;
 
 always @*
   if (!awkeepvld_q)
     awkeepvld_d = o_axi_AWVALID && !i_axi_AWREADY; // set
-  else if (awfifo_i_pop)
+  else if (awfifo_i_ready)
     awkeepvld_d = 1'b0; // clr
   else
     awkeepvld_d = awkeepvld_q;
 
-assign o_axi_AWVALID = !awfifo_o_empty && (!do_aw_stall || awkeepvld_q);
+assign o_axi_AWVALID = awfifo_o_valid && (!do_aw_stall || awkeepvld_q);
 
-assign wfifo_i_pop = o_axi_WVALID && i_axi_WREADY;
+assign wfifo_i_ready = o_axi_WVALID && i_axi_WREADY;
 
 always @*
   if (!wkeepvld_q)
     wkeepvld_d = o_axi_WVALID && !i_axi_WREADY; // set
-  else if (wfifo_i_pop)
+  else if (wfifo_i_ready)
     wkeepvld_d = 1'b0; // clr
   else
     wkeepvld_d = wkeepvld_q;
 
-assign o_axi_WVALID = !wfifo_o_empty && (!do_w_stall || wkeepvld_q);
+assign o_axi_WVALID = wfifo_o_valid && (!do_w_stall || wkeepvld_q);
 
-assign arfifo_i_push = !arfifo_o_full; // Always try to queue more transactions.
-assign arfifo_i_pop = o_axi_ARVALID && i_axi_ARREADY;
+assign arfifo_i_valid = arfifo_o_ready; // Always try to queue more transactions.
+assign arfifo_i_ready = o_axi_ARVALID && i_axi_ARREADY;
 
 always @*
   if (!arkeepvld_q)
     arkeepvld_d = o_axi_ARVALID && !i_axi_ARREADY; // set
-  else if (arfifo_i_pop)
+  else if (arfifo_i_ready)
     arkeepvld_d = 1'b0; // clr
   else
     arkeepvld_d = arkeepvld_q;
 
-assign o_axi_ARVALID = !arfifo_o_empty && (!do_ar_stall || arkeepvld_q);
+assign o_axi_ARVALID = arfifo_o_valid && (!do_ar_stall || arkeepvld_q);
 
 assign arfifo_i_data = {rnd_arid, rnd_araddr};
 assign {o_axi_ARID, o_axi_ARADDR} = arfifo_o_data;

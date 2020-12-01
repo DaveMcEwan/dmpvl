@@ -35,10 +35,10 @@ char * FifoModel::info() {
     return infobuff;
 }
 
-int unsigned FifoModel::popcnt(int unsigned o_valid) {
+int unsigned FifoModel::popcnt(int unsigned o_validEntries) {
     int unsigned ret = 0;
     for (int i = 0; i < depth; i++) {
-        if (o_valid & (1 << i)) ret++;
+        if (o_validEntries & (1 << i)) ret++;
     }
     return ret;
 }
@@ -52,14 +52,14 @@ void FifoModel::check(
     int unsigned i_cg,
 
     int unsigned i_flush,
-    int unsigned i_push,
-    int unsigned i_pop,
 
     int unsigned i_data,
-    int unsigned o_data,
+    int unsigned i_valid, // push
+    int unsigned o_ready, // !full
 
-    int unsigned o_empty,
-    int unsigned o_full,
+    int unsigned o_data,
+    int unsigned o_valid, // !empty
+    int unsigned i_ready, // pop
 
     int unsigned o_pushed,
     int unsigned o_popped,
@@ -67,7 +67,7 @@ void FifoModel::check(
     int unsigned o_wrptr,
     int unsigned o_rdptr,
 
-    int unsigned o_valid,
+    int unsigned o_validEntries,
     int unsigned o_nEntries,
 
     int unsigned o_entries
@@ -95,7 +95,7 @@ void FifoModel::check(
       nEntries = 0;
     }
 
-    if (!empty && i_pop && !i_flush) {
+    if (!empty && i_ready && !i_flush) {
       nEntries--;
 
       if (topology == CIRCULAR) {
@@ -114,7 +114,7 @@ void FifoModel::check(
       }
     }
 
-    if (!full && i_push && !i_flush) {
+    if (!full && i_valid && !i_flush) {
       entries[wr_ptr] = i_data & dataMask;
       nEntries++;
 
@@ -134,19 +134,19 @@ void FifoModel::check(
   // Check state
   ///////////////////////////////////////////////////////////////////////////
 
-  if (empty != (bool)o_empty) {
+  if (empty == (bool)o_valid) {
     modelPrint(ERROR, t, info(), "empty model=%d design=%d",
-      empty, o_empty);
+      empty, o_valid);
   }
 
-  if (full != (bool)o_full) {
+  if (full == (bool)o_ready) {
     modelPrint(ERROR, t, info(), "full model=%d design=%d",
-      full, o_full);
+      full, o_ready);
   }
 
-  if (4 > depth && model_nEntries != popcnt(o_valid)) {
-    modelPrint(ERROR, t, info(), "nEntries model=%d design=%d o_valid=0x%x",
-      model_nEntries, popcnt(o_valid), o_valid);
+  if (4 > depth && model_nEntries != popcnt(o_validEntries)) {
+    modelPrint(ERROR, t, info(), "nEntries model=%d design=%d o_validEntries=0x%x",
+      model_nEntries, popcnt(o_validEntries), o_validEntries);
   } else if (4 <= depth && model_nEntries != o_nEntries) {
     modelPrint(ERROR, t, info(), "nEntries model=%d design=%d",
       model_nEntries, o_nEntries);

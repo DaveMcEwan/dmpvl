@@ -80,8 +80,8 @@ wire outEp_reqGranted;
 assign outEp_reqGranted = o_outEp_req && i_outEp_grant;
 
 // {{{ Host-to-consumer buffer
-wire fifoOut_full;
-wire fifoOut_empty;
+wire fifoOut_notFull;
+wire fifoOut_notEmpty;
 fifo #(
   .WIDTH          (8),
   .DEPTH          (8),
@@ -92,14 +92,14 @@ fifo #(
   .i_cg       (1'b1),
 
   .i_flush    (1'b0), // unused
-  .i_push     (i_outEp_dataAvail && o_outEp_dataGet),
-  .i_pop      (i_uartOut_ready && o_uartOut_valid),
 
   .i_data     (i_outEp_data),
-  .o_data     (o_uartOut_data),
+  .i_valid    (i_outEp_dataAvail && o_outEp_dataGet), // push
+  .o_ready    (fifoOut_notFull), // !full
 
-  .o_empty    (fifoOut_empty),
-  .o_full     (fifoOut_full),
+  .o_data     (o_uartOut_data),
+  .o_valid    (fifoOut_notEmpty), // !empty
+  .i_ready    (i_uartOut_ready && o_uartOut_valid), // pop
 
   .o_pushed   (),
   .o_popped   (),
@@ -107,8 +107,8 @@ fifo #(
   .o_wrptr    (),
   .o_rdptr    (),
 
-  .o_valid    (),
-  .o_nEntries (),
+  .o_validEntries (),
+  .o_nEntries     (),
 
   .o_entries  ()
 );
@@ -118,9 +118,9 @@ fifo #(
 `dff_nocg_srst(reg, outEp_req, i_clk, i_rst, 1'b0)
 
 always @*
-  if (!fifoOut_full && outEp_reqGranted)
+  if (fifoOut_notFull && outEp_reqGranted)
     outEp_dataGet_d = 1'b1;
-  else if (fifoOut_full || !i_outEp_dataAvail)
+  else if (!fifoOut_notFull || !i_outEp_dataAvail)
     outEp_dataGet_d = 1'b0;
   else
     outEp_dataGet_d = outEp_dataGet_q;
@@ -128,14 +128,14 @@ always @*
 assign o_outEp_dataGet = outEp_dataGet_q;
 
 always @*
-  if (fifoOut_empty && outEp_reqGranted)
+  if (!fifoOut_notEmpty && outEp_reqGranted)
     outEp_req_d = 1'b1;
-  else if (!fifoOut_empty && !i_uartOut_ready)
+  else if (fifoOut_notEmpty && !i_uartOut_ready)
     outEp_req_d = 1'b0;
   else
     outEp_req_d = outEp_req_q;
 
-assign o_uartOut_valid = !fifoOut_empty;
+assign o_uartOut_valid = fifoOut_notEmpty;
 
 assign o_outEp_req = outEp_req_q || i_outEp_dataAvail;
 

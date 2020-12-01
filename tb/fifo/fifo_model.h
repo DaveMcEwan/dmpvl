@@ -38,7 +38,7 @@ class FifoModel {
         int unsigned getEntry(int unsigned index);
         bool isEmpty();
         bool isFull();
-        int unsigned popcnt(int unsigned o_valid);
+        int unsigned popcnt(int unsigned o_validEntries);
         void check(
             int unsigned t, // tickcount
 
@@ -47,14 +47,14 @@ class FifoModel {
             int unsigned i_cg,
 
             int unsigned i_flush,
-            int unsigned i_push,
-            int unsigned i_pop,
 
             int unsigned i_data,
-            int unsigned o_data,
+            int unsigned i_valid, // push
+            int unsigned o_ready, // !full
 
-            int unsigned o_empty,
-            int unsigned o_full,
+            int unsigned o_data,
+            int unsigned o_valid, // !empty
+            int unsigned i_ready, // pop
 
             int unsigned o_pushed,
             int unsigned o_popped,
@@ -62,7 +62,7 @@ class FifoModel {
             int unsigned o_wrptr,
             int unsigned o_rdptr,
 
-            int unsigned o_valid,
+            int unsigned o_validEntries,
             int unsigned o_nEntries,
 
             int unsigned o_entries

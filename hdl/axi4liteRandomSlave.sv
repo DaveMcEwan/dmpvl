@@ -96,35 +96,29 @@ wire do_bresp_notokay;
 wire do_rresp_notokay;
 wire do_rddata_corrupt;
 
-wire wfifo_i_push;
-wire wfifo_i_pop;
-wire wfifo_o_empty;
-wire wfifo_o_full;
-wire wfifo_o_pushed;
-wire wfifo_o_popped;
 wire [WFIFO_W-1:0] wfifo_i_data;
+wire wfifo_i_valid;
+wire wfifo_o_ready;
 wire [WFIFO_W-1:0] wfifo_o_data;
+wire wfifo_o_valid;
+wire wfifo_i_ready;
 wire [(DATA_BYTEW*8)-1:0] wdata;
 wire [3:0] wstrb;
 
-wire bfifo_i_push;
-wire bfifo_i_pop;
-wire bfifo_o_empty;
-wire bfifo_o_full;
-wire bfifo_o_pushed;
-wire bfifo_o_popped;
 wire [BFIFO_W-1:0] bfifo_i_data;
+wire bfifo_i_valid;
+wire bfifo_o_ready;
 wire [BFIFO_W-1:0] bfifo_o_data;
+wire bfifo_o_valid;
+wire bfifo_i_ready;
 `dff_nocg_srst(reg, bkeepvld, i_clk, i_rst, 'd0)
 
-wire rfifo_i_push;
-wire rfifo_i_pop;
-wire rfifo_o_empty;
-wire rfifo_o_full;
-wire rfifo_o_pushed;
-wire rfifo_o_popped;
 wire [RFIFO_W-1:0] rfifo_i_data;
+wire rfifo_i_valid;
+wire rfifo_o_ready;
 wire [RFIFO_W-1:0] rfifo_o_data;
+wire rfifo_o_valid;
+wire rfifo_i_ready;
 `dff_nocg_srst(reg, rkeepvld, i_clk, i_rst, 'd0)
 reg [(DATA_BYTEW*8)-1:0] rdata;
 
@@ -210,23 +204,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (wfifo_i_push),
-  .i_pop      (wfifo_i_pop),
 
   .i_data     (wfifo_i_data),
+  .i_valid    (wfifo_i_valid),
+  .o_ready    (wfifo_o_ready),
+
   .o_data     (wfifo_o_data),
+  .o_valid    (wfifo_o_valid),
+  .i_ready    (wfifo_i_ready),
 
-  .o_empty    (wfifo_o_empty),
-  .o_full     (wfifo_o_full),
-
-  .o_pushed   (wfifo_o_pushed),
-  .o_popped   (wfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -242,23 +236,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (bfifo_i_push),
-  .i_pop      (bfifo_i_pop),
 
   .i_data     (bfifo_i_data),
+  .i_valid    (bfifo_i_valid),
+  .o_ready    (bfifo_o_ready),
+
   .o_data     (bfifo_o_data),
+  .o_valid    (bfifo_o_valid),
+  .i_ready    (bfifo_i_ready),
 
-  .o_empty    (bfifo_o_empty),
-  .o_full     (bfifo_o_full),
-
-  .o_pushed   (bfifo_o_pushed),
-  .o_popped   (bfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -274,23 +268,23 @@ fifo #(
   .i_cg       (1'b1), // unused
 
   .i_flush    (1'b0), // unused
-  .i_push     (rfifo_i_push),
-  .i_pop      (rfifo_i_pop),
 
   .i_data     (rfifo_i_data),
+  .i_valid    (rfifo_i_valid),
+  .o_ready    (rfifo_o_ready),
+
   .o_data     (rfifo_o_data),
+  .o_valid    (rfifo_o_valid),
+  .i_ready    (rfifo_i_ready),
 
-  .o_empty    (rfifo_o_empty),
-  .o_full     (rfifo_o_full),
-
-  .o_pushed   (rfifo_o_pushed),
-  .o_popped   (rfifo_o_popped),
+  .o_pushed   (), // unused
+  .o_popped   (), // unused
 
   .o_wrptr    (), // unused
   .o_rdptr    (), // unused
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
@@ -303,18 +297,18 @@ assign {wdata, wstrb} = wfifo_o_data;
 assign {o_axi_BID, o_axi_BRESP} = bfifo_o_data;
 assign {o_axi_RID, o_axi_RRESP, o_axi_RDATA} = rfifo_o_data;
 
-assign wfifo_i_push = (i_axi_WVALID && o_axi_WREADY) && !bfifo_i_push;
-assign wfifo_i_pop  = !wfifo_o_empty && bfifo_i_push;
+assign wfifo_i_valid = (i_axi_WVALID && o_axi_WREADY) && !bfifo_i_valid;
+assign wfifo_i_ready  = wfifo_o_valid && bfifo_i_valid;
 
-assign bfifo_i_push = i_axi_AWVALID && o_axi_AWREADY;
-assign bfifo_i_pop  = o_axi_BVALID  && i_axi_BREADY;
-assign rfifo_i_push = i_axi_ARVALID && o_axi_ARREADY;
-assign rfifo_i_pop  = o_axi_RVALID  && i_axi_RREADY;
+assign bfifo_i_valid = i_axi_AWVALID && o_axi_AWREADY;
+assign bfifo_i_ready  = o_axi_BVALID  && i_axi_BREADY;
+assign rfifo_i_valid = i_axi_ARVALID && o_axi_ARREADY;
+assign rfifo_i_ready  = o_axi_RVALID  && i_axi_RREADY;
 
 always @*
   if (!bkeepvld_q)
     bkeepvld_d = o_axi_BVALID && !i_axi_BREADY; // set
-  else if (bfifo_i_pop)
+  else if (bfifo_i_ready)
     bkeepvld_d = 1'b0; // clr
   else
     bkeepvld_d = bkeepvld_q;
@@ -322,19 +316,19 @@ always @*
 always @*
   if (!rkeepvld_q)
     rkeepvld_d = o_axi_RVALID && !i_axi_RREADY; // set
-  else if (rfifo_i_pop)
+  else if (rfifo_i_ready)
     rkeepvld_d = 1'b0; // clr
   else
     rkeepvld_d = rkeepvld_q;
 
 // Keep xVALID high until xREADY.
-assign o_axi_BVALID = !bfifo_o_empty && (!do_b_stall || bkeepvld_q);
-assign o_axi_RVALID = !rfifo_o_empty && (!do_r_stall || rkeepvld_q);
+assign o_axi_BVALID = bfifo_o_valid && (!do_b_stall || bkeepvld_q);
+assign o_axi_RVALID = rfifo_o_valid && (!do_r_stall || rkeepvld_q);
 
 // Backpressure on request channels.
-assign o_axi_AWREADY = !do_aw_stall && !bfifo_o_full;
-assign o_axi_WREADY  = !do_w_stall  && !wfifo_o_full;
-assign o_axi_ARREADY = !do_ar_stall && !rfifo_o_full;
+assign o_axi_AWREADY = !do_aw_stall && bfifo_o_ready;
+assign o_axi_WREADY  = !do_w_stall  && wfifo_o_ready;
+assign o_axi_ARREADY = !do_ar_stall && rfifo_o_ready;
 
 // Address decode.
 assign awoffset = i_axi_AWADDR[OFFSET_H:OFFSET_L];
@@ -372,7 +366,7 @@ always @*
 genvar i;
 generate for (i = 0; i < DATA_BYTEW; i=i+1) begin : memoryWrite_b
   always @ (posedge i_clk)
-    if (bfifo_i_push && !awdecerr && wstrb[i])
+    if (bfifo_i_valid && !awdecerr && wstrb[i])
       memory_m[awoffset][i*8 +: 8] <= wdata[i*8 +: 8];
 
   // Initialise memory with random data.
@@ -394,13 +388,13 @@ always @* begin
     rdata = rdata ^ (1 << rnd_rddata_corrupt[$clog2(DATA_BYTEW*8)-1:0]);
 end
 
-assign o_busy = (!bfifo_o_empty || !rfifo_o_empty);
+assign o_busy = (bfifo_o_valid || rfifo_o_valid);
 
 // Idle timeout.
 // Assert o_idle after a fixed (small) number of cycles of inactivity.
 `dff_nocg_srst(reg [3:0], idlecnt, i_clk, i_rst, 'd0)
 always @*
-  if (!bfifo_o_empty || !rfifo_o_empty)
+  if (bfifo_o_valid || rfifo_o_valid)
     idlecnt_d = IDLE_TIMEOUT;
   else
     idlecnt_d = (idlecnt_q == '0) ? '0 : idlecnt_q - 1;
@@ -408,7 +402,7 @@ always @*
 assign o_idle = !o_busy && (idlecnt_q == '0);
 
 assign o_stall =
-  (!bfifo_o_empty && do_b_stall) ||
-  (!rfifo_o_empty && do_r_stall);
+  (bfifo_o_valid && do_b_stall) ||
+  (rfifo_o_valid && do_r_stall);
 
 endmodule

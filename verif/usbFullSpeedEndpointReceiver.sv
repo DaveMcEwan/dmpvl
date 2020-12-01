@@ -37,7 +37,6 @@ always @*
 
 // {{{ fifo
 wire push = (nBytes_pushed_q != nBytes_topush_q);
-wire empty;
 fifo #(
   .WIDTH          (8),
   .DEPTH          (2),
@@ -48,14 +47,14 @@ fifo #(
   .i_cg       (1'b1),
 
   .i_flush    (1'b0), // unused
-  .i_push     (push),
-  .i_pop      (accepted),
 
   .i_data     (i_erData[8*nBytes_pushed_q +: 8]),
-  .o_data     (o_data),
+  .i_valid    (push),
+  .o_ready    (),
 
-  .o_empty    (empty),
-  .o_full     (),
+  .o_data     (o_data),
+  .o_valid    (o_valid),
+  .i_ready    (accepted),
 
   .o_pushed   (),
   .o_popped   (),
@@ -63,17 +62,15 @@ fifo #(
   .o_wrptr    (),
   .o_rdptr    (),
 
-  .o_valid    (), // unused
-  .o_nEntries (), // unused
+  .o_validEntries (), // unused
+  .o_nEntries     (), // unused
 
   .o_entries  ()  // unused
 );
 // }}} fifo
 
 // Must have space for a full packet.
-assign o_erReady = empty;
-
-assign o_valid = !empty;
+assign o_erReady = !o_valid;
 
 // There are no halting conditions.
 assign o_erStall = 1'b0;

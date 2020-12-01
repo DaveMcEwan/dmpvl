@@ -194,11 +194,11 @@ corrCountLogdrop #(
 
 // }}} Correlation counters
 
-wire pktfifo_i_push;
+wire pktfifo_push;
 wire pktIdx_wrap;
-`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_i_push, i_rst || pktIdx_wrap)
+`dff_upcounter(reg [2:0], pktIdx, i_clk, i_cg && pktfifo_push, i_rst || pktIdx_wrap)
 assign pktIdx_wrap = i_cg &&
-  (((pktIdx_q == 'd4) && pktfifo_i_push) || i_pktfifo_flush);
+  (((pktIdx_q == 'd4) && pktfifo_push) || i_pktfifo_flush);
 
 // {{{ Correlation metrics
 
@@ -285,13 +285,15 @@ always @* metricHam_d = ~countSymdiff_narrow;
 // {{{ Packetize and queue data for recording
 
 reg [7:0] pktfifo_i_data;
-assign pktfifo_i_push = tDoWrap || (pktIdx_q != '0);
-wire                                  _unused_pktfifo_o_full;
+assign pktfifo_push = tDoWrap || (pktIdx_q != '0);
+wire pktfifo_o_valid;
+assign o_pktfifo_empty = !pktfifo_o_valid;
+wire                                  _unused_pktfifo_o_notFull;
 wire                                  _unused_pktfifo_o_pushed;
 wire                                  _unused_pktfifo_o_popped;
 wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wrptr;
 wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rdptr;
-wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_valid;
+wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_validEntries;
 wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
 wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
 fifo #(
@@ -304,14 +306,14 @@ fifo #(
   .i_cg       (i_cg),
 
   .i_flush    (i_pktfifo_flush),
-  .i_push     (pktfifo_i_push),
-  .i_pop      (i_pktfifo_pop),
 
   .i_data     (pktfifo_i_data),
-  .o_data     (o_pktfifo_data),
+  .i_valid    (pktfifo_push),
+  .o_ready    (_unused_pktfifo_o_notFull),
 
-  .o_empty    (o_pktfifo_empty),
-  .o_full     (_unused_pktfifo_o_full),
+  .o_data     (o_pktfifo_data),
+  .o_valid    (pktfifo_o_valid),
+  .i_ready    (i_pktfifo_pop),
 
   .o_pushed   (_unused_pktfifo_o_pushed),
   .o_popped   (_unused_pktfifo_o_popped),
@@ -319,8 +321,8 @@ fifo #(
   .o_wrptr    (_unused_pktfifo_o_wrptr),
   .o_rdptr    (_unused_pktfifo_o_rdptr),
 
-  .o_valid    (_unused_pktfifo_o_valid),
-  .o_nEntries (_unused_pktfifo_o_nEntries),
+  .o_validEntries (_unused_pktfifo_o_validEntries),
+  .o_nEntries     (_unused_pktfifo_o_nEntries),
 
   .o_entries  (_unused_pktfifo_o_entries)
 );

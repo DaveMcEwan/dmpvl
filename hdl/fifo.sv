@@ -11,14 +11,14 @@ module fifo #(
   input  wire                         i_cg,
 
   input  wire                         i_flush,
-  input  wire                         i_push,
-  input  wire                         i_pop,
 
   input  wire [WIDTH-1:0]             i_data,
-  output wire [WIDTH-1:0]             o_data,
+  input  wire                         i_valid, // push
+  output wire                         o_ready, // !full
 
-  output wire                         o_empty,
-  output wire                         o_full,
+  output wire [WIDTH-1:0]             o_data,
+  output wire                         o_valid, // !empty
+  input  wire                         i_ready, // pop
 
   output wire                         o_pushed,
   output wire                         o_popped,
@@ -26,7 +26,7 @@ module fifo #(
   output wire [$clog2(DEPTH)-1:0]     o_wrptr,
   output wire [$clog2(DEPTH)-1:0]     o_rdptr,
 
-  output wire [DEPTH-1:0]             o_valid, // Only used with DEPTH < 4.
+  output wire [DEPTH-1:0]             o_validEntries, // Only used with DEPTH < 4.
   output wire [$clog2(DEPTH + 1)-1:0] o_nEntries, // Only used with DEPTH >= 4.
 
   output wire [(DEPTH*WIDTH)-1:0]     o_entries // Only used with FLOPS_NOT_MEM.
@@ -37,8 +37,8 @@ localparam CNT_W = $clog2(DEPTH + 1);
 
 genvar i;
 
-wire doPush = !o_full && i_push;
-wire doPop = !o_empty && i_pop;
+wire doPush = o_ready && i_valid;
+wire doPop = o_valid && i_ready;
 wire doFlush = i_cg && i_flush;
 
 `dff_cg_srst(reg [PTR_W-1:0], wrptr, i_clk, i_cg && doPush, i_rst || doFlush, '0)
@@ -47,6 +47,10 @@ wire doFlush = i_cg && i_flush;
 // Onehot vectors for write and read enables.
 wire [DEPTH-1:0] wr_vec;
 wire [DEPTH-1:0] rd_vec;
+generate for (i = 0; i < DEPTH; i=i+1) begin : vec_b
+  assign wr_vec[i] = (wrptr_q == (i)) && doPush; // Set bit in valid_d/q
+  assign rd_vec[i] = (rdptr_q == (i)) && doPop; // Clear bit in valid_d/q
+end : vec_b endgenerate
 
 generate if (FLOPS_NOT_MEM != 0) begin : useFlops
 
@@ -97,26 +101,20 @@ assign o_wrptr = wrptr_q;
 assign o_rdptr = rdptr_q;
 
 
-// Onehot rd/wr vectors.
-generate for (i = 0; i < DEPTH; i=i+1) begin : vec_b
-  assign wr_vec[i] = (wrptr_q == (i)) && doPush; // Set bit in valid_d/q
-  assign rd_vec[i] = (rdptr_q == (i)) && doPop; // Clear bit in valid_d/q
-end : vec_b endgenerate
-
 generate if (DEPTH < 4) begin
   `dff_cg_srst(reg [DEPTH-1:0], valid, i_clk, i_cg, i_rst || doFlush, '0)
   always @* valid_d = (valid_q & ~rd_vec) | wr_vec;
-  assign o_valid = valid_q;
+  assign o_validEntries = valid_q;
   assign o_nEntries = '0;
 
-  assign o_empty = !(|valid_q);
-  assign o_full = &valid_q;
+  assign o_valid = |valid_q;
+  assign o_ready = !(&valid_q);
 end else begin
-  // NOTE: o_valid/valid_q should only be used where DEPTH < 4.
+  // NOTE: o_validEntries/valid_q should only be used where DEPTH < 4.
   // Disable valid_q and use a counter instead for empty/full.
   // Deep fifos would require too many LUTs because OR/AND tree depth for
   // empty/full calculation would be log(DEPTH) instead of log(log(DEPTH)).
-  assign o_valid = '0;
+  assign o_validEntries = '0;
 
   `dff_cg_srst(reg [CNT_W-1:0], nEntries, i_clk, i_cg, i_rst || doFlush, '0)
   always @*
@@ -129,8 +127,8 @@ end else begin
 
   assign o_nEntries = nEntries_q;
 
-  assign o_empty = (nEntries_q == '0);
-  assign o_full = (nEntries_q == DEPTH);
+  assign o_valid = (nEntries_q != '0);
+  assign o_ready = (nEntries_q != DEPTH);
 end endgenerate
 
 endmodule

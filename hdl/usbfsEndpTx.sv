@@ -30,12 +30,11 @@ localparam IDX_W = $clog2(MAX_PKT);
 wire accepted = o_ready && i_valid;
 wire et_accepted = i_etReady && o_etValid; // ACK received
 
-wire fifo_o_empty;
-wire fifo_o_full;
+wire fifo_o_valid;
 wire _unused_fifo_o_pushed;
 wire _unused_fifo_o_wrptr;
 wire _unused_fifo_o_rdptr;
-wire [1:0] _unused_fifo_o_valid;
+wire [1:0] _unused_fifo_o_validEntries;
 wire [1:0] _unused_fifo_o_nEntries;
 wire [15:0] _unused_fifo_o_entries;
 
@@ -51,14 +50,14 @@ fifo #(
   .i_cg       (1'b1),
 
   .i_flush    (1'b0),
-  .i_push     (i_valid),
-  .i_pop      (writing_q),
 
   .i_data     (i_data),
-  .o_data     (o_etWrByte),
+  .i_valid    (i_valid),
+  .o_ready    (o_ready),
 
-  .o_empty    (fifo_o_empty),
-  .o_full     (fifo_o_full),
+  .o_data     (o_etWrByte),
+  .o_valid    (fifo_o_valid),
+  .i_ready    (writing_q),
 
   .o_pushed   (_unused_fifo_o_pushed),
   .o_popped   (o_etWrEn),
@@ -66,15 +65,14 @@ fifo #(
   .o_wrptr    (_unused_fifo_o_wrptr),
   .o_rdptr    (_unused_fifo_o_rdptr),
 
-  .o_valid    (_unused_fifo_o_valid),
-  .o_nEntries (_unused_fifo_o_nEntries),
+  .o_validEntries (_unused_fifo_o_validEntries),
+  .o_nEntries     (_unused_fifo_o_nEntries),
 
   .o_entries  (_unused_fifo_o_entries)
 );
-assign o_ready = !fifo_o_full;
 
 // No more data, OR sent MAX_PKT.
-wire writing_goDn = fifo_o_empty || (o_etWrIdx == MAX_IDX[IDX_W-1:0]);
+wire writing_goDn = !fifo_o_valid || (o_etWrIdx == MAX_IDX[IDX_W-1:0]);
 always @*
   if (i_etTxAccepted)
     writing_d = 1'b1;
@@ -91,7 +89,7 @@ assign o_etWrIdx = wrIdx_q;
 generate if (NAK_NOT_ZEROLENGTHDATA) begin
   `dff_nocg_srst(reg, etValid, i_clk, i_rst, 1'b0)
   always @*
-    if (!fifo_o_empty)
+    if (fifo_o_valid)
       etValid_d = 1'b1;
     else if (et_accepted)
       etValid_d = 1'b0;
