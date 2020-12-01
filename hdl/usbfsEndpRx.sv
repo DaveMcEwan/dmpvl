@@ -68,8 +68,8 @@ fifo #(
   .o_pushed   (),
   .o_popped   (),
 
-  .o_wrptr    (), // unused
-  .o_rdptr    (), // unused
+  .o_wptr     (), // unused
+  .o_rptr     (), // unused
 
   .o_validEntries (), // unused
   .o_nEntries     (), // unused

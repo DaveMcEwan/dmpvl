@@ -59,8 +59,8 @@ class FifoModel {
             int unsigned o_pushed,
             int unsigned o_popped,
 
-            int unsigned o_wrptr,
-            int unsigned o_rdptr,
+            int unsigned o_wptr,
+            int unsigned o_rptr,
 
             int unsigned o_validEntries,
             int unsigned o_nEntries,

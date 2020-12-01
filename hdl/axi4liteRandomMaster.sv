@@ -198,8 +198,8 @@ fifo #(
   .o_pushed   (), // unused
   .o_popped   (), // unused
 
-  .o_wrptr    (), // unused
-  .o_rdptr    (), // unused
+  .o_wptr     (), // unused
+  .o_rptr     (), // unused
 
   .o_validEntries (), // unused
   .o_nEntries     (), // unused
@@ -230,8 +230,8 @@ fifo #(
   .o_pushed   (), // unused
   .o_popped   (), // unused
 
-  .o_wrptr    (), // unused
-  .o_rdptr    (), // unused
+  .o_wptr     (), // unused
+  .o_rptr     (), // unused
 
   .o_validEntries (), // unused
   .o_nEntries     (), // unused
@@ -262,8 +262,8 @@ fifo #(
   .o_pushed   (), // unused
   .o_popped   (), // unused
 
-  .o_wrptr    (), // unused
-  .o_rdptr    (), // unused
+  .o_wptr     (), // unused
+  .o_rptr     (), // unused
 
   .o_validEntries (), // unused
   .o_nEntries     (), // unused

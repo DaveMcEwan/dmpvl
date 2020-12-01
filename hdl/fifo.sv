@@ -28,8 +28,8 @@ module fifo #(
   output wire                         o_pushed,
   output wire                         o_popped,
 
-  output wire [$clog2(DEPTH)-1:0]     o_wrptr,
-  output wire [$clog2(DEPTH)-1:0]     o_rdptr,
+  output wire [$clog2(DEPTH)-1:0]     o_wptr,
+  output wire [$clog2(DEPTH)-1:0]     o_rptr,
 
   output wire [DEPTH-1:0]             o_validEntries, // Only used with DEPTH < 4.
   output wire [$clog2(DEPTH + 1)-1:0] o_nEntries, // Only used with DEPTH >= 4.
@@ -53,18 +53,18 @@ assign o_popped = doPop && !i_flush;
 
 `dff_cg_srst(reg [PTR_W:0], wptr, i_clk, i_cg && doPush, i_rst || doFlush, '0)
 `dff_cg_srst(reg [PTR_W:0], rptr, i_clk, i_cg && doPop,  i_rst || doFlush, '0)
-assign o_wrptr = wptr_q`LSb(PTR_W);
-assign o_rdptr = rptr_q`LSb(PTR_W);
+assign o_wptr = wptr_q`LSb(PTR_W);
+assign o_rptr = rptr_q`LSb(PTR_W);
 
 generate if (DEPTH_ISPOW2) begin
   // Funtionally equivalent to non-pow2 case but easier for synth tools.
   always @* wptr_d = wptr_q + 'd1;
   always @* rptr_d = rptr_q + 'd1;
 end else begin
-  wire wptrWrap = (o_wrptr == MAXPTR`LSb(PTR_W));
-  wire rptrWrap = (o_rdptr == MAXPTR`LSb(PTR_W));
-  always @* wptr_d`LSb(PTR_W) = wptrWrap ? '0 : (o_wrptr + 'd1);
-  always @* rptr_d`LSb(PTR_W) = rptrWrap ? '0 : (o_rdptr + 'd1);
+  wire wptrWrap = (o_wptr == MAXPTR`LSb(PTR_W));
+  wire rptrWrap = (o_rptr == MAXPTR`LSb(PTR_W));
+  always @* wptr_d`LSb(PTR_W) = wptrWrap ? '0 : (o_wptr + 'd1);
+  always @* rptr_d`LSb(PTR_W) = rptrWrap ? '0 : (o_rptr + 'd1);
   always @* wptr_d[PTR_W] = wptrWrap ? !wptr_q[PTR_W] : wptr_q[PTR_W];
   always @* rptr_d[PTR_W] = rptrWrap ? !rptr_q[PTR_W] : rptr_q[PTR_W];
 end endgenerate
@@ -73,8 +73,8 @@ end endgenerate
 wire [DEPTH-1:0] wr_vec;
 wire [DEPTH-1:0] rd_vec;
 generate for (i = 0; i < DEPTH; i=i+1) begin : vec_b
-  assign wr_vec[i] = (o_wrptr == (i)) && doPush; // Set bit in valid_d/q
-  assign rd_vec[i] = (o_rdptr == (i)) && doPop; // Clear bit in valid_d/q
+  assign wr_vec[i] = (o_wptr == (i)) && doPush; // Set bit in valid_d/q
+  assign rd_vec[i] = (o_rptr == (i)) && doPop; // Clear bit in valid_d/q
 end : vec_b endgenerate
 
 generate if (DEPTH < 4) begin
@@ -107,7 +107,7 @@ end else begin
     assign o_valid = (nEntries_q != '0);
     assign o_ready = (nEntries_q != DEPTH);
   end else begin
-    wire ptrsUnequal = (o_wrptr != o_rdptr);
+    wire ptrsUnequal = (o_wptr != o_rptr);
     wire ptrsWrapped = (wptr_q[PTR_W] != rptr_q[PTR_W]);
 
     assign o_valid = ptrsUnequal || ptrsWrapped; // !empty
@@ -136,7 +136,7 @@ generate if (FLOPS_NOT_MEM != 0) begin : useFlops
 
   end : entries_b
 
-  assign o_data = entries_q[o_rdptr];
+  assign o_data = entries_q[o_rptr];
 
 end : useFlops else begin : useMem
 
@@ -147,9 +147,9 @@ end : useFlops else begin : useMem
 
   always @ (posedge i_clk)
     if (i_cg && o_pushed)
-      entries_m[o_wrptr] <= i_data;
+      entries_m[o_wptr] <= i_data;
 
-  assign o_data = entries_m[o_rdptr];
+  assign o_data = entries_m[o_rptr];
 
 end : useMem endgenerate
 

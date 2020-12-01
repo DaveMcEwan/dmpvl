@@ -32,8 +32,8 @@ wire et_accepted = i_etReady && o_etValid; // ACK received
 
 wire fifo_o_valid;
 wire _unused_fifo_o_pushed;
-wire _unused_fifo_o_wrptr;
-wire _unused_fifo_o_rdptr;
+wire _unused_fifo_o_wptr;
+wire _unused_fifo_o_rptr;
 wire [1:0] _unused_fifo_o_validEntries;
 wire [1:0] _unused_fifo_o_nEntries;
 wire [15:0] _unused_fifo_o_entries;
@@ -62,8 +62,8 @@ fifo #(
   .o_pushed   (_unused_fifo_o_pushed),
   .o_popped   (o_etWrEn),
 
-  .o_wrptr    (_unused_fifo_o_wrptr),
-  .o_rdptr    (_unused_fifo_o_rdptr),
+  .o_wptr     (_unused_fifo_o_wptr),
+  .o_rptr     (_unused_fifo_o_rptr),
 
   .o_validEntries (_unused_fifo_o_validEntries),
   .o_nEntries     (_unused_fifo_o_nEntries),

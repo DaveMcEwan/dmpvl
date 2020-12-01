@@ -34,8 +34,8 @@ wire          fifoUpstream_o_valid; // !empty
 wire          fifoUpstream_i_ready; // pop
 wire          fifoUpstream_o_pushed;
 wire          fifoUpstream_o_popped;
-wire [2:0]    fifoUpstream_o_wrptr;
-wire [2:0]    fifoUpstream_o_rdptr;
+wire [2:0]    fifoUpstream_o_wptr;
+wire [2:0]    fifoUpstream_o_rptr;
 wire [7:0]    fifoUpstream_o_validEntries;
 wire [3:0]    fifoUpstream_o_nEntries;
 wire [63:0]   fifoUpstream_o_entries;
@@ -48,8 +48,8 @@ wire          fifoDnstream_o_valid; // !empty
 reg           fifoDnstream_i_ready; // pop
 wire          fifoDnstream_o_pushed;
 wire          fifoDnstream_o_popped;
-wire [2:0]    fifoDnstream_o_wrptr;
-wire [2:0]    fifoDnstream_o_rdptr;
+wire [2:0]    fifoDnstream_o_wptr;
+wire [2:0]    fifoDnstream_o_rptr;
 wire [7:0]    fifoDnstream_o_validEntries;
 wire [3:0]    fifoDnstream_o_nEntries;
 wire [63:0]   fifoDnstream_o_entries;
@@ -94,8 +94,8 @@ fifo #(
   .o_pushed   (fifoUpstream_o_pushed),
   .o_popped   (fifoUpstream_o_popped),
 
-  .o_wrptr    (fifoUpstream_o_wrptr),
-  .o_rdptr    (fifoUpstream_o_rdptr),
+  .o_wptr     (fifoUpstream_o_wptr),
+  .o_rptr     (fifoUpstream_o_rptr),
 
   .o_validEntries (fifoUpstream_o_validEntries),
   .o_nEntries     (fifoUpstream_o_nEntries),
@@ -125,8 +125,8 @@ fifo #(
   .o_pushed   (fifoDnstream_o_pushed),
   .o_popped   (fifoDnstream_o_popped),
 
-  .o_wrptr    (fifoDnstream_o_wrptr),
-  .o_rdptr    (fifoDnstream_o_rdptr),
+  .o_wptr     (fifoDnstream_o_wptr),
+  .o_rptr     (fifoDnstream_o_rptr),
 
   .o_validEntries (fifoDnstream_o_validEntries),
   .o_nEntries     (fifoDnstream_o_nEntries),

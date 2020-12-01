@@ -291,8 +291,8 @@ assign o_pktfifo_empty = !pktfifo_o_valid;
 wire                                  _unused_pktfifo_o_notFull;
 wire                                  _unused_pktfifo_o_pushed;
 wire                                  _unused_pktfifo_o_popped;
-wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wrptr;
-wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rdptr;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_wptr;
+wire [$clog2(PKTFIFO_DEPTH)-1:0]      _unused_pktfifo_o_rptr;
 wire [PKTFIFO_DEPTH-1:0]              _unused_pktfifo_o_validEntries;
 wire [$clog2(PKTFIFO_DEPTH+1)-1:0]    _unused_pktfifo_o_nEntries;
 wire [8*PKTFIFO_DEPTH-1:0]            _unused_pktfifo_o_entries;
@@ -318,8 +318,8 @@ fifo #(
   .o_pushed   (_unused_pktfifo_o_pushed),
   .o_popped   (_unused_pktfifo_o_popped),
 
-  .o_wrptr    (_unused_pktfifo_o_wrptr),
-  .o_rdptr    (_unused_pktfifo_o_rdptr),
+  .o_wptr     (_unused_pktfifo_o_wptr),
+  .o_rptr     (_unused_pktfifo_o_rptr),
 
   .o_validEntries (_unused_pktfifo_o_validEntries),
   .o_nEntries     (_unused_pktfifo_o_nEntries),

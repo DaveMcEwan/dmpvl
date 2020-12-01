@@ -51,8 +51,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_dut->fifo_8_8_mem_o_pushed,
       tb->m_dut->fifo_8_8_mem_o_popped,
 
-      tb->m_dut->fifo_8_8_mem_o_wrptr,
-      tb->m_dut->fifo_8_8_mem_o_rdptr,
+      tb->m_dut->fifo_8_8_mem_o_wptr,
+      tb->m_dut->fifo_8_8_mem_o_rptr,
 
       tb->m_dut->fifo_8_8_mem_o_validEntries,
       tb->m_dut->fifo_8_8_mem_o_nEntries,
@@ -80,8 +80,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_dut->fifo_1_2_mem_o_pushed,
       tb->m_dut->fifo_1_2_mem_o_popped,
 
-      tb->m_dut->fifo_1_2_mem_o_wrptr,
-      tb->m_dut->fifo_1_2_mem_o_rdptr,
+      tb->m_dut->fifo_1_2_mem_o_wptr,
+      tb->m_dut->fifo_1_2_mem_o_rptr,
 
       tb->m_dut->fifo_1_2_mem_o_validEntries,
       tb->m_dut->fifo_1_2_mem_o_nEntries,
@@ -109,8 +109,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_dut->fifo_5_5_mem_o_pushed,
       tb->m_dut->fifo_5_5_mem_o_popped,
 
-      tb->m_dut->fifo_5_5_mem_o_wrptr,
-      tb->m_dut->fifo_5_5_mem_o_rdptr,
+      tb->m_dut->fifo_5_5_mem_o_wptr,
+      tb->m_dut->fifo_5_5_mem_o_rptr,
 
       tb->m_dut->fifo_5_5_mem_o_validEntries,
       tb->m_dut->fifo_5_5_mem_o_nEntries,
@@ -138,8 +138,8 @@ int main(int argc, char **argv, char **env) {
       tb->m_dut->fifo_8_2_flops_o_pushed,
       tb->m_dut->fifo_8_2_flops_o_popped,
 
-      tb->m_dut->fifo_8_2_flops_o_wrptr,
-      tb->m_dut->fifo_8_2_flops_o_rdptr,
+      tb->m_dut->fifo_8_2_flops_o_wptr,
+      tb->m_dut->fifo_8_2_flops_o_rptr,
 
       tb->m_dut->fifo_8_2_flops_o_validEntries,
       tb->m_dut->fifo_8_2_flops_o_nEntries,
