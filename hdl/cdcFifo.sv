@@ -15,7 +15,7 @@ module cdcFifo #(
   // 0 -> gray-to-bin-inc-to-gray in single cycle.
   // 1 -> bin-inc and bin-to-gray separate FFs
   //      with result 1-cycle later.
-  parameter FAST_NOT_SMALL = 0
+  parameter FAST_NOT_SMALL = 0 // TODO
 ) (
   input  wire                         i_wclk,
   input  wire                         i_wrst,
