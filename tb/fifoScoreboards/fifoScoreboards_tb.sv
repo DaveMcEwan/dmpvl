@@ -1,3 +1,5 @@
+`include "misc.svh"
+
 /** fifoW1R1_tb
  * Instance multiple fifos with different parameters.
  * Instance name should be u_fifo_<WIDTH>_<DEPTH>_(mem|flops)
@@ -60,6 +62,7 @@ wire o_wready;
 wire [`WIDTH-1:0] o_rdata;
 wire o_rvalid;
 
+generate if (`STRING(`DUT_TYPE) == "fifoW1R1") begin
 `ifdef FIFO_W1R1
   fifoW1R1 #(
     .WIDTH              (`WIDTH),
@@ -93,7 +96,7 @@ wire o_rvalid;
 
     .o_entries  ()
   );
-`elif CDC_DATA
+end else if (`STRING(`DUT_TYPE) == "cdcData") begin
   cdcData #(
     .WIDTH          (`WIDTH),
     .TOPOLOGY       (`TOPOLOGY),
@@ -115,7 +118,7 @@ wire o_rvalid;
     .o_rvalid   (o_rvalid),
     .i_rready   (i_rready)
   );
-`elif CDC_FIFO
+end else if (`STRING(`DUT_TYPE) == "cdcFifo") begin
   cdcFifo #(
     .WIDTH          (`WIDTH),
     .DEPTH          (`DEPTH),
@@ -144,6 +147,6 @@ wire o_rvalid;
     .o_wpushed  (),
     .o_rpopped  ()
   );
-`endif
+end endgenerate
 
 endmodule

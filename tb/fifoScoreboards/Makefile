@@ -1,67 +1,80 @@
 
 TB := fifoScoreboards_tb
 
+N_CYCLES ?= 1000000
+
+BUILD ?= ./build
+
 space :=
 space +=
+CSV_KEYS = $(strip       "DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  FORCEKEEP_NENTRIES  FAST_NOT_SMALL  CDC")
+CSV :=
+CSV += $(subst $(space),,"fifoW1R1, 1,     8,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 2,     8,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 5,     8,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 1,     8,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 2,     8,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 5,     8,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     8,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     2,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     3,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     4,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     5,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     2,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     3,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     4,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     5,     1,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        1,                  0,              0")
+#CSV += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  1,              0")
+#CSV += $(subst $(space),,"cdcFifo,  1,     8,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  2,     8,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  5,     8,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  1,     8,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  2,     8,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  5,     8,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     8,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     2,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     3,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     4,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     5,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     2,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     3,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     4,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcFifo,  8,     5,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     0,              1,        0,                  0,              0")
+#CSV += $(subst $(space),,"cdcData,  1,     2,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  2,     2,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  5,     2,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  1,     2,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  2,     2,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  5,     2,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     1,              0,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  1,     2,     0,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  2,     2,     0,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  5,     2,     0,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     0,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  1,     2,     1,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  2,     2,     1,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  5,     2,     1,              1,        0,                  0,              1")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     1,              1,        0,                  0,              1")
 
-INSTANCES =
-#                               TYPE      WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  FORCEKEEP_NENTRIES  FAST_NOT_SMALL  CDC
-INSTANCES += $(subst $(space),,"fifoW1R1, 1,     8,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 2,     8,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 5,     8,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 1,     8,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 2,     8,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 5,     8,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     8,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     2,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     3,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     4,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     5,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     2,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     3,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     4,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     5,     1,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        1,                  0,              0")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  1,              0")
-INSTANCES += $(subst $(space),,"cdcFifo,  1,     8,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  2,     8,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  5,     8,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  1,     8,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  2,     8,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  5,     8,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     8,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     2,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     3,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     4,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     5,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     2,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     3,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     4,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcFifo,  8,     5,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     0,              1,        0,                  0,              0")
-INSTANCES += $(subst $(space),,"cdcData,  1,     2,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  2,     2,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  5,     2,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  1,     2,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  2,     2,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  5,     2,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     1,              0,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  1,     2,     0,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  2,     2,     0,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  5,     2,     0,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     0,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  1,     2,     1,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  2,     2,     1,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  5,     2,     1,              1,        0,                  0,              1")
-INSTANCES += $(subst $(space),,"cdcData,  8,     2,     1,              1,        0,                  0,              1")
-foo:
-	echo $(INSTANCES)
+N_CSV_KEYS := $(shell echo $(CSV_KEYS) | wc -w)
+CSV_MAP = \
+	for i in $$(seq 1 $(N_CSV_KEYS)); do \
+		KEY=$$(echo $(CSV_KEYS) | cut -d' ' -f$$i); \
+		VALUE=$$(echo $* | cut -d',' -f$$i); \
+		echo -CFLAGS -D$$KEY=$$VALUE; \
+  done
 
-N_CYCLES ?= 1000000
+TB_VERILATOR_VCD = $(BUILD)/$(ROW)/$(TB).verilator.vcd
+TB_IVERILOG_VCD = $(BUILD)/$(ROW)/$(TB).iverilog.vcd
+all: $(foreach ROW,$(CSV),$(TB_VERILATOR_VCD))
+#all: $(foreach ROW,$(CSV),$(TB_IVERILOG_VCD))
+.PHONY: all
 
 V_SRC := \
 	$(TB).sv \
@@ -84,17 +97,18 @@ VERILATOR_INCDIRS := $(addprefix -I,$(V_INCDIRS))
 # Verilator compile verilog into C++.
 VERILATOR_TOP ?= $(TB)
 VERILATOR_TRACE_DEPTH ?= 3
-$(BUILD)/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
-	mkdir -p $(BUILD)
+$(BUILD)/%/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
+	mkdir -p $(BUILD)/$*
 	verilator --cc \
 		--trace \
 		--trace-depth $(VERILATOR_TRACE_DEPTH) \
 		--exe \
 		$(VERILATOR_INCDIRS) \
-		--Mdir $(BUILD) \
+		--Mdir $(BUILD)/$* \
+		$(shell $(CSV_MAP)) \
 		-DN_CYCLES=$(N_CYCLES) \
 		-CFLAGS -DN_CYCLES=$(N_CYCLES) \
-		-CFLAGS -I../../../verif \
+		-CFLAGS -I../../../../verif \
 		$(VERILATOR_DPI_OBJS) \
 		--clk common_clk \
 		--top-module $(VERILATOR_TOP) \
@@ -102,13 +116,14 @@ $(BUILD)/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 		$(VERILATOR_TOP).sv
 
 # Compile verilated C++ into executable.
-$(BUILD)/V$(TB): $(BUILD)/V$(TB).mk $(VERILATOR_DPI_DEPS)
-	make -j -C $(BUILD) -f V$(TB).mk V$(TB)
+$(BUILD)/%/V$(TB): $(BUILD)/%/V$(TB).mk $(VERILATOR_DPI_DEPS)
+	make -j -C $(BUILD)/$* -f V$(TB).mk V$(TB)
 
 # Execute verilator object to dump VCD.
-$(VCD_VERILATOR): $(BUILD)/V$(TB)
-	time $(BUILD)/V$(TB) > $(BUILD)/$(TB).verilator.log
-	@! grep -q ERROR $(BUILD)/$(TB).verilator.log
+$(BUILD)/%/$(TB).verilator.vcd: $(BUILD)/%/V$(TB)
+	time $(BUILD)/$*/V$(TB) > $(BUILD)/$*/$(TB).verilator.log
+	@! grep -q ERROR $(BUILD)/$*/$(TB).verilator.log
+
 
 .PHONY: clean
 clean:
