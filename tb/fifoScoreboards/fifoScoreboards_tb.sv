@@ -22,7 +22,14 @@ localparam FORCEKEEP_NENTRIES = `FORCEKEEP_NENTRIES;
 localparam FAST_NOT_SMALL     = `FAST_NOT_SMALL;
 localparam CDC                = `CDC;
 
+// N_CYCLES is the number of tbclk cycles to randomize inputs to DUT.
+// As data may take some time to get through a FIFO, N_OUTFLOW is the number of
+// tbclk cycles to allow data to flow out of FIFOs.
+// Since clockgates are randomized and clocks run at random ratios, it is not
+// guaranteed that the DUT will be emptied ever, but a big enough number for
+// N_OUTFLOW makes it highly likely.
 localparam N_CYCLES = `N_CYCLES;
+localparam N_OUTFLOW = 1000;
 
 // {{{ clock,clockgate,reset,dump
 
@@ -49,8 +56,8 @@ generate if (CDC) begin
     rclkCtrlPeriod = 5;
   end
   always @(posedge tbclk) begin
-    if ($random % CLKPERIOD_CTRL_MOD == 0) wclkCtrlPeriod = $random & CLKPERIOD_CTRL_MASK;
-    if ($random % CLKPERIOD_CTRL_MOD == 0) rclkCtrlPeriod = $random & CLKPERIOD_CTRL_MASK;
+    if ($random % CLKPERIOD_CTRL_MOD == 0) wclkCtrlPeriod <= $random & CLKPERIOD_CTRL_MASK;
+    if ($random % CLKPERIOD_CTRL_MOD == 0) rclkCtrlPeriod <= $random & CLKPERIOD_CTRL_MASK;
   end
 
   strobe #(
@@ -101,6 +108,8 @@ end endgenerate
 initial nCycles_q = '0;
 always @* nCycles_d = nCycles_q + 'd1;
 
+wire outflowStage = (nCycles_q > N_CYCLES);
+
 reg rst;
 wire wrst = rst;
 wire rrst = rst;
@@ -115,12 +124,7 @@ initial begin
   $dumpfile("fifoScoreboards_tb.iverilog.vcd");
   $dumpvars(0, fifoScoreboards_tb);
 end
-
-// Finish sim after an upper limit on the number of clock cycles.
-always @* if (nCycles_q > N_CYCLES) $finish;
 `endif
-
-// }}} clock,clockgate,reset,dump
 
 // Clockgates drop between 1/20 and 1/(CGRATE_CTRL_C * 2**CGRATE_CTRL_A).
 // Rates changes around every 2**CGRATE_CTRL_B cycles.
@@ -137,9 +141,22 @@ initial begin
   rcgRate = 5;
 end
 always @(posedge tbclk) begin
-  if ($random % CGRATE_CTRL_MOD == 0) wcgRate = $random & CGRATE_CTRL_MASK;
-  if ($random % CGRATE_CTRL_MOD == 0) rcgRate = $random & CGRATE_CTRL_MASK;
+  if ($random % CGRATE_CTRL_MOD == 0) wcgRate <= $random & CGRATE_CTRL_MASK;
+  if ($random % CGRATE_CTRL_MOD == 0) rcgRate <= $random & CGRATE_CTRL_MASK;
 end
+
+reg wcg, rcg;
+always @(posedge tbclk) wcg <= ($random % ((wcgRate+'d1) * CGRATE_CTRL_C)) != 0;
+
+generate if (CDC) begin
+  always @(posedge tbclk) rcg <= ($random % ((rcgRate+'d1) * CGRATE_CTRL_C)) != 0;
+end else begin
+  always @* rcg = wcg;
+end endgenerate
+
+// }}} clock,clockgate,reset,dump
+
+// {{{ Randomized inputs
 
 // Handshake/flow-controls pulse between 1/1 and 1/2**FLOWRATE_CTRL_A.
 // Rates changes around every 2**FLOWRATE_CTRL_B cycles.
@@ -155,27 +172,54 @@ initial begin
   rreadyRate = 5;
 end
 always @(posedge tbclk) begin
-  if ($random % FLOWRATE_CTRL_MOD == 0) wvalidRate = $random & FLOWRATE_CTRL_MASK;
-  if ($random % FLOWRATE_CTRL_MOD == 0) rreadyRate = $random & FLOWRATE_CTRL_MASK;
+  if ($random % FLOWRATE_CTRL_MOD == 0) wvalidRate <= $random & FLOWRATE_CTRL_MASK;
+  if ($random % FLOWRATE_CTRL_MOD == 0) rreadyRate <= $random & FLOWRATE_CTRL_MASK;
 end
 
-reg wcg, rcg;
 reg [31:0] wdata32;
 reg wvalid, rready;
-always @(posedge tbclk) begin
-  wcg      <= ($random % ((wcgRate+'d1) * CGRATE_CTRL_C)) != 0;
-  rcg      <= ($random % ((rcgRate+'d1) * CGRATE_CTRL_C)) != 0;
-  wdata32  <= $random;
-  wvalid   <= ($random % (wvalidRate+'d1)) == 0;
-  rready   <= ($random % (rreadyRate+'d1)) == 0;
-end
 wire [WIDTH-1:0] wdata = wdata32[WIDTH-1:0];
+always @(posedge tbclk)
+  if (outflowStage) begin
+    wdata32  <= '0;
+    wvalid   <= 1'b0;
+    rready   <= 1'b1;
+  end else begin
+    wdata32  <= $random;
+    wvalid   <= ($random % (wvalidRate+'d1)) == 0;
+    rready   <= ($random % (rreadyRate+'d1)) == 0;
+  end
+
+// }}} Randomized inputs
+
+// {{{ Record pushed and popped data
+wire pushed = wcg && wvalid && wready;
+wire popped = rcg && rvalid && rready;
+integer fPushed, fPopped;
+initial begin
+  fPushed = $fopen("pushed.log", "w");
+  fPopped = $fopen("popped.log", "w");
+
+  $fwrite(fPushed, "nCycles_q wdata\n");
+  $fwrite(fPopped, "nCycles_q rdata\n");
+end
+
+always @(posedge wclk) if (pushed) $fwrite(fPushed, "%0d %0h\n", nCycles_q, wdata);
+always @(posedge rclk) if (popped) $fwrite(fPopped, "%0d %0h\n", nCycles_q, rdata);
+
+// Finish sim after an upper limit on the number of clock cycles.
+always @* if (nCycles_q > (N_CYCLES+N_OUTFLOW)) begin
+  $fclose(fPushed);
+  $fclose(fPopped);
+  $finish;
+end
+// }}} Record pushed and popped data
 
 wire wready;
 wire [WIDTH-1:0] rdata;
 wire rvalid;
 
-generate if (DUT_TYPE == "fifoW1R1") begin
+generate if (DUT_TYPE == "fifoW1R1") begin // {{{ DUT
   fifoW1R1 #(
     .WIDTH              (WIDTH),
     .DEPTH              (DEPTH),
@@ -262,6 +306,6 @@ end else if (DUT_TYPE == "cdcFifo") begin
 end else initial begin
   $display("ERROR: Unsupported DUT_TYPE: %s", DUT_TYPE);
   $finish;
-end endgenerate
+end endgenerate // }}} DUT
 
 endmodule

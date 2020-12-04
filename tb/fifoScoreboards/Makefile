@@ -9,24 +9,24 @@ space :=
 space +=
 CSV_KEYS = $(strip       "DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  FORCEKEEP_NENTRIES  FAST_NOT_SMALL  CDC")
 CSV :=
-#CSV += $(subst $(space),,"fifoW1R1, 1,     8,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 2,     8,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 5,     8,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 1,     8,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 2,     8,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 5,     8,     0,              0,        0,                  0,              0")
 CSV += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 1,     8,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 2,     8,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 5,     8,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     8,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     2,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     3,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     4,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     5,     0,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     2,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     3,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     4,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     5,     1,              0,        0,                  0,              0")
-#CSV += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        1,                  0,              0")
-CSV += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  1,              0")
+CSV += $(subst $(space),,"fifoW1R1, 1,     8,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 2,     8,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 5,     8,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     8,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     2,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     3,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     4,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     5,     0,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     2,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     3,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     4,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     5,     1,              0,        0,                  0,              0")
+CSV += $(subst $(space),,"fifoW1R1, 8,     8,     0,              0,        1,                  0,              0")
+#CSV += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,                  1,              0")
 #CSV += $(subst $(space),,"cdcFifo,  1,     8,     0,              0,        0,                  0,              1")
 #CSV += $(subst $(space),,"cdcFifo,  2,     8,     0,              0,        0,                  0,              1")
 #CSV += $(subst $(space),,"cdcFifo,  5,     8,     0,              0,        0,                  0,              1")
@@ -43,7 +43,7 @@ CSV += $(subst $(space),,"cdcFifo,  8,     8,     0,              0,        0,  
 #CSV += $(subst $(space),,"cdcFifo,  8,     3,     1,              0,        0,                  0,              1")
 #CSV += $(subst $(space),,"cdcFifo,  8,     4,     1,              0,        0,                  0,              1")
 #CSV += $(subst $(space),,"cdcFifo,  8,     5,     1,              0,        0,                  0,              1")
-CSV += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              0")
+#CSV += $(subst $(space),,"cdcData,  8,     2,     0,              0,        0,                  0,              0")
 #CSV += $(subst $(space),,"cdcData,  8,     2,     0,              1,        0,                  0,              0")
 #CSV += $(subst $(space),,"cdcData,  1,     2,     0,              0,        0,                  0,              1")
 #CSV += $(subst $(space),,"cdcData,  2,     2,     0,              0,        0,                  0,              1")
@@ -118,9 +118,19 @@ $(BUILD)/%/V$(TB): $(BUILD)/%/V$(TB).mk $(VERILATOR_DPI_DEPS)
 	make -j -C $(BUILD)/$* -f V$(TB).mk V$(TB)
 
 # Execute verilator object to dump VCD.
+# Then check that the data going into the queue is the same as the data coming
+# out, in the same order, regardless of the time difference.
+# Much simpler than a bunch of assertions for:
+#   1. No data dropped.
+#   2. No extraeous data inserted.
+#   3. No data changed.
+#   4. No data re-ordered.
 $(BUILD)/%/$(TB).verilator.vcd: $(BUILD)/%/V$(TB)
 	cd $(BUILD)/$*; time ./V$(TB) > $(TB).verilator.log
 	@! grep -q ERROR $(BUILD)/$*/$(TB).verilator.log
+	tail -n+2 $(BUILD)/$*/pushed.log | cut -f2 -d' ' > $(BUILD)/$*/pushed.data
+	tail -n+2 $(BUILD)/$*/popped.log | cut -f2 -d' ' > $(BUILD)/$*/popped.data
+	diff $(BUILD)/$*/pushed.data $(BUILD)/$*/popped.data > $(BUILD)/$*/data.diff
 
 
 .PHONY: clean

@@ -22,7 +22,7 @@ int main(int argc, char **argv, char **env) {
   tb->reset();
 
   // Run simulation for N_CYCLES clock periods.
-  while (tb->tickcount() < N_CYCLES) {
+  while (tb->tickcount() < (2*N_CYCLES+5000)) {
     tb->tick(); // Checks performed at negedge times.
   }
 
