@@ -1,34 +1,144 @@
+`include "dff.svh"
 `include "misc.svh"
 
-/** fifoW1R1_tb
- * Instance multiple fifos with different parameters.
- * Instance name should be u_fifo_<WIDTH>_<DEPTH>_(mem|flops)
- * Connecting wires should be <instance>_<port>
+/** fifoScoreboards_tb
+ * Instance single fifo-like design with
  */
-module fifoW1R1_tb (
+module fifoScoreboards_tb (
+`ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   input  wire           i_clk,
   input  wire           i_rst
-
+`endif
 );
 
-wire i_wrst = i_rst;
-wire i_rrst = i_rst;
+// Convert -Ddefines into localparams to keep preprocessor behaviour in single
+// place for good linting.
+localparam string DUT_TYPE    = `STRING(`DUT_TYPE);
+localparam WIDTH              = `WIDTH;
+localparam DEPTH              = `DEPTH;
+localparam FLOPS_NOT_MEM      = `FLOPS_NOT_MEM;
+localparam TOPOLOGY           = `TOPOLOGY;
+localparam FORCEKEEP_NENTRIES = `FORCEKEEP_NENTRIES;
+localparam FAST_NOT_SMALL     = `FAST_NOT_SMALL;
+localparam CDC                = `CDC;
 
-// Clockgates drop between 1/20 and 1/(CGGATE_CTRL_C * 2**CGRATE_CTRL_A).
+localparam N_CYCLES = `N_CYCLES;
+
+// {{{ clock,clockgate,reset,dump
+
+wire tbclk, wclk, rclk;
+generateClock u_tbclk (
+`ifdef VERILATOR // V_erilator must drive its own root clock
+  .i_rootClk        (i_clk),
+`endif
+  .o_clk            (tbclk),
+  .i_periodHi       (8'd0),
+  .i_periodLo       (8'd0),
+  .i_jitterControl  (8'd0)
+);
+
+generate if (CDC) begin
+  localparam CLKPERIOD_CTRL_A = 3; // ?clk between 1/1 and 1/8 rate of tbclk.
+  localparam CLKPERIOD_CTRL_B = 15; // Change ?clk after approx 32k cycles.
+  localparam CLKPERIOD_CTRL_MASK = (1 << CLKPERIOD_CTRL_A) - 1;
+  localparam CLKPERIOD_CTRL_MOD = (1 << CLKPERIOD_CTRL_B);
+  reg [31:0] wclkCtrlPeriod, rclkCtrlPeriod;
+
+  initial begin
+    wclkCtrlPeriod = 5;
+    rclkCtrlPeriod = 5;
+  end
+  always @(posedge tbclk) begin
+    if ($random % CLKPERIOD_CTRL_MOD == 0) wclkCtrlPeriod = $random & CLKPERIOD_CTRL_MASK;
+    if ($random % CLKPERIOD_CTRL_MOD == 0) rclkCtrlPeriod = $random & CLKPERIOD_CTRL_MASK;
+  end
+
+  strobe #(
+    .CTRL_PERIOD_W    (CLKPERIOD_CTRL_A),
+    .CTRL_JITTER_W    (1),
+    .N_STROBE         (1),
+    .ENABLE_JITTER    (0)
+  ) u_wclk (
+    .i_clk              (tbclk),
+    .i_rst              (1'b0),
+    .i_cg               (1'b1),
+
+    .i_ctrlPeriodM1     (wclkCtrlPeriod[CLKPERIOD_CTRL_A-1:0]),
+    .i_ctrlJitter       ('0),
+
+    .i_jitterSeedByte   ('0),
+    .i_jitterSeedValid  (1'b0),
+    .o_jitterPrng       (),
+
+    .o_strobe           (wclk)
+  );
+
+  strobe #(
+    .CTRL_PERIOD_W    (CLKPERIOD_CTRL_A),
+    .CTRL_JITTER_W    (1),
+    .N_STROBE         (1),
+    .ENABLE_JITTER    (0)
+  ) u_rclk (
+    .i_clk              (tbclk),
+    .i_rst              (1'b0),
+    .i_cg               (1'b1),
+
+    .i_ctrlPeriodM1     (rclkCtrlPeriod[CLKPERIOD_CTRL_A-1:0]),
+    .i_ctrlJitter       ('0),
+
+    .i_jitterSeedByte   ('0),
+    .i_jitterSeedValid  (1'b0),
+    .o_jitterPrng       (),
+
+    .o_strobe           (rclk)
+  );
+end else begin
+  assign wclk = tbclk;
+  assign rclk = tbclk;
+end endgenerate
+
+`dff_nocg_norst(reg [31:0], nCycles, tbclk)
+initial nCycles_q = '0;
+always @* nCycles_d = nCycles_q + 'd1;
+
+reg rst;
+wire wrst = rst;
+wire rrst = rst;
+
+`ifdef VERILATOR // V_erilator tb drives its own clockgate,reset
+always @* rst = i_rst;
+`else
+initial rst = 1'b1;
+always @* rst = (nCycles_q <= 20);
+
+initial begin
+  $dumpfile("fifoScoreboards_tb.iverilog.vcd");
+  $dumpvars(0, fifoScoreboards_tb);
+end
+
+// Finish sim after an upper limit on the number of clock cycles.
+always @* if (nCycles_q > N_CYCLES) $finish;
+`endif
+
+// }}} clock,clockgate,reset,dump
+
+// Clockgates drop between 1/20 and 1/(CGRATE_CTRL_C * 2**CGRATE_CTRL_A).
 // Rates changes around every 2**CGRATE_CTRL_B cycles.
 // ==> Clockgates drop between 1/20 and 1/640 cycles, with actual rate changing
 //     roughly every 64ki cycles.
-localparam CGGATE_CTRL_A = 5;
-localparam CGGATE_CTRL_B = 16;
-localparam CGGATE_CTRL_C = 20;
-reg [CGGATE_CTRL_A-1:0] wcgRate, rcgRate;
+localparam CGRATE_CTRL_A = 5;
+localparam CGRATE_CTRL_B = 16;
+localparam CGRATE_CTRL_C = 20;
+localparam CGRATE_CTRL_MASK = (1 << CGRATE_CTRL_A) - 1;
+localparam CGRATE_CTRL_MOD = (1 << CGRATE_CTRL_B);
+reg [31:0] wcgRate, rcgRate;
 initial begin
   wcgRate = 5;
   rcgRate = 5;
 end
-always @(posedge i_clk) begin
-  if ($random % (1 << CGGATE_CTRL_B) == 0) wcgRate = $random;
-  if ($random % (1 << CGGATE_CTRL_B) == 0) rcgRate = $random;
+always @(posedge tbclk) begin
+  if ($random % CGRATE_CTRL_MOD == 0) wcgRate = $random & CGRATE_CTRL_MASK;
+  if ($random % CGRATE_CTRL_MOD == 0) rcgRate = $random & CGRATE_CTRL_MASK;
 end
 
 // Handshake/flow-controls pulse between 1/1 and 1/2**FLOWRATE_CTRL_A.
@@ -37,53 +147,55 @@ end
 //     roughly every 512 cycles.
 localparam FLOWRATE_CTRL_A = 3;
 localparam FLOWRATE_CTRL_B = 9;
-reg [FLOWRATE_CTRL_A-1:0] wvalidRate, rreadyRate;
+localparam FLOWRATE_CTRL_MASK = (1 << FLOWRATE_CTRL_A) - 1;
+localparam FLOWRATE_CTRL_MOD = (1 << FLOWRATE_CTRL_B);
+reg [31:0] wvalidRate, rreadyRate;
 initial begin
   wvalidRate = 5;
   rreadyRate = 5;
 end
-always @(posedge i_clk) begin
-  if ($random % (1 << FLOWRATE_CTRL_B) == 0) wvalidRate = $random;
-  if ($random % (1 << FLOWRATE_CTRL_B) == 0) rreadyRate = $random;
+always @(posedge tbclk) begin
+  if ($random % FLOWRATE_CTRL_MOD == 0) wvalidRate = $random & FLOWRATE_CTRL_MASK;
+  if ($random % FLOWRATE_CTRL_MOD == 0) rreadyRate = $random & FLOWRATE_CTRL_MASK;
 end
 
-reg i_wcg, i_rcg;
-reg [31:0] i_wdata;
-reg i_wvalid, i_rready;
-always @(posedge i_clk) begin
-  i_wcg    <= ($random % ((wcgRate+1) * CGGATE_CTRL_C)) != 0;
-  i_rcg    <= ($random % ((rcgRate+1) * CGGATE_CTRL_C)) != 0;
-  i_wdata  <= $random;
-  i_wvalid <= ($random % (wvalidRate+1)) == 0;
-  i_rready <= ($random % (rreadyRate+1)) == 0;
+reg wcg, rcg;
+reg [31:0] wdata32;
+reg wvalid, rready;
+always @(posedge tbclk) begin
+  wcg      <= ($random % ((wcgRate+'d1) * CGRATE_CTRL_C)) != 0;
+  rcg      <= ($random % ((rcgRate+'d1) * CGRATE_CTRL_C)) != 0;
+  wdata32  <= $random;
+  wvalid   <= ($random % (wvalidRate+'d1)) == 0;
+  rready   <= ($random % (rreadyRate+'d1)) == 0;
 end
+wire [WIDTH-1:0] wdata = wdata32[WIDTH-1:0];
 
-wire o_wready;
-wire [`WIDTH-1:0] o_rdata;
-wire o_rvalid;
+wire wready;
+wire [WIDTH-1:0] rdata;
+wire rvalid;
 
-generate if (`STRING(`DUT_TYPE) == "fifoW1R1") begin
-`ifdef FIFO_W1R1
+generate if (DUT_TYPE == "fifoW1R1") begin
   fifoW1R1 #(
-    .WIDTH              (`WIDTH),
-    .DEPTH              (`DEPTH),
-    .FLOPS_NOT_MEM      (`FLOPS_NOT_MEM),
-    .FORCEKEEP_NENTRIES (`FORCEKEEP_NENTRIES),
+    .WIDTH              (WIDTH),
+    .DEPTH              (DEPTH),
+    .FLOPS_NOT_MEM      (FLOPS_NOT_MEM),
+    .FORCEKEEP_NENTRIES (FORCEKEEP_NENTRIES)
   ) u_dut (
-    // NOTE: Single clock domain could use either i_wclk or i_rclk;
-    .i_clk      (i_wclk),
-    .i_rst      (i_wrst),
-    .i_cg       (i_wcg),
+    // NOTE: Single clock domain could use either wclk or rclk;
+    .i_clk      (wclk),
+    .i_rst      (wrst),
+    .i_cg       (wcg),
 
     .i_flush    (1'b0),
 
-    .i_data     (i_wdata[`WIDTH-1:0]),
-    .i_valid    (i_wvalid),
-    .o_ready    (o_wready),
+    .i_data     (wdata),
+    .i_valid    (wvalid),
+    .o_ready    (wready),
 
-    .o_data     (o_rdata),
-    .o_valid    (o_rvalid),
-    .i_ready    (i_rready),
+    .o_data     (rdata),
+    .o_valid    (rvalid),
+    .i_ready    (rready),
 
     .o_pushed   (),
     .o_popped   (),
@@ -96,50 +208,50 @@ generate if (`STRING(`DUT_TYPE) == "fifoW1R1") begin
 
     .o_entries  ()
   );
-end else if (`STRING(`DUT_TYPE) == "cdcData") begin
+end else if (DUT_TYPE == "cdcData") begin
   cdcData #(
-    .WIDTH          (`WIDTH),
-    .TOPOLOGY       (`TOPOLOGY),
-    .FLOPS_NOT_MEM  (`FLOPS_NOT_MEM)
+    .WIDTH          (WIDTH),
+    .TOPOLOGY       (TOPOLOGY),
+    .FLOPS_NOT_MEM  (FLOPS_NOT_MEM)
   ) u_dut (
-    .i_wclk     (i_wclk),
-    .i_wrst     (i_wrst),
-    .i_wcg      (i_wcg),
+    .i_wclk     (wclk),
+    .i_wrst     (wrst),
+    .i_wcg      (wcg),
 
-    .i_rclk     (i_rclk),
-    .i_rrst     (i_rrst),
-    .i_rcg      (i_rcg),
+    .i_rclk     (rclk),
+    .i_rrst     (rrst),
+    .i_rcg      (rcg),
 
-    .i_wdata    (i_wdata[`WIDTH-1:0]),
-    .i_wvalid   (i_wvalid),
-    .o_wready   (o_wready),
+    .i_wdata    (wdata),
+    .i_wvalid   (wvalid),
+    .o_wready   (wready),
 
-    .o_rdata    (o_rdata),
-    .o_rvalid   (o_rvalid),
-    .i_rready   (i_rready)
+    .o_rdata    (rdata),
+    .o_rvalid   (rvalid),
+    .i_rready   (rready)
   );
-end else if (`STRING(`DUT_TYPE) == "cdcFifo") begin
+end else if (DUT_TYPE == "cdcFifo") begin
   cdcFifo #(
-    .WIDTH          (`WIDTH),
-    .DEPTH          (`DEPTH),
-    .FLOPS_NOT_MEM  (`FLOPS_NOT_MEM)
-    .FAST_NOT_SMALL (`FAST_NOT_SMALL)
+    .WIDTH          (WIDTH),
+    .DEPTH          (DEPTH),
+    .FLOPS_NOT_MEM  (FLOPS_NOT_MEM),
+    .FAST_NOT_SMALL (FAST_NOT_SMALL)
   ) u_dut (
-    .i_wclk     (i_wclk),
-    .i_wrst     (i_wrst),
-    .i_wcg      (i_wcg),
+    .i_wclk     (wclk),
+    .i_wrst     (wrst),
+    .i_wcg      (wcg),
 
-    .i_rclk     (i_rclk),
-    .i_rrst     (i_rrst),
-    .i_rcg      (i_rcg),
+    .i_rclk     (rclk),
+    .i_rrst     (rrst),
+    .i_rcg      (rcg),
 
-    .i_wdata    (i_wdata[`WIDTH-1:0]),
-    .i_wvalid   (i_wvalid),
-    .o_wready   (o_wready),
+    .i_wdata    (wdata),
+    .i_wvalid   (wvalid),
+    .o_wready   (wready),
 
-    .o_rdata    (o_rdata),
-    .o_rvalid   (o_rvalid),
-    .i_rready   (i_rready)
+    .o_rdata    (rdata),
+    .o_rvalid   (rvalid),
+    .i_rready   (rready),
 
     .o_wptr     (),
     .o_rptr     (),
@@ -147,6 +259,9 @@ end else if (`STRING(`DUT_TYPE) == "cdcFifo") begin
     .o_wpushed  (),
     .o_rpopped  ()
   );
+end else initial begin
+  $display("ERROR: Unsupported DUT_TYPE: %s", DUT_TYPE);
+  $finish;
 end endgenerate
 
 endmodule
