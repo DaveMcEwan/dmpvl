@@ -100,12 +100,13 @@ generate if (TOPOLOGY != 0) begin : topoLinear
     assign rAckCtrl = rAckCtrl_q;
     assign o_rvalid = rFsm_q;
 
-    always @* rData_d = doRead ? wData : rData_q;
+    wire rAcceptData = !rFsm_q && rEnEdge;
+    always @* rData_d = rAcceptData ? wData : rData_q;
     always @* rAckCtrl_d = rAckCtrl_q ^ doRead;
     always @*
-      if (!rFsm_q && rEnEdge) rFsm_d = 1'b1;
-      else if (doRead)        rFsm_d = 1'b0;
-      else                    rFsm_d = rFsm_q;
+      if (rAcceptData)  rFsm_d = 1'b1;
+      else if (doRead)  rFsm_d = 1'b0;
+      else              rFsm_d = rFsm_q;
 
     syncBit #(
       .DEBOUNCE_CYCLES  (0),
