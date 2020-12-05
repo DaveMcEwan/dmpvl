@@ -19,7 +19,6 @@ localparam DEPTH              = `DEPTH;
 localparam FLOPS_NOT_MEM      = `FLOPS_NOT_MEM;
 localparam TOPOLOGY           = `TOPOLOGY;
 localparam FORCEKEEP_NENTRIES = `FORCEKEEP_NENTRIES;
-localparam FAST_NOT_SMALL     = `FAST_NOT_SMALL;
 localparam CDC                = `CDC;
 
 // N_CYCLES is the number of tbclk cycles to randomize inputs to DUT.
@@ -279,7 +278,7 @@ end else if (DUT_TYPE == "cdcFifo") begin
     .WIDTH          (WIDTH),
     .DEPTH          (DEPTH),
     .FLOPS_NOT_MEM  (FLOPS_NOT_MEM),
-    .FAST_NOT_SMALL (FAST_NOT_SMALL)
+    .FAST_NOT_SMALL (TOPOLOGY)
   ) u_dut (
     .i_wclk     (wclk),
     .i_wrst     (wrst),
