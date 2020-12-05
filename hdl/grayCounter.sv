@@ -13,6 +13,7 @@ module grayCounter #(
   input  wire                         i_cg,
 
   input  wire                         i_incr, // increment-counter
+  output wire                         o_wrap,
   output wire [WIDTH-1:0]             o_gray
 );
 
@@ -20,6 +21,7 @@ genvar i;
 
 `dff_cg_srst(reg [WIDTH-1:0], gray, i_clk, i_cg, i_rst, '0)
 assign o_gray = gray_q;
+assign o_wrap = !gray_d[WIDTH-1] && gray_q[WIDTH-1];
 
 generate if (FAST_NOT_SMALL) begin : fastNotSmall
 
