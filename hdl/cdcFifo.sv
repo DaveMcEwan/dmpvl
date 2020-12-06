@@ -47,43 +47,38 @@ localparam PTR_W = $clog2(DEPTH);
 assign o_wpushed = o_wready && i_wvalid;
 assign o_rpopped = o_rvalid && i_rready;
 
-wire [PTR_W-1:0] wptrSynced;
-wire [PTR_W-1:0] rptrSynced;
-wire wptrWrap, wptrSyncedWrap, wptrSyncedPage;
-wire rptrWrap, rptrSyncedWrap, rptrSyncedPage;
-
-`dff_cg_srst(reg, wptrPage, i_wclk, i_wcg, i_wrst, 1'b0)
-`dff_cg_srst(reg, rptrPage, i_rclk, i_rcg, i_rrst, 1'b0)
-always @* wptrPage_d = wptrWrap ? !wptrPage_q : wptrPage_q;
-always @* rptrPage_d = rptrWrap ? !rptrPage_q : rptrPage_q;
-
+wire [PTR_W:0] wptr;
+wire [PTR_W:0] rptr;
 grayCounter #(
-  .WIDTH          (PTR_W),
+  .WIDTH          (PTR_W+1),
   .FAST_NOT_SMALL (FAST_NOT_SMALL)
 ) wptrGray (
   .i_clk  (i_wclk),
   .i_rst  (i_wrst),
   .i_cg   (i_wcg),
   .i_incr (o_wpushed),
-  .o_wrap (wptrWrap),
-  .o_gray (o_wptr)
+  .o_gray (wptr)
 );
 grayCounter #(
-  .WIDTH          (PTR_W),
+  .WIDTH          (PTR_W+1),
   .FAST_NOT_SMALL (FAST_NOT_SMALL)
 ) rptrGray (
   .i_clk  (i_rclk),
   .i_rst  (i_rrst),
   .i_cg   (i_rcg),
   .i_incr (o_rpopped),
-  .o_wrap (rptrWrap),
-  .o_gray (o_rptr)
+  .o_gray (rptr)
 );
+assign o_wptr = wptr`LSb(PTR_W);
+assign o_rptr = rptr`LSb(PTR_W);
 
-wire ptrsUnequalW = (o_wptr != rptrSynced) && !rptrSyncedWrap;
-wire ptrsWrappedW = (rptrSyncedPage != wptrPage_q);
-wire ptrsUnequalR = (wptrSynced != o_rptr) && !wptrSyncedWrap;
-wire ptrsWrappedR = (wptrSyncedPage != rptrPage_q);
+wire [PTR_W:0] wptrSynced;
+wire [PTR_W:0] rptrSynced;
+
+wire ptrsUnequalW = (o_wptr != rptrSynced`LSb(PTR_W));
+wire ptrsWrappedW = (wptr[PTR_W] != rptrSynced[PTR_W]);
+wire ptrsUnequalR = (wptrSynced`LSb(PTR_W) != o_rptr);
+wire ptrsWrappedR = (wptrSynced[PTR_W] != rptr[PTR_W]);
 
 assign o_wready = ptrsUnequalW || !ptrsWrappedW; // !full
 assign o_rvalid = ptrsUnequalR || ptrsWrappedR; // !empty
@@ -116,8 +111,7 @@ end : useFlops else begin : useMem
 
 end : useMem endgenerate
 
-// Lower bits of gray counter pointers.
-generate for (i = 0; i < (PTR_W-1); i=i+1) begin
+generate for (i = 0; i <= PTR_W; i=i+1) begin
   syncBit #(
     .DEBOUNCE_CYCLES  (0),
     .EDGECNTR_W       (1),
@@ -127,7 +121,7 @@ generate for (i = 0; i < (PTR_W-1); i=i+1) begin
     .i_cg       (i_rcg),
     .i_rst      (i_rrst),
 
-    .i_bit      (o_wptr[i]),
+    .i_bit      (wptr[i]),
 
     .o_bit      (wptrSynced[i]),
     .o_edge     (),
@@ -146,7 +140,7 @@ generate for (i = 0; i < (PTR_W-1); i=i+1) begin
     .i_cg       (i_wcg),
     .i_rst      (i_wrst),
 
-    .i_bit      (o_rptr[i]),
+    .i_bit      (rptr[i]),
 
     .o_bit      (rptrSynced[i]),
     .o_edge     (),
@@ -157,45 +151,5 @@ generate for (i = 0; i < (PTR_W-1); i=i+1) begin
     .o_nFall    ()
   );
 end endgenerate
-
-// Upper bit syncs have extra flop toggling on fall.
-syncBit #(
-  .DEBOUNCE_CYCLES  (0),
-  .EDGECNTR_W       (1),
-  .N_SYNC           (2)
-) syncBit_wptrMsb (
-  .i_clk      (i_rclk),
-  .i_cg       (i_rcg),
-  .i_rst      (i_rrst),
-
-  .i_bit      (o_wptr[PTR_W-1]),
-
-  .o_bit      (wptrSynced[PTR_W-1]),
-  .o_edge     (wptrSyncedWrap),
-  .o_rise     (),
-  .o_fall     (),
-  .o_nEdge    (),
-  .o_nRise    (),
-  .o_nFall    (wptrSyncedPage)
-);
-syncBit #(
-  .DEBOUNCE_CYCLES  (0),
-  .EDGECNTR_W       (1),
-  .N_SYNC           (2)
-) syncBit_rptrMsb (
-  .i_clk      (i_wclk),
-  .i_cg       (i_wcg),
-  .i_rst      (i_wrst),
-
-  .i_bit      (o_rptr[PTR_W-1]),
-
-  .o_bit      (rptrSynced[PTR_W-1]),
-  .o_edge     (rptrSyncedWrap),
-  .o_rise     (),
-  .o_fall     (),
-  .o_nEdge    (),
-  .o_nRise    (),
-  .o_nFall    (rptrSyncedPage)
-);
 
 endmodule
