@@ -1,3 +1,4 @@
+`include "asrt.svh"
 `include "dff.svh"
 `include "misc.svh"
 
@@ -12,10 +13,9 @@ module cdcFifo #(
   parameter DEPTH = 8,  // >= 2, must be power-of-2.
   parameter FLOPS_NOT_MEM = 0,
 
-  // 0 -> gray-to-bin-inc-to-gray in single cycle.
-  // 1 -> bin-inc and bin-to-gray separate FFs
-  //      with result 1-cycle later.
-  parameter FAST_NOT_SMALL = 0 // TODO
+  // 0 -> gray-->bin-->incr-->gray in single cycle.
+  // 1 -> bin-->incl, bin-->gray separate FFs with result 1-cycle later.
+  parameter TOPOLOGY = 0 // TODO
 ) (
   input  wire                         i_wclk,
   input  wire                         i_wrst,
@@ -47,43 +47,30 @@ localparam PTR_W = $clog2(DEPTH);
 assign o_wpushed = o_wready && i_wvalid;
 assign o_rpopped = o_rvalid && i_rready;
 
-wire [PTR_W:0] wptr;
-wire [PTR_W:0] rptr;
-grayCounter #(
-  .WIDTH          (PTR_W+1),
-  .FAST_NOT_SMALL (FAST_NOT_SMALL)
-) wptrGray (
-  .i_clk  (i_wclk),
-  .i_rst  (i_wrst),
-  .i_cg   (i_wcg),
-  .i_incr (o_wpushed),
-  .o_gray (wptr)
-);
-grayCounter #(
-  .WIDTH          (PTR_W+1),
-  .FAST_NOT_SMALL (FAST_NOT_SMALL)
-) rptrGray (
-  .i_clk  (i_rclk),
-  .i_rst  (i_rrst),
-  .i_cg   (i_rcg),
-  .i_incr (o_rpopped),
-  .o_gray (rptr)
-);
-assign o_wptr = wptr`LSb(PTR_W);
-assign o_rptr = rptr`LSb(PTR_W);
+wire [PTR_W:0] wptrBin, rptrBin;
+`dff_cg_srst(reg [PTR_W:0], wptrGray, i_wclk, i_wcg && o_wpushed, i_wrst, '0)
+`dff_cg_srst(reg [PTR_W:0], rptrGray, i_rclk, i_rcg && o_rpopped, i_rrst, '0)
+binToGray #(.WIDTH(PTR_W+1)) u_b2gWptr (.i_bin(wptrBin + 'd1), .o_gray(wptrGray_d));
+binToGray #(.WIDTH(PTR_W+1)) u_b2gRptr (.i_bin(rptrBin + 'd1), .o_gray(rptrGray_d));
+grayToBin #(.WIDTH(PTR_W+1)) u_g2bWptr (.i_gray(wptrGray_q), .o_bin(wptrBin));
+grayToBin #(.WIDTH(PTR_W+1)) u_g2bRptr (.i_gray(rptrGray_q), .o_bin(rptrBin));
 
-wire [PTR_W:0] wptrSynced;
-wire [PTR_W:0] rptrSynced;
+assign o_wptr = wptrBin`LSb(PTR_W);
+assign o_rptr = rptrBin`LSb(PTR_W);
 
-wire ptrsUnequalW = (o_wptr != rptrSynced`LSb(PTR_W));
-wire ptrsWrappedW = (wptr[PTR_W] != rptrSynced[PTR_W]);
-wire ptrsUnequalR = (wptrSynced`LSb(PTR_W) != o_rptr);
-wire ptrsWrappedR = (wptrSynced[PTR_W] != rptr[PTR_W]);
+wire [PTR_W:0] wptrSyncedGray, rptrSyncedGray;
+wire [PTR_W:0] wptrSyncedBin, rptrSyncedBin;
+grayToBin #(.WIDTH(PTR_W+1)) u_g2bWsynced (.i_gray(wptrSyncedGray), .o_bin(wptrSyncedBin));
+grayToBin #(.WIDTH(PTR_W+1)) u_g2bRsynced (.i_gray(rptrSyncedGray), .o_bin(rptrSyncedBin));
+
+wire ptrsUnequalW = (o_wptr != rptrSyncedBin`LSb(PTR_W));
+wire ptrsUnequalR = (o_rptr != wptrSyncedBin`LSb(PTR_W));
+wire ptrsWrappedW = (wptrGray_q[PTR_W] != rptrSyncedGray[PTR_W]);
+wire ptrsWrappedR = (rptrGray_q[PTR_W] != wptrSyncedGray[PTR_W]);
 
 assign o_wready = ptrsUnequalW || !ptrsWrappedW; // !full
 assign o_rvalid = ptrsUnequalR || ptrsWrappedR; // !empty
 
-// TODO: FAST_NOT_SMALL requires line of flops on i_wdata and i_wvalid.
 generate if (FLOPS_NOT_MEM != 0) begin : useFlops
 
   (* mem2reg *) reg [WIDTH-1:0] entries_q [DEPTH]; // dff_cg_norst
@@ -121,9 +108,9 @@ generate for (i = 0; i <= PTR_W; i=i+1) begin
     .i_cg       (i_rcg),
     .i_rst      (i_rrst),
 
-    .i_bit      (wptr[i]),
+    .i_bit      (wptrGray_q[i]),
 
-    .o_bit      (wptrSynced[i]),
+    .o_bit      (wptrSyncedGray[i]),
     .o_edge     (),
     .o_rise     (),
     .o_fall     (),
@@ -140,9 +127,9 @@ generate for (i = 0; i <= PTR_W; i=i+1) begin
     .i_cg       (i_wcg),
     .i_rst      (i_wrst),
 
-    .i_bit      (rptr[i]),
+    .i_bit      (rptrGray_q[i]),
 
-    .o_bit      (rptrSynced[i]),
+    .o_bit      (rptrSyncedGray[i]),
     .o_edge     (),
     .o_rise     (),
     .o_fall     (),
@@ -151,5 +138,15 @@ generate for (i = 0; i <= PTR_W; i=i+1) begin
     .o_nFall    ()
   );
 end endgenerate
+
+`ifndef SYNTHESIS
+`dff_upcounter(reg [31:0], nPushed, i_wclk, i_wcg && o_wpushed, i_wrst)
+`dff_upcounter(reg [31:0], nPopped, i_rclk, i_rcg && o_rpopped, i_rrst)
+wire [31:0] nDiff = nPushed_q - nPopped_q;
+wire tooManyPush = nDiff > DEPTH;
+wire tooManyPop = nPopped_q > nPushed_q;
+`asrtw_en (!tooManyPush, i_wclk, i_wcg)
+`asrtw_en (!tooManyPop, i_rclk, i_rcg)
+`endif
 
 endmodule

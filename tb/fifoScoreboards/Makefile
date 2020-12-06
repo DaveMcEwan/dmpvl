@@ -78,6 +78,8 @@ all: $(foreach ROW,$(CSV),$(TB_VERILATOR_VCD))
 
 V_SRC := \
 	$(TB).sv \
+	../../hdl/binToGray.sv \
+	../../hdl/grayToBin.sv \
 	../../hdl/cdcData.sv \
 	../../hdl/cdcFifo.sv \
 	../../hdl/fifoW1R1.sv

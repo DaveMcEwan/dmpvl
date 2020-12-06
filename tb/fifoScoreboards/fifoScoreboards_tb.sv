@@ -278,7 +278,7 @@ end else if (DUT_TYPE == "cdcFifo") begin
     .WIDTH          (WIDTH),
     .DEPTH          (DEPTH),
     .FLOPS_NOT_MEM  (FLOPS_NOT_MEM),
-    .FAST_NOT_SMALL (TOPOLOGY)
+    .TOPOLOGY       (TOPOLOGY)
   ) u_dut (
     .i_wclk     (wclk),
     .i_wrst     (wrst),
