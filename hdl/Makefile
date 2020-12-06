@@ -11,6 +11,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) axi4liteMonitor.sv
 	verilator $(VERILATOR_FLAGS) axi4liteRandomMaster.sv
 	verilator $(VERILATOR_FLAGS) axi4liteRandomSlave.sv
+	verilator $(VERILATOR_FLAGS) binToGray.sv
 	verilator $(VERILATOR_FLAGS) bpRegMem.sv
 	verilator $(VERILATOR_FLAGS) cdcData.sv
 	verilator $(VERILATOR_FLAGS) cdcFifo.sv
@@ -22,6 +23,7 @@ lint:
 	verilator $(VERILATOR_FLAGS) fpgaReset.sv
 	verilator $(VERILATOR_FLAGS) fxcs.sv
 	verilator $(VERILATOR_FLAGS) grayCounter.sv
+	verilator $(VERILATOR_FLAGS) grayToBin.sv
 	verilator $(VERILATOR_FLAGS) logdropWindow.sv
 	verilator $(VERILATOR_FLAGS) mssbIdx.sv
 	verilator $(VERILATOR_FLAGS) onehotIdx.sv
@@ -52,6 +54,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) axi4liteMonitor.sv
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomMaster.sv
 	iverilog $(IVERILOG_FLAGS) -i axi4liteRandomSlave.sv
+	iverilog $(IVERILOG_FLAGS) binToGray.sv
 	iverilog $(IVERILOG_FLAGS) bpRegMem.sv
 	iverilog $(IVERILOG_FLAGS) -i cdcData.sv
 	iverilog $(IVERILOG_FLAGS) -i cdcFifo.sv
@@ -63,6 +66,7 @@ iverilog:
 	iverilog $(IVERILOG_FLAGS) fpgaReset.sv
 	iverilog $(IVERILOG_FLAGS) fxcs.sv
 	iverilog $(IVERILOG_FLAGS) grayCounter.sv
+	iverilog $(IVERILOG_FLAGS) grayToBin.sv
 	iverilog $(IVERILOG_FLAGS) -i logdropWindow.sv
 	iverilog $(IVERILOG_FLAGS) -i mssbIdx.sv
 	iverilog $(IVERILOG_FLAGS) onehotIdx.sv
@@ -91,6 +95,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv axi4liteMonitor.sv'
 	yosys -q -p 'read_verilog -sv axi4liteRandomMaster.sv'
 	yosys -q -p 'read_verilog -sv axi4liteRandomSlave.sv'
+	yosys -q -p 'read_verilog -sv binToGray.sv'
 	yosys -q -p 'read_verilog -sv bpRegMem.sv'
 	yosys -q -p 'read_verilog -sv cdcData.sv'
 	yosys -q -p 'read_verilog -sv cdcFifo.sv'
@@ -102,6 +107,7 @@ yosys:
 	yosys -q -p 'read_verilog -sv fpgaReset.sv'
 	yosys -q -p 'read_verilog -sv fxcs.sv'
 	yosys -q -p 'read_verilog -sv grayCounter.sv'
+	yosys -q -p 'read_verilog -sv grayToBin.sv'
 	yosys -q -p 'read_verilog -sv logdropWindow.sv'
 	yosys -q -p 'read_verilog -sv mssbIdx.sv'
 	yosys -q -p 'read_verilog -sv onehotIdx.sv'
@@ -132,6 +138,7 @@ add_files \\
 	axi4liteMonitor.sv \\
 	axi4liteRandomMaster.sv \\
 	axi4liteRandomSlave.sv \\
+	binToGray.sv \\
 	bpRegMem.sv \\
 	cdcData.sv \\
 	cdcFifo.sv \\
@@ -143,6 +150,7 @@ add_files \\
 	fpgaReset.sv \\
 	fxcs.sv \\
 	grayCounter.sv \\
+	grayToBin.sv \\
 	logdropWindow.sv \\
 	mssbIdx.sv \\
 	onehotIdx.sv \\
