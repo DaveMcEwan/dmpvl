@@ -22,6 +22,7 @@ run_tbs:
 	make -C tb/bpRegMem
 	make -C tb/dividerFsm
 	make -C tb/fifoW1R1
+	make -C tb/fifoScoreboards
 	make -C tb/fxcs
 	make -C tb/logdropWindow
 	make -C tb/onehotIdx
@@ -33,6 +34,7 @@ clean_tbs:
 	make -C tb/bpRegMem clean
 	make -C tb/dividerFsm clean
 	make -C tb/fifoW1R1 clean
+	make -C tb/fifoScoreboards clean
 	make -C tb/fxcs clean
 	make -C tb/logdropWindow clean
 	make -C tb/onehotIdx clean
