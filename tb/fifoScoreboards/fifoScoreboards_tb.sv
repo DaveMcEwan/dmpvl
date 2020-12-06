@@ -18,7 +18,6 @@ localparam WIDTH              = `WIDTH;
 localparam DEPTH              = `DEPTH;
 localparam FLOPS_NOT_MEM      = `FLOPS_NOT_MEM;
 localparam TOPOLOGY           = `TOPOLOGY;
-localparam FORCEKEEP_NENTRIES = `FORCEKEEP_NENTRIES;
 localparam CDC                = `CDC;
 
 // N_CYCLES is the number of tbclk cycles to randomize inputs to DUT.
@@ -223,7 +222,7 @@ generate if (DUT_TYPE == "fifoW1R1") begin // {{{ DUT
     .WIDTH              (WIDTH),
     .DEPTH              (DEPTH),
     .FLOPS_NOT_MEM      (FLOPS_NOT_MEM),
-    .FORCEKEEP_NENTRIES (FORCEKEEP_NENTRIES)
+    .FORCEKEEP_NENTRIES (0)
   ) u_dut (
     // NOTE: Single clock domain could use either wclk or rclk;
     .i_clk      (wclk),
