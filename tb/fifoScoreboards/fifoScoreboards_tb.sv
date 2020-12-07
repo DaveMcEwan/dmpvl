@@ -106,13 +106,11 @@ end endgenerate
 initial nCycles_q = '0;
 always @* nCycles_d = nCycles_q + 'd1;
 
-wire outflowStage = (nCycles_q > N_CYCLES);
-
 reg rst;
 wire wrst = rst;
 wire rrst = rst;
 
-`ifdef VERILATOR // V_erilator tb drives its own clockgate,reset
+`ifdef VERILATOR // V_erilator tb drives its own clock,reset
 always @* rst = i_rst;
 `else
 initial rst = 1'b1;
@@ -124,10 +122,10 @@ initial begin
 end
 `endif
 
-// Clockgates drop between 1/20 and 1/(CGRATE_CTRL_C * 2**CGRATE_CTRL_A).
+// Clockgates drop between 1/CGRATE_CTRL_C and 1/(CGRATE_CTRL_C * 2**CGRATE_CTRL_A).
 // Rates changes around every 2**CGRATE_CTRL_B cycles.
 // ==> Clockgates drop between 1/20 and 1/640 cycles, with actual rate changing
-//     roughly every 64ki cycles.
+//     approximately every 64k cycles.
 localparam CGRATE_CTRL_A = 5;
 localparam CGRATE_CTRL_B = 16;
 localparam CGRATE_CTRL_C = 20;
@@ -178,7 +176,7 @@ reg [31:0] wdata32;
 reg wvalid, rready;
 wire [WIDTH-1:0] wdata = wdata32[WIDTH-1:0];
 always @(posedge tbclk)
-  if (outflowStage) begin
+  if (nCycles_q > N_CYCLES) begin
     wdata32  <= '0;
     wvalid   <= 1'b0;
     rready   <= 1'b1;

@@ -1,0 +1,25 @@
+# Minimal clock-domain-crossing FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, flops or memory, circular or linear topologies.
+# Linear useful when source and destinations are physically disparate.
+# DEPTH is ignored, just noted as 2 for a hint about the implementation.
+
+DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  CDC
+
+cdcData,  8,     2,     0,              0,        0
+cdcData,  8,     2,     0,              1,        0
+cdcData,  1,     2,     0,              0,        1
+cdcData,  2,     2,     0,              0,        1
+cdcData,  5,     2,     0,              0,        1
+cdcData,  8,     2,     0,              0,        1
+cdcData,  1,     2,     1,              0,        1
+cdcData,  2,     2,     1,              0,        1
+cdcData,  5,     2,     1,              0,        1
+cdcData,  8,     2,     1,              0,        1
+cdcData,  1,     2,     0,              1,        1
+cdcData,  2,     2,     0,              1,        1
+cdcData,  5,     2,     0,              1,        1
+cdcData,  8,     2,     0,              1,        1
+cdcData,  1,     2,     1,              1,        1
+cdcData,  2,     2,     1,              1,        1
+cdcData,  5,     2,     1,              1,        1
+cdcData,  8,     2,     1,              1,        1

@@ -1,0 +1,26 @@
+# Clock-domain-crossing FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, DEPTH >= 2 and power-of-2, flops or memory, fast or slow
+# topologies for write and read sides individually.
+# Circular only, as linear makes no sense for CDC FIFO deeper than 2.
+
+DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  CDC
+
+cdcFifo,  8,     8,     0,              0,        0
+cdcFifo,  8,     8,     0,              0,        1
+cdcFifo,  5,     8,     0,              0,        1
+cdcFifo,  2,     8,     0,              0,        1
+cdcFifo,  1,     8,     0,              0,        1
+cdcFifo,  8,     4,     0,              0,        1
+cdcFifo,  8,     2,     0,              0,        1
+cdcFifo,  8,     8,     1,              0,        1
+cdcFifo,  5,     8,     1,              0,        1
+cdcFifo,  2,     8,     1,              0,        1
+cdcFifo,  1,     8,     1,              0,        1
+cdcFifo,  8,     4,     1,              0,        1
+cdcFifo,  8,     2,     1,              0,        1
+cdcFifo,  8,     8,     0,              1,        0
+cdcFifo,  8,     8,     0,              1,        1
+cdcFifo,  8,     8,     0,              2,        0
+cdcFifo,  8,     8,     0,              2,        1
+cdcFifo,  8,     8,     0,              3,        0
+cdcFifo,  8,     8,     0,              3,        1

@@ -1,0 +1,21 @@
+# Single-clock-domain FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, DEPTH >= 2, flops or memory, single topology (circular).
+
+DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  CDC
+
+fifoW1R1, 1,     8,     0,              0,        0
+fifoW1R1, 2,     8,     0,              0,        0
+fifoW1R1, 5,     8,     0,              0,        0
+fifoW1R1, 8,     8,     0,              0,        0
+fifoW1R1, 1,     8,     1,              0,        0
+fifoW1R1, 2,     8,     1,              0,        0
+fifoW1R1, 5,     8,     1,              0,        0
+fifoW1R1, 8,     8,     1,              0,        0
+fifoW1R1, 8,     2,     0,              0,        0
+fifoW1R1, 8,     3,     0,              0,        0
+fifoW1R1, 8,     4,     0,              0,        0
+fifoW1R1, 8,     5,     0,              0,        0
+fifoW1R1, 8,     2,     1,              0,        0
+fifoW1R1, 8,     3,     1,              0,        0
+fifoW1R1, 8,     4,     1,              0,        0
+fifoW1R1, 8,     5,     1,              0,        0

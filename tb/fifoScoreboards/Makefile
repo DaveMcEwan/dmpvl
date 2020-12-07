@@ -5,67 +5,13 @@ N_CYCLES ?= 1000000
 
 BUILD ?= ./build
 
-space :=
-space +=
-CSV_KEYS = $(strip       DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  CDC)
-CSV :=
-CSV += $(subst $(space),,fifoW1R1, 1,     8,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 2,     8,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 5,     8,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     8,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 1,     8,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 2,     8,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 5,     8,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     8,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     2,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     3,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     4,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     5,     0,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     2,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     3,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     4,     1,              0,        0)
-CSV += $(subst $(space),,fifoW1R1, 8,     5,     1,              0,        0)
-
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              0,        0)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  5,     8,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  2,     8,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  1,     8,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     4,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     2,     0,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  5,     8,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  2,     8,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  1,     8,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     4,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     2,     1,              0,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              1,        0)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              1,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              2,        0)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              2,        1)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              3,        0)
-CSV += $(subst $(space),,cdcFifo,  8,     8,     0,              3,        1)
-
-CSV += $(subst $(space),,cdcData,  8,     2,     0,              0,        0)
-CSV += $(subst $(space),,cdcData,  8,     2,     0,              1,        0)
-CSV += $(subst $(space),,cdcData,  1,     2,     0,              0,        1)
-CSV += $(subst $(space),,cdcData,  2,     2,     0,              0,        1)
-CSV += $(subst $(space),,cdcData,  5,     2,     0,              0,        1)
-CSV += $(subst $(space),,cdcData,  8,     2,     0,              0,        1)
-CSV += $(subst $(space),,cdcData,  1,     2,     1,              0,        1)
-CSV += $(subst $(space),,cdcData,  2,     2,     1,              0,        1)
-CSV += $(subst $(space),,cdcData,  5,     2,     1,              0,        1)
-CSV += $(subst $(space),,cdcData,  8,     2,     1,              0,        1)
-CSV += $(subst $(space),,cdcData,  1,     2,     0,              1,        1)
-CSV += $(subst $(space),,cdcData,  2,     2,     0,              1,        1)
-CSV += $(subst $(space),,cdcData,  5,     2,     0,              1,        1)
-CSV += $(subst $(space),,cdcData,  8,     2,     0,              1,        1)
-CSV += $(subst $(space),,cdcData,  1,     2,     1,              1,        1)
-CSV += $(subst $(space),,cdcData,  2,     2,     1,              1,        1)
-CSV += $(subst $(space),,cdcData,  5,     2,     1,              1,        1)
-CSV += $(subst $(space),,cdcData,  8,     2,     1,              1,        1)
-
+CSV ?= all.csv
+CSV_KEYS := $(shell grep -v "^\w*$$\|^\\\#" $(CSV) | head -n1)
+CSV_ROWS := $(shell grep -v "^\w*$$\|^\\\#" $(CSV) | tail -n+2 | sed 's/\s*//g')
 N_CSV_KEYS := $(shell echo $(CSV_KEYS) | wc -w)
+
+# Map each row in CSV to a preprocessor define (-Dkey=value).
+# Row selected using the patter stem variable ($*).
 CSV_MAP = \
 	for i in $$(seq 1 $(N_CSV_KEYS)); do \
 		KEY=$$(echo $(CSV_KEYS) | cut -d' ' -f$$i); \
@@ -75,8 +21,8 @@ CSV_MAP = \
 
 TB_VERILATOR_VCD = $(BUILD)/$(ROW)/$(TB).verilator.fst
 TB_IVERILOG_VCD = $(BUILD)/$(ROW)/$(TB).iverilog.fst
-ALL_TB_VERILATOR_VCD := $(foreach ROW,$(CSV),$(TB_VERILATOR_VCD))
-ALL_TB_IVERILOG_VCD := #$(foreach ROW,$(CSV),$(TB_IVERILOG_VCD))
+ALL_TB_VERILATOR_VCD := $(foreach ROW,$(CSV_ROWS),$(TB_VERILATOR_VCD))
+ALL_TB_IVERILOG_VCD := #$(foreach ROW,$(CSV_ROWS),$(TB_IVERILOG_VCD))
 .PHONY: all
 all: $(ALL_TB_VERILATOR_VCD) $(ALL_TB_IVERILOG_VCD)
 	@echo $(TB) PASSED
@@ -124,7 +70,8 @@ $(BUILD)/%/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 $(BUILD)/%/V$(TB): $(BUILD)/%/V$(TB).mk $(VERILATOR_DPI_DEPS)
 	make -j -C $(BUILD)/$* -f V$(TB).mk V$(TB)
 
-# Execute verilator object to dump VCD.
+# Execute verilator object to dump VCD, convert to FST, then delete VCD which
+# consumes unnecessary disk space.
 # Then check that the data going into the queue is the same as the data coming
 # out, in the same order, regardless of the time difference.
 # Much simpler than a bunch of assertions for:
@@ -132,6 +79,7 @@ $(BUILD)/%/V$(TB): $(BUILD)/%/V$(TB).mk $(VERILATOR_DPI_DEPS)
 #   2. No extraeous data inserted.
 #   3. No data changed.
 #   4. No data re-ordered.
+# NOTE: vcd2fst comes with GtkWave.
 $(BUILD)/%/$(TB).verilator.fst: $(BUILD)/%/V$(TB)
 	cd $(BUILD)/$*; time ./V$(TB) > $(TB).verilator.log
 	@! grep -q ERROR $(BUILD)/$*/$(TB).verilator.log

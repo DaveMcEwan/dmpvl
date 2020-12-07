@@ -1,0 +1,67 @@
+DUT_TYPE  WIDTH  DEPTH  FLOPS_NOT_MEM   TOPOLOGY  CDC
+
+# Single-clock-domain FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, DEPTH >= 2, flops or memory, single topology (circular).
+fifoW1R1, 1,     8,     0,              0,        0
+fifoW1R1, 2,     8,     0,              0,        0
+fifoW1R1, 5,     8,     0,              0,        0
+fifoW1R1, 8,     8,     0,              0,        0
+fifoW1R1, 1,     8,     1,              0,        0
+fifoW1R1, 2,     8,     1,              0,        0
+fifoW1R1, 5,     8,     1,              0,        0
+fifoW1R1, 8,     8,     1,              0,        0
+fifoW1R1, 8,     2,     0,              0,        0
+fifoW1R1, 8,     3,     0,              0,        0
+fifoW1R1, 8,     4,     0,              0,        0
+fifoW1R1, 8,     5,     0,              0,        0
+fifoW1R1, 8,     2,     1,              0,        0
+fifoW1R1, 8,     3,     1,              0,        0
+fifoW1R1, 8,     4,     1,              0,        0
+fifoW1R1, 8,     5,     1,              0,        0
+
+# Clock-domain-crossing FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, DEPTH >= 2 and power-of-2, flops or memory, fast or slow
+# topologies for write and read sides individually.
+# Circular only, as linear makes no sense for CDC FIFO deeper than 2.
+cdcFifo,  8,     8,     0,              0,        0
+cdcFifo,  8,     8,     0,              0,        1
+cdcFifo,  5,     8,     0,              0,        1
+cdcFifo,  2,     8,     0,              0,        1
+cdcFifo,  1,     8,     0,              0,        1
+cdcFifo,  8,     4,     0,              0,        1
+cdcFifo,  8,     2,     0,              0,        1
+cdcFifo,  8,     8,     1,              0,        1
+cdcFifo,  5,     8,     1,              0,        1
+cdcFifo,  2,     8,     1,              0,        1
+cdcFifo,  1,     8,     1,              0,        1
+cdcFifo,  8,     4,     1,              0,        1
+cdcFifo,  8,     2,     1,              0,        1
+cdcFifo,  8,     8,     0,              1,        0
+cdcFifo,  8,     8,     0,              1,        1
+cdcFifo,  8,     8,     0,              2,        0
+cdcFifo,  8,     8,     0,              2,        1
+cdcFifo,  8,     8,     0,              3,        0
+cdcFifo,  8,     8,     0,              3,        1
+
+# Minimal clock-domain-crossing FIFO with 1 write port and 1 read port.
+# WIDTH >= 1, flops or memory, circular or linear topologies.
+# Linear useful when source and destinations are physically disparate.
+# DEPTH is ignored, just noted as 2 for a hint about the implementation.
+cdcData,  8,     2,     0,              0,        0
+cdcData,  8,     2,     0,              1,        0
+cdcData,  1,     2,     0,              0,        1
+cdcData,  2,     2,     0,              0,        1
+cdcData,  5,     2,     0,              0,        1
+cdcData,  8,     2,     0,              0,        1
+cdcData,  1,     2,     1,              0,        1
+cdcData,  2,     2,     1,              0,        1
+cdcData,  5,     2,     1,              0,        1
+cdcData,  8,     2,     1,              0,        1
+cdcData,  1,     2,     0,              1,        1
+cdcData,  2,     2,     0,              1,        1
+cdcData,  5,     2,     0,              1,        1
+cdcData,  8,     2,     0,              1,        1
+cdcData,  1,     2,     1,              1,        1
+cdcData,  2,     2,     1,              1,        1
+cdcData,  5,     2,     1,              1,        1
+cdcData,  8,     2,     1,              1,        1
