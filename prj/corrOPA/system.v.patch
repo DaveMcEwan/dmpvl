@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..3ff9aa9 100644
+index 2e5244d..a20485a 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -142,7 +142,9 @@ module system(
@@ -73,7 +73,7 @@ index 2e5244d..3ff9aa9 100644
  
  `ifndef PITON_CLKS_SIM
  // If these are not provided from
-@@ -553,6 +576,30 @@ assign rtc = rtc_div[6];
+@@ -553,6 +576,38 @@ assign rtc = rtc_div[6];
  assign uart_rts = 1'b0;
  `endif // VCU118_BOARD
  
@@ -92,6 +92,14 @@ index 2e5244d..3ff9aa9 100644
 +  .o_rst        (rst)
 +);
 +
++// Correlator on separate reset to allow config the multiple boot runs.
++wire corr_rst;
++fpgaReset u_corr_rst (
++  .i_clk        (clk_48MHz),
++  .i_pllLocked  (1'b1),
++  .o_rst        (corr_rst)
++);
++
 +always @ (posedge clk_48MHz)
 +  if (rst)
 +    inhibitBootN_q <= 1'b0;
@@ -104,7 +112,7 @@ index 2e5244d..3ff9aa9 100644
  // Different reset active levels for different boards
  always @ *
  begin
-@@ -687,8 +734,27 @@ assign passthru_pll_rst_n = 1'b1;
+@@ -687,8 +742,27 @@ assign passthru_pll_rst_n = 1'b1;
  // Sub-module Instances //
  //////////////////////////
  
@@ -132,7 +140,7 @@ index 2e5244d..3ff9aa9 100644
      // I/O settings
  `ifdef PITON_FPGA_SYNTH
      // Tie these off if not used
-@@ -911,11 +977,12 @@ passthru passthru(
+@@ -911,11 +985,12 @@ passthru passthru(
  
  // Piton chipset
  chipset chipset(
@@ -146,7 +154,7 @@ index 2e5244d..3ff9aa9 100644
  
  `ifdef PITON_CHIPSET_CLKS_GEN
  `ifdef PITON_CHIPSET_DIFF_CLK
-@@ -1192,7 +1259,7 @@ chipset chipset(
+@@ -1192,7 +1267,7 @@ chipset chipset(
  `ifndef XUPP3R_BOARD
      .sw(sw),
  `endif
@@ -155,7 +163,7 @@ index 2e5244d..3ff9aa9 100644
  
  `ifdef PITON_ARIANE
      ,
-@@ -1218,4 +1285,122 @@ chipset chipset(
+@@ -1218,4 +1293,122 @@ chipset chipset(
  
  );
  
@@ -258,7 +266,7 @@ index 2e5244d..3ff9aa9 100644
 +  .PKTFIFO_DEPTH          (50)
 +) u_usbfsBpCorrelator (
 +  .i_clk_48MHz        (clk_48MHz),
-+  .i_rst              (rst),
++  .i_rst              (corr_rst),
 +  .i_cg               (1'b1),
 +
 +  // USB {d+, d-}, output enable.
