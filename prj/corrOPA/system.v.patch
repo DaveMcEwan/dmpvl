@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..f90771d 100644
+index 2e5244d..e897af0 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -142,7 +142,9 @@ module system(
@@ -203,16 +203,16 @@ index 2e5244d..f90771d 100644
  //////////////////////////
  
 +// Pipeline for probes to prevent messing up floorplan.
-+localparam N_PROBE = 3*12; // <= 64
++localparam N_PROBE = 3*12 + 1; // <= 64
 +wire tile_clk;
-+wire [N_PROBE-1:0] chip_o_probe;
++wire [N_PROBE-2:0] chip_o_probe;
 +reg [N_PROBE-1:0] chip_o_probe_q0,
 +               chip_o_probe_q1,
 +               chip_o_probe_q2,
 +               chip_o_probe_q3,
 +               chip_o_probe_q;
 +always @ (posedge tile_clk) begin
-+  chip_o_probe_q0 <= chip_o_probe;
++  chip_o_probe_q0 <= {chip_o_probe, 1'b0};
 +  chip_o_probe_q1 <= chip_o_probe_q0;
 +  chip_o_probe_q2 <= chip_o_probe_q1;
 +  chip_o_probe_q3 <= chip_o_probe_q2;
@@ -249,7 +249,7 @@ index 2e5244d..f90771d 100644
  
  `ifdef PITON_ARIANE
      ,
-@@ -1218,4 +1379,186 @@ chipset chipset(
+@@ -1218,4 +1379,195 @@ chipset chipset(
  
  );
  
@@ -387,15 +387,24 @@ index 2e5244d..f90771d 100644
 +);
 +
 +wire ledSrc;
-+pushbutton #(
-+  .DEBOUNCE_CYCLES (240000) // 5ms at 48MHz
++syncBit #(
++  .DEBOUNCE_CYCLES (240000), // 5ms at 48MHz
++  .EDGECNTR_W (1),
++  .N_SYNC     (2)
 +) u_btnW (
 +  .i_clk        (clk_48MHz),
 +  .i_cg         (1'b1),
 +  .i_rst        (rst),
-+  .i_button     (GPIO_SW_W),
-+  .o_debounced  (),
-+  .o_toggle     (ledSrc)
++
++  .i_bit      (GPIO_SW_W),
++
++  .o_bit      (),
++  .o_edge     (),
++  .o_rise     (),
++  .o_fall     (),
++  .o_nEdge    (),
++  .o_nRise    (ledSrc),
++  .o_nFall    ()
 +);
 +
 +assign leds = ledSrc ? resultPwm : ledsChipset;

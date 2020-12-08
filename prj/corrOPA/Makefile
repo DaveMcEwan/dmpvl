@@ -1,3 +1,6 @@
+# source /space/xilinx/Vivado/2018.2/settings64.sh
+# pushd openpiton; source piton/ariane_setup.sh; popd
+# make clean && make apply && make prog
 
 apply:
 	cd openpiton; git apply ../*.patch
@@ -53,10 +56,11 @@ prog: $(BITFILE)
 
 clean:
 	rm -rf openpiton/build/vc707
-	cd openpiton: git checkout piton/design/chipset/xilinx/vc707/ip_cores/clk_mmcm/clk_mmcm.xci
-	cd openpiton: git checkout piton/design/chipset/rtl/chipset.v
-	cd openpiton: git checkout piton/design/xilinx/vc707/constraints.xdc
-	cd openpiton: git checkout piton/tools/src/proto/common/rtl_setup.tcl
-	cd openpiton: git checkout piton/design/rtl/system.v
+	cd openpiton; git checkout piton/design/chipset/xilinx/vc707/ip_cores/clk_mmcm/clk_mmcm.xci
+	cd openpiton; git checkout piton/design/chip/rtl/chip.v.pyv
+	cd openpiton; git checkout piton/design/chipset/rtl/chipset.v
+	cd openpiton; git checkout piton/design/xilinx/vc707/constraints.xdc
+	cd openpiton; git checkout piton/tools/src/proto/common/rtl_setup.tcl
+	cd openpiton; git checkout piton/design/rtl/system.v
 
 .PHONY: patchset rmbit prog clean

@@ -1,5 +1,5 @@
 diff --git a/piton/tools/src/proto/common/rtl_setup.tcl b/piton/tools/src/proto/common/rtl_setup.tcl
-index 7064df6..e126bdc 100644
+index 7064df6..344ee9e 100644
 --- a/piton/tools/src/proto/common/rtl_setup.tcl
 +++ b/piton/tools/src/proto/common/rtl_setup.tcl
 @@ -49,10 +49,36 @@ set GLOBAL_DEFAULT_VERILOG_MACROS "NO_SCAN FPGA_SYN PITON_FPGA_SYNTH PITON_PROTO
@@ -8,7 +8,7 @@ index 7064df6..e126bdc 100644
  set SYSTEM_RTL_IMPL_FILES [list \
 -    "${DV_ROOT}/design/rtl/system.v" \
 +    "${DV_ROOT}/../../../../hdl/fpgaReset.sv"            \
-+    "${DV_ROOT}/../../../../hdl/pushbutton.sv"           \
++    "${DV_ROOT}/../../../../hdl/syncBit.sv"              \
 +    "${DV_ROOT}/../../../../hdl/usbfsPktRx.sv"           \
 +    "${DV_ROOT}/../../../../hdl/usbfsPktTx.sv"           \
 +    "${DV_ROOT}/../../../../hdl/usbfsTxn.sv"             \
@@ -16,7 +16,7 @@ index 7064df6..e126bdc 100644
 +    "${DV_ROOT}/../../../../hdl/usbfsEndpTx.sv"          \
 +    "${DV_ROOT}/../../../../hdl/usbfsEndpCtrlSerial.sv"  \
 +    "${DV_ROOT}/../../../../hdl/usbfsSerial.sv"          \
-+    "${DV_ROOT}/../../../../hdl/fifo.sv"                 \
++    "${DV_ROOT}/../../../../hdl/fifoW1R1.sv"             \
 +    "${DV_ROOT}/../../../../hdl/fxcs.sv"                 \
 +    "${DV_ROOT}/../../../../hdl/logdropWindow.sv"        \
 +    "${DV_ROOT}/../../../../hdl/mssbIdx.sv"              \
