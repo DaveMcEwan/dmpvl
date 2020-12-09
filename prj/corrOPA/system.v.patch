@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..a20485a 100644
+index 2e5244d..2f9d304 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -142,7 +142,9 @@ module system(
@@ -7,7 +7,7 @@ index 2e5244d..a20485a 100644
  `endif
  
 -    input                                       sys_rst_n,
-+    input                                       CPU_RESET,
++    input                                       GPIO_SW_E, // Reset/reboot OPA.
 +    input                                       GPIO_SW_C, // Don't boot until sw is pressed.
 +    input                                       GPIO_SW_W, // Toggle/select LED source.
  
@@ -78,17 +78,17 @@ index 2e5244d..a20485a 100644
  `endif // VCU118_BOARD
  
 +// System boots when sys_rst_n is low.
-+// sys_rst_n <= 0 (allowing boot) when CPU_RESET is 0
++// sys_rst_n <= 0 (allowing boot) when GPIO_SW_E is 0
 +// sys_rst_n <= 0 (allowing boot) when inhibitBootN_q is 1
-+// sys_rst_n <= 1 (preventing boot) when inhibitBootN_q is 0 or CPU_RESET is 1
++// sys_rst_n <= 1 (preventing boot) when inhibitBootN_q is 0 or GPIO_SW_E is 1
 +wire clk_48MHz;
 +reg inhibitBootN_q;
-+wire sys_rst_n = !inhibitBootN_q || CPU_RESET;
++wire sys_rst_n = !inhibitBootN_q || GPIO_SW_E;
 +
 +wire rst;
 +fpgaReset u_rst (
 +  .i_clk        (clk_48MHz),
-+  .i_pllLocked  (!CPU_RESET),
++  .i_pllLocked  (!GPIO_SW_E),
 +  .o_rst        (rst)
 +);
 +
@@ -168,7 +168,7 @@ index 2e5244d..a20485a 100644
  );
  
 +// {{{ correlator
-+wire o_pin_usbpu = !rst;
++wire o_pin_usbpu = !corr_rst;
 +wire b_pin_usb_p;
 +wire b_pin_usb_n;
 +wire o_pin_usb_oe;
@@ -235,7 +235,7 @@ index 2e5244d..a20485a 100644
 +) u_btnW (
 +  .i_clk        (clk_48MHz),
 +  .i_cg         (1'b1),
-+  .i_rst        (rst),
++  .i_rst        (corr_rst),
 +
 +  .i_bit      (GPIO_SW_W),
 +

@@ -1,5 +1,5 @@
 diff --git a/piton/design/xilinx/vc707/constraints.xdc b/piton/design/xilinx/vc707/constraints.xdc
-index db5d307..2ab678c 100644
+index db5d307..e75a745 100644
 --- a/piton/design/xilinx/vc707/constraints.xdc
 +++ b/piton/design/xilinx/vc707/constraints.xdc
 @@ -11,7 +11,7 @@
@@ -17,8 +17,8 @@ index db5d307..2ab678c 100644
  # Reset
 -set_property IOSTANDARD LVCMOS18 [get_ports sys_rst_n]
 -set_property PACKAGE_PIN AV40 [get_ports sys_rst_n]
-+set_property IOSTANDARD LVCMOS18 [get_ports CPU_RESET]
-+set_property PACKAGE_PIN AV40 [get_ports CPU_RESET]
++set_property IOSTANDARD LVCMOS18 [get_ports GPIO_SW_E]
++set_property PACKAGE_PIN AU38 [get_ports GPIO_SW_E]
 +set_property IOSTANDARD LVCMOS18 [get_ports GPIO_SW_C]
 +set_property PACKAGE_PIN AV39 [get_ports GPIO_SW_C]
 +set_property IOSTANDARD LVCMOS18 [get_ports GPIO_SW_W]
