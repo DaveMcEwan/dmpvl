@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Fix PnR tool and compare parameter sets or other netlist variants.
+# This requires running "make multipnr" then saving the results like
+# "mv multipnr multipnr.netlist0" which is a fairly manual process.
+
 import csv
 import re
 

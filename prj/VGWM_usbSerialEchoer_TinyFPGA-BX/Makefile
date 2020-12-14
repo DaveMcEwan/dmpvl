@@ -1,12 +1,4 @@
 
-# TinyFPGA-BX
-DEVICE ?= lp8k
-PACKAGE ?= cm81
-PCF ?= pins.pcf
-
-PROJ := top
-BUILD := ./build
-
 SRC := \
 	../../hdl/edgeDetect.sv \
 	../../hdl/fifoW1R1.sv \
@@ -22,124 +14,34 @@ SRC := \
 	usbEpBridge.sv \
 	usbCtrlSerial.sv \
 	usbSerial.sv \
-	$(BUILD)/pll48.sv \
-	$(PROJ).sv
+	./build/pll48.sv \
+	top.sv
 
-# Target fMax, not the PLL frequency.
-# This design is tied to a PLL frequency of 48MHz.
-# High fMax (lots of slack), and low LUT usage is desirable.
-# With the right value of PNR_SEED this can be up to 58MHz.
-TGT_FMAX = 48
+LINT_VERILATOR_SRC := \
+	usbPktTxMux.sv \
+	usbPktTx.sv \
+	usbPktRx.sv \
+	usbEpInArbiter.sv \
+	usbEpOutArbiter.sv \
+	usbPeIn.sv \
+	usbPeOut.sv \
+	usbPe.sv \
+	usbEpBridge.sv \
+	usbCtrlSerial.sv
 
-# NOTE: Finding a good seed requires some trials and won't necessarily be good
-# for other setups (minor code changes, tool versions, host OS version, etc).
-# Use multipnr to find a suitable seed.
-PNR_SEED ?= 5
+LINT_IVERILOG_SRC := \
+	$(LINT_VERILATOR_SRC) \
+	top.sv
 
-default: lint iverilog $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
+LINT_YOSYS_SRC := \
+	$(LINT_VERILATOR_SRC) \
+	top.sv
 
-synth: $(BUILD)/$(PROJ).yosys.json
-pnr: $(BUILD)/$(PROJ).nextpnr.asc $(BUILD)/$(PROJ).arachne.asc
-pack: $(BUILD)/$(PROJ).icepack.bin $(BUILD)/$(PROJ).arachne.icepack.bin
-rpt: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).arachne.icetime.rpt
-all: lint iverilog synth pnr pack rpt
+include ../common_ice40.mk
 
-# Use Verilator's LINT mode to ensure there's nothing too obviously wrong.
-# This also ensures files are compatible with verilator.
-VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
-lint:
-	verilator $(VERILATOR_FLAGS) usbPktTxMux.sv
-	verilator $(VERILATOR_FLAGS) usbPktTx.sv
-	verilator $(VERILATOR_FLAGS) usbPktRx.sv
-	verilator $(VERILATOR_FLAGS) usbEpInArbiter.sv
-	verilator $(VERILATOR_FLAGS) usbEpOutArbiter.sv
-	verilator $(VERILATOR_FLAGS) usbPeIn.sv
-	verilator $(VERILATOR_FLAGS) usbPeOut.sv
-	verilator $(VERILATOR_FLAGS) usbPe.sv
-	verilator $(VERILATOR_FLAGS) usbEpBridge.sv
-	verilator $(VERILATOR_FLAGS) usbCtrlSerial.sv
-
-# Run through iverilog (Icarus) to ensure files are compatible.
-IVERILOG_LANG ?= -g2005-sv
-IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
-iverilog:
-	iverilog $(IVERILOG_FLAGS) usbPktTxMux.sv
-	iverilog $(IVERILOG_FLAGS) usbPktTx.sv
-	iverilog $(IVERILOG_FLAGS) usbPktRx.sv
-	iverilog $(IVERILOG_FLAGS) usbEpInArbiter.sv
-	iverilog $(IVERILOG_FLAGS) usbEpOutArbiter.sv
-	iverilog $(IVERILOG_FLAGS) usbPeIn.sv
-	iverilog $(IVERILOG_FLAGS) usbPeOut.sv
-	iverilog $(IVERILOG_FLAGS) -i usbPe.sv
-	iverilog $(IVERILOG_FLAGS) -i usbEpBridge.sv
-	iverilog $(IVERILOG_FLAGS) -i usbCtrlSerial.sv
-	iverilog $(IVERILOG_FLAGS) -i usbSerial.sv
-
-$(BUILD)/pll48.sv:
-	mkdir -p $(BUILD)
-	icepll \
-		-q \
-		-i 16 \
-		-o 48 \
-		-n pll48 \
-		-m -f $@
-
-# JSON netlist format - specific to yosys/nextpnr.
-# BLIF netlist is usable with other tools, like Vivado.
-%.yosys.json: $(SRC)
-	yosys -q \
-		-l $*.yosys.log \
-		-p 'read_verilog -sv -I../../hdl/ $^' \
-		-p 'synth_ice40 -top $(PROJ) -blif $*.yosys.blif -json $@'
-
-%.nextpnr.asc: $(PCF) %.yosys.json
-	nextpnr-ice40 -q \
-		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
-		-l $*.nextpnr.log \
-		--freq $(TGT_FMAX) \
-		--seed $(PNR_SEED) \
-		--opt-timing \
-		--json $*.yosys.json \
-		--asc $@
-
-gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
-	nextpnr-ice40 --gui \
-		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
-		--json $*.yosys.json \
-		--asc $(BUILD)/$(PROJ).asc
-
-%.icepack.bin: %.nextpnr.asc
-	icepack $< $@
-
-%.icetime.rpt: %.nextpnr.asc
-	icetime -d $(DEVICE) -mtr $@ $<
-
-prog: $(BUILD)/$(PROJ).icepack.bin
-	tinyprog -p $<
-
-
-# NOTE: Hardcoded device.
-# NOTE: Use multipnr to find suitable seed.
-# NOTE: arachne-pnr is now superceeded by nextpnr.
-%.arachne.asc: $(PCF) %.yosys.json
-	arachne-pnr \
-		--device 8k \
-		--package $(PACKAGE) \
-		--seed 14 \
-		--pcf-file $(PCF) \
-		$*.yosys.blif \
-		--output-file $@ 2> $*.arachne.log
-
-%.arachne.icepack.bin: %.arachne.asc
-	icepack $< $@
-
-%.arachne.icetime.rpt: %.arachne.asc
-	icetime -d $(DEVICE) -mtr $@ $<
-
-prog_arachne: $(BUILD)/$(PROJ).arachne.icepack.bin
-	tinyprog -p $<
-
+MULTIPNR_MK := ../multipnr_ice40.mk
+MULTIPNR_ARACHNE := 1
+include $(MULTIPNR_MK)
 
 # {{{ WIP
 
@@ -187,14 +89,3 @@ $(BUILD_ICECUBE2)/$(PROJ).icecube2.bin: $(BUILD_ICECUBE2)/$(PROJ).synplifypro.ed
 # TODO: bin to asc, `icepack -u`
 
 # }}} WIP
-
-
-clean:
-	rm -rf build
-
-.SECONDARY:
-.PHONY: default all lint iverilog synth pnr pack rpt prog clean gui
-
-MULTIPNR_MK := ../multipnr_ice40/multipnr_ice40.mk
-MULTIPNR_ARACHNE := 1
-include $(MULTIPNR_MK)
