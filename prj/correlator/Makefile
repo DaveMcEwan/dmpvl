@@ -130,3 +130,7 @@ clean:
 .SECONDARY:
 .PHONY: default all synth pnr pack rpt prog clean gui
 .PHONY: lint lint_verilator lint_iverilog lint_yosys
+
+MULTIPNR_MK := ../multipnr_ice40.mk
+MULTIPNR_ARACHNE := 1
+include $(MULTIPNR_MK)

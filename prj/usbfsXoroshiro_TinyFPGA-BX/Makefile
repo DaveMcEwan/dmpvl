@@ -116,50 +116,10 @@ plotDist: $(BUILD)/samples.bin
 
 clean:
 	rm -rf build
-	rm -rf multipnr
-	rm -f *.wavedrom.svg
-
-# Run place-and-route with different seed values to get a distribution of
-# timing results.
-# NOTE: Use the -j flag to parallelize runs.
-# Put all asc,rpt,log files in ./multipnr/<seed>/*.{asc,rpt,log}
-# Create a CSV log with these values:
-#		seed, nextpnr.log, icetime.rpt
-N_RUNS ?= 10
-NUMBERS := $(shell seq 1 ${N_RUNS})
-ASC_NEXTPNR := $(addprefix multipnr/,$(addsuffix /nextpnr.asc,${NUMBERS}))
-RPT_NEXTPNR := $(addprefix multipnr/,$(addsuffix /nextpnr.rpt,${NUMBERS}))
-multipnr/%/nextpnr.asc:
-	mkdir -p $(@D)
-	nextpnr-ice40 -q \
-		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
-		-l $(@D)/nextpnr.log \
-		--seed $* \
-		--opt-timing \
-		--json $(BUILD)/$(PROJ).yosys.json \
-		--asc $@
-
-${RPT_NEXTPNR}: multipnr/%/nextpnr.rpt: multipnr/%/nextpnr.asc
-	icetime -d $(DEVICE) -mtr $@ $<
-
-multipnr/nextpnr.log.extracted: ${RPT_NEXTPNR}
-	for f in multipnr/*/nextpnr.log; do \
-		grep --with-filename 'Max frequency for clock' $$f | grep clk_48MHz_ | \
-			tail -1 >> multipnr/nextpnr.log.extracted; \
-	done
-
-multipnr/nextpnr.rpt.extracted: ${RPT_NEXTPNR}
-	grep -H 'Total path delay:' multipnr/*/nextpnr.rpt > \
-		multipnr/nextpnr.rpt.extracted
-
-multipnr/results.csv.pdf: multipnr/nextpnr.log.extracted
-multipnr/results.csv.pdf: multipnr/nextpnr.rpt.extracted
-multipnr/results.csv.pdf:
-	python3.7 multipnrAnalyze.py
-
-.PHONY: multipnr
-multipnr: $(PCF) $(BUILD)/$(PROJ).yosys.json
-multipnr: multipnr/results.csv.pdf
 
 .SECONDARY:
 .PHONY: default all synth pnr pack rpt prog test clean gui
+
+MULTIPNR_MK := ../multipnr_ice40.mk
+MULTIPNR_ARACHNE := 1
+include $(MULTIPNR_MK)

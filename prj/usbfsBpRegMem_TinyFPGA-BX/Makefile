@@ -125,8 +125,11 @@ wavedrom: $(WAVEDROM_SVG)
 
 clean:
 	rm -rf build
-	rm -rf multipnr
 	rm -f *.wavedrom.svg
 
 .SECONDARY:
 .PHONY: default all synth pnr pack rpt prog test wavedrom clean gui
+
+MULTIPNR_MK := ../multipnr_ice40.mk
+MULTIPNR_ARACHNE := 1
+include $(MULTIPNR_MK)
