@@ -33,8 +33,8 @@ def plotLogdropWindow(ts, ys, eqn, nm):
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(fractionFmt))
 
     #plt.title(eqn)
-    plt.xlabel("$t$")
-    plt.ylabel("$w(t)$", y=0.7, rotation="vertical")
+    plt.xlabel("$n$")
+    plt.ylabel("$w[n]$", y=0.7, rotation="vertical")
 
     plt.xticks((ts[0], ts[-1]))
     plt.yticks(list(set(ys)))
