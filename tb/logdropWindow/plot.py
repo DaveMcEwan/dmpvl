@@ -37,9 +37,13 @@ def plotLogdropWindow(ts, ys, eqn, nm):
     plt.ylabel("$w[n]$", y=0.7, rotation="vertical")
 
     plt.xticks((ts[0], ts[-1]))
-    plt.yticks(list(set(ys)))
+    plt.yticks(list(set(y for y in ys if y > 0.05)))
+    plt.ylim(0, 1.05)
 
-    plt.bar(ts, ys, color="C0")
+    if len(ts) < 2**8:
+        plt.bar(ts, ys, color="C0")
+    else:
+        plt.plot(ts, ys, color="C0")
 
     plt.savefig("logdropWindow_%s.pdf" % nm, bbox_inches='tight')
     plt.close()
@@ -149,9 +153,9 @@ ys_0idx_altA = [2**-( log(n/4, 2) - flog2(min(t, n-t-1)) ) for t in ts_0idx]
 ys_0idx_altB = [w_0idx(t, n) for t in ts_0idx]
 assert all(y == yAlt for y,yAlt in zip(ys_0idx, ys_0idx_altA))
 assert all(y == yAlt for y,yAlt in zip(ys_0idx, ys_0idx_altB))
-print("0idx")
-print("ts=", ts_0idx)
-print("ys=", ys_0idx)
+#print("0idx")
+#print("ts=", ts_0idx)
+#print("ys=", ys_0idx)
 plotLogdropWindow(ts_0idx, ys_0idx, eqn_0idx, "0idx")
 
 eqn_1idx = r"$t \in [1, n];\ w(t) = 2^{\lceil\log_2\min(t, n-t+1)\rceil - \log_2\frac{n}{2}}$"
@@ -159,9 +163,9 @@ ts_1idx = np.arange(1, n+1, 1)
 ys_1idx = [2**( ceil(log(min(t, n-t+1), 2)) - log(n/2, 2) ) for t in ts_1idx]
 ys_1idx_alt = [w_1idx(t, n) for t in ts_1idx]
 assert all(y == yAlt for y,yAlt in zip(ys_1idx, ys_1idx_alt))
-print("1idx")
-print("ts=", ts_1idx)
-print("ys=", ys_1idx)
+#print("1idx")
+#print("ts=", ts_1idx)
+#print("ys=", ys_1idx)
 plotLogdropWindow(ts_1idx, ys_1idx, eqn_1idx, "1idx")
 
 assert all(y0 == y1 for y0,y1 in zip(ys_0idx, ys_1idx))
