@@ -13,4 +13,5 @@ set_io i_pin_probe[2]   B1 # top TH pin3
 set_io i_pin_probe[3]   C2 # top TH pin4
 set_io o_pin_pwm[0]     B3 # bottom SMR led
 set_io o_pin_pwm[1]     A6 # top TH pin24
+set_io o_pin_pwm[2]     B6 # top TH pin23
 
