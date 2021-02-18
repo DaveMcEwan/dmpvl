@@ -11,7 +11,7 @@ CSV_ROWS := $(shell grep -v "^\w*$$\|^\\\#" $(CSV) | tail -n+2 | sed 's/\s*//g')
 N_CSV_KEYS := $(shell echo $(CSV_KEYS) | wc -w)
 
 # Map each row in CSV to a preprocessor define (-Dkey=value).
-# Row selected using the patter stem variable ($*).
+# Row selected using the pattern stem variable ($*).
 CSV_MAP = \
 	for i in $$(seq 1 $(N_CSV_KEYS)); do \
 		KEY=$$(echo $(CSV_KEYS) | cut -d' ' -f$$i); \

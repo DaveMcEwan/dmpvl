@@ -216,5 +216,5 @@ Each subsequent byte received by the device decrements `burst`, and when
 
 All burst transactions therefore have an overhead of 5B.
 The maximum efficiency of a burst read is `255/(255+5)`, just over 98%.
-The maximum efficiency of a burst read is `256/(256+5)`, just over 98%.
+The maximum efficiency of a burst write is `256/(256+5)`, just over 98%.
 
