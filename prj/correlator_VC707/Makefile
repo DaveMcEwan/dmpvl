@@ -23,7 +23,7 @@ SRC := \
 	../../hdl/onehotIdx.sv \
 	../../hdl/prngXoshiro128p.sv \
 	../../hdl/strobe.sv \
-	../../hdl/pushbutton.sv \
+	../../hdl/syncBit.sv \
 	../../hdl/pwm.sv \
 	../../hdl/dividerFsm.sv \
 	../../hdl/corrCountRect.sv \

@@ -44,7 +44,7 @@
 module syncBit #(
   parameter DEBOUNCE_CYCLES = 0,  // 0 to disable debouncing, or >= 2.
   parameter EDGECNTR_W = 1,       // >= 1.
-  parameter N_SYNC = 3            // >=3
+  parameter N_SYNC = 2            // >=2
 ) (
   input  wire                         i_clk,
   input  wire                         i_rst,

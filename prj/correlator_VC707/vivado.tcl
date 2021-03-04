@@ -27,7 +27,7 @@ if {$SYNTH_YOSYS == 0} {
     ${dirHdl}/onehotIdx.sv \
     ${dirHdl}/prngXoshiro128p.sv \
     ${dirHdl}/strobe.sv \
-    ${dirHdl}/pushbutton.sv \
+    ${dirHdl}/syncBit.sv \
     ${dirHdl}/pwm.sv \
     ${dirHdl}/dividerFsm.sv \
     ${dirHdl}/corrCountRect.sv \
