@@ -31,6 +31,7 @@ module correlator #(
   input  wire         i_x,
   input  wire         i_y,
 
+  output wire [31:0]  o_pkt,
   output wire         o_pwm
 );
 
@@ -364,6 +365,8 @@ always @*
     3'd4:     pktfifo_i_data = pkt_q[8*3 +: 8];
     default:  pktfifo_i_data = winNum_q;
   endcase
+
+assign o_pkt = pkt_q;
 
 // }}} Packetize and queue data for recording
 

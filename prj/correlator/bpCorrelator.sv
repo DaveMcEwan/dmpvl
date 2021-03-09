@@ -147,6 +147,7 @@ generate for (i = 0; i < N_ENGINE; i=i+1) begin
     .i_x                    (probeX[i]),
     .i_y                    (probeY[i]),
 
+    .o_pkt                  (), // Unused in usbfs, useful for UltraSoC config.
     .o_pwm                  (o_pwm[i])
   );
 end endgenerate

@@ -64,3 +64,8 @@ clean:
 	cd openpiton; git checkout piton/design/rtl/system.v
 
 .PHONY: patchset rmbit prog clean
+
+# Unpack protofiles from UltraSoC delivery
+.PHONY: protofiles
+protofiles:
+	tar -xzvf protofiles.tar.gz
