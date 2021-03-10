@@ -43,6 +43,9 @@ LINT_YOSYS_SRC := \
 	$(LINT_VERILATOR_SRC) \
 	top.sv
 
+PREPROC_SRC := \
+	$(LINT_VERILATOR_SRC)
+
 include ../common_ice40.mk
 
 MULTIPNR_MK := ../multipnr_ice40.mk

@@ -90,6 +90,12 @@ gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 prog: $(BUILD)/$(PROJ).icepack.bin
 	tinyprog -p $<
 
+preproc: $(addprefix $(BUILD)/preproc/,$(PREPROC_SRC))
+preproc: $(addprefix $(BUILD)/preproc/,$(PREPROC_SRC))
+build/preproc/%:
+	mkdir -p $(shell dirname $@)
+	verilator -E -P $(VERILATOR_LANG) -I../../hdl $* > $@
+
 # NOTE: Hardcoded device.
 # NOTE: Use multipnr to find suitable seed.
 # NOTE: arachne-pnr is now superceeded by nextpnr.

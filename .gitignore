@@ -1,5 +1,8 @@
 tools/*
 
+# Build for HDL pre-compile.
+hdl/build/*
+
 # Build for projects.
 prj/*/build/*
 
