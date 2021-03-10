@@ -15,6 +15,17 @@ tb/*/build/*
 # Build and process for multipnr experiments.
 prj/*/multipnr/*
 
+# Formalpro working files and logs.
+*/formalpro.cache/*
+formalpro.log
+
+# JasperGold working files and logs.
+*/jgproject*
+
+# ModelSim working files and logs.
+qverilog.log
+*/work*
+
 # Vivado journal and logs.
 vivado*.jou
 vivado*.log
@@ -22,5 +33,15 @@ vivado*.str
 webtalk*.jou
 webtalk*.log
 
-# Temporary TCL scripts for Vivado.
+# Xcelium working files and logs.
+xmvlog.log
+*/xcelium.d*
+
+# VCS working files and logs.
+*/csrc*
+*/simv.daidir*
+vcs.log
+
+# Temporary TCL scripts.
 hdl/vivado.tcl
+hdl/jaspergold.tcl

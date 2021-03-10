@@ -41,19 +41,27 @@ SRC_MULTIHIER += xbar.sv
 
 # As a basic sanity check `make` should complete with no warnings or errors.
 default: lint_foss
-all: lint_foss lint_vivado
+all: preproc lint_foss lint_paid
 
-lint_foss: lint_verilator
 lint_foss: lint_iverilog
+lint_foss: lint_verilator
 lint_foss: lint_yosys
 
-VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I.
-lint_verilator: $(addprefix lint_verilator/,$(SRC_SINGLEHIER))
-lint_verilator: $(addprefix lint_verilator/,$(SRC_MULTIHIER))
-lint_verilator/%:
-	verilator $(VERILATOR_FLAGS) $*
+lint_paid: lint_formalpro
+lint_paid: lint_jaspergold
+lint_paid: lint_modelsim
+lint_paid: lint_vcs
+lint_paid: lint_vivado
+lint_paid: lint_xmvlog
 
+preproc: $(addprefix build/preproc/,$(SRC_MULTIHIER))
+preproc: $(addprefix build/preproc/,$(SRC_SINGLEHIER))
+build/preproc/%:
+	mkdir -p $(shell dirname $@)
+	verilator -E -P $(VERILATOR_LANG) -I. $* > $@
+
+
+# RTL simulator from Steve Icarus.
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I.
 lint_iverilog: lint_iverilog_singlehier
@@ -64,29 +72,79 @@ lint_iverilog_singlehier/%:
 	iverilog $(IVERILOG_FLAGS) $*
 lint_iverilog_multihier/%:
 	iverilog $(IVERILOG_FLAGS) -i $*
+.PHONY: lint_iverilog lint_iverilog_singlehier lint_iverilog_multihier
 
+# Two-state simulator via C++ from Wilson Snyder.
+VERILATOR_LANG ?= --language 1800-2005
+VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I.
+lint_verilator: $(addprefix lint_verilator/,$(SRC_SINGLEHIER))
+lint_verilator: $(addprefix lint_verilator/,$(SRC_MULTIHIER))
+lint_verilator/%:
+	verilator $(VERILATOR_FLAGS) $*
+.PHONY: lint_verilator
+
+# Generic synthesis from Clifford Wolf.
 lint_yosys: $(addprefix lint_yosys/,$(SRC_SINGLEHIER))
 lint_yosys: $(addprefix lint_yosys/,$(SRC_MULTIHIER))
 lint_yosys/%:
 	yosys -q -p 'read_verilog -sv -I. $*'
-
-.PHONY: lint_foss lint_verilator lint_iverilog lint_yosys
-.PHONY: lint_iverilog_singlehier lint_iverilog_multihier
-
-preproc: $(addprefix build/preproc/,$(SRC_MULTIHIER))
-preproc: $(addprefix build/preproc/,$(SRC_SINGLEHIER))
-build/preproc/%:
-	mkdir -p $(shell dirname $@)
-	verilator -E -P $(VERILATOR_LANG) -I. $* > $@
+.PHONY: lint_yosys
 
 
-# Tested with Vivado 2018.2
-define VIVADO_TCL =
+# Equivalence checker from Mentor/Siemens.
+# Tested with Formalpro v2020.1
+# NOTE: SYNTHESIS is defined to remove asserts using $onehot0.
+FORMALPRO_LANG ?= -sv2005
+FORMALPRO_FLAGS := $(FORMALPRO_LANG) +define+SYNTHESIS
+lint_formalpro: $(addprefix lint_formalpro/,$(SRC_SINGLEHIER))
+lint_formalpro: $(addprefix lint_formalpro/,$(SRC_MULTIHIER))
+lint_formalpro/%:
+	formalpro $(FORMALPRO_FLAGS) $* > /dev/null
+.PHONY: lint_formalpro
+
+# Formal proof assistant from Cadence.
+# Tested with JasperGold 2020.03
+define JASPERGOLD_TCL
+clear -all
+analyze -sv05 \
+	$(SRC_SINGLEHIER) \
+	$(SRC_MULTIHIER)
+endef
+export JASPERGOLD_TCL
+lint_jaspergold:
+	rm -rf jgproject
+	echo "$$JASPERGOLD_TCL" > jaspergold.tcl
+	jaspergold -batch jaspergold.tcl > /dev/null
+	@! grep -q ERROR jgproject/jg.log
+.PHONY: lint_jaspergold
+
+# RTL simulator from Intel.
+# Tested with Modelsim 10.4
+# NOTE: Questa is the premium edition.
+MODELSIM_LANG ?= -sv05compat
+MODELSIM_FLAGS := $(MODELSIM_LANG) -lint -quiet
+lint_modelsim: $(addprefix lint_modelsim/,$(SRC_SINGLEHIER))
+lint_modelsim: $(addprefix lint_modelsim/,$(SRC_MULTIHIER))
+lint_modelsim/%:
+	vlog $(MODELSIM_FLAGS) $*
+	qverilog $(MODELSIM_FLAGS) $* > /dev/null
+.PHONY: lint_modelsim
+
+# RTL simulator from Mentor/Siemens.
+# Tested with VCS 2018.09
+VCS_LANG ?= -sverilog
+VCS_FLAGS := $(VCS_LANG) +lint=all -C -q +incdir+.
+lint_vcs:
+	vcs $(VCS_FLAGS) $(SRC_SINGLEHIER) $(SRC_MULTIHIER) > vcs.log
+
+# FPGA bitstream compiler from Xilinx.
+# Tested with Vivado 2018.2, 2018.3
+define VIVADO_TCL
 create_project -in_memory projectDummy
 create_fileset -blockset filesetDummy
-add_files \\
-	$(SRC_SINGLEHIER) \\
-	$(SRC_MULTIHIER) \\
+add_files \
+	$(SRC_SINGLEHIER) \
+	$(SRC_MULTIHIER) \
 	-fileset filesetDummy
 check_syntax -fileset filesetDummy
 endef
@@ -99,5 +157,15 @@ lint_vivado:
 	vivado -mode batch -source vivado.tcl > /dev/null
 	@! grep -q ERROR vivado.log
 	@! grep -q WARNING vivado.log
+.PHONY: lint_vivado
+
+# RTL simulator from Cadence.
+# Tested with Xcelium 20.03
+XMVLOG_LANG ?= -SYSV05
+XMVLOG_FLAGS := $(XMVLOG_LANG) -INCDIR ./ -NOLOG
+lint_xmvlog: $(addprefix lint_xmvlog/,$(SRC_SINGLEHIER))
+lint_xmvlog: $(addprefix lint_xmvlog/,$(SRC_MULTIHIER))
+lint_xmvlog/%:
+	xmvlog $(XMVLOG_FLAGS) $* > /dev/null
 
 .SECONDARY:
