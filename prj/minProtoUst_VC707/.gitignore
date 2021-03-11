@@ -1,0 +1,5 @@
+
+# Plaintext tarball of UltraSoC delivery will never be intentionally committed.
+protofiles.tar.gz
+protofiles/*
+vivado-addFiles.tcl
