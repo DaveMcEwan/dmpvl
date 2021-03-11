@@ -102,6 +102,42 @@ lint_formalpro/%:
 	formalpro $(FORMALPRO_FLAGS) $* > /dev/null
 .PHONY: lint_formalpro
 
+# Linter from Cadence.
+# Tested with HAL 20.03
+# NOTE: SYNTHESIS is defined to remove asserts using $onehot0.
+# NOTE: Not all warnings are removed, because some serve as useful confirmations
+# about design decisions.
+HAL_LANG ?= -SV
+HAL_NOCHECK := LCVARN UCCONN VERCAS NUMSUF MAXLEN SEPLIN
+HAL_NOCHECK += UNMGEN NBGEND NOBLKN
+HAL_NOCHECK += STYVAL PRMVAL IDLENG
+HAL_NOCHECK += CDWARN NOINCD
+HAL_NOCHECK += DIFCLK DIFRST
+HAL_NOCHECK += POOBID POIASG PRMSZM
+HAL_NOCHECK += PRMBSE CONSBS CONSTC EXPIPC ATLGLC IPRTEX
+HAL_NOCHECK += URDREG URDWIR
+HAL_NOCHECK += ONPNSG TIELOG UNCONO DALIAS
+HAL_NOCHECK += INDXOP INTTOB
+HAL_NOCHECK += SYNPRT
+HAL_NOCHECK += OLDALW
+HAL_NOWARN := USEPRT
+HAL_NOWARN += TPOUNR
+HAL_NOWARN += FFWNSR FFWASR
+HAL_NOWARN += VLGMEM DFDRVS
+HAL_NOWARN += TRUNCZ LRGOPR RDOPND SHFTOF REVROP MULBAS IOCOMB
+HAL_NOWARN += IMPDTC IMPTYP
+HAL_FLAGS := $(HAL_LANG) -DATE -DEFINE SYNTHESIS
+HAL_FLAGS += $(addprefix -NOCHECK ,$(HAL_NOCHECK))
+HAL_FLAGS += $(addprefix -NOWARN ,$(HAL_NOWARN))
+lint_hal: $(addprefix lint_hal/,$(SRC_SINGLEHIER))
+lint_hal: $(addprefix lint_hal/,$(SRC_MULTIHIER))
+lint_hal/%:
+	hal $(HAL_FLAGS) $* \
+		-LOGFILE $*.hal.log \
+		-DESIGN_FACTS_FILE $*.hal.design_facts \
+		> /dev/null
+.PHONY: lint_hal
+
 # Formal proof assistant from Cadence.
 # Tested with JasperGold 2020.03
 define JASPERGOLD_TCL

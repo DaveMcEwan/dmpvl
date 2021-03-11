@@ -19,6 +19,11 @@ prj/*/multipnr/*
 */formalpro.cache/*
 formalpro.log
 
+# HAL working files and logs.
+*/.hal-*
+*/*.hal.design_facts
+*/*.hal.log
+
 # JasperGold working files and logs.
 */jgproject*
 

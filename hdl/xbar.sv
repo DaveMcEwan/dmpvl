@@ -29,7 +29,7 @@ end endgenerate
 
 localparam SEL_W = $clog2(N_IN);
 wire [N_OUT*SEL_W-1:0] selectFF;
-generate if (FF_IN) begin
+generate if (FF_SELECT) begin
   `dff_cg_norst_d(reg [N_OUT*SEL_W-1:0], selectFF, i_clk, i_cg, i_select)
   assign selectFF = selectFF_q;
 end else begin
