@@ -40,11 +40,11 @@ SRC_TOP := \
 default: synth
 
 # Delivery is a gzipped tarball encrypted with:
-#   openssl enc -bf-cbc -a -salt -in delivery.tar.gz
+#   openssl enc -e -md sha256 -bf-cbc -a -salt -in delivery.tar.gz
 TARBALL := $(BUILD)/$(DELIVERY).tar.gz
 $(TARBALL): $(DELIVERY_ENCRYPTED)
 	mkdir -p $(BUILD)
-	openssl enc -d -bf-cbc -a -in $(DELIVERY_ENCRYPTED) > $@
+	openssl enc -d -md sha256 -bf-cbc -a -in $(DELIVERY_ENCRYPTED) > $@
 decrypt: $(TARBALL)
 .PHONY: decrypt
 
