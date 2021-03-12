@@ -1,31 +1,30 @@
 `timescale 1ps/1ps
 
-module pllUlpi (
-  input  wire i_clk_p_200MHz,
-  input  wire i_clk_n_200MHz,
+module pll (
+  input  wire i_sysclk_p_200MHz,
+  input  wire i_sysclk_n_200MHz,
   output wire o_locked,
-  output wire o_clk_ulpi
+  output wire o_clk_26MHz,
+  output wire o_clk_50MHz
 );
 
 // Buffer differential pair to single ended signal.
-wire clk_200MHz;
-IBUFDS u_ibufgds_clkin1 (
-  .I  (i_clk_p_200MHz),
-  .IB (i_clk_n_200MHz),
-  .O  (clk_200MHz)
+wire clk_raw200MHz;
+IBUFDS u_ibufgds_sysclk (
+  .I  (i_sysclk_p_200MHz),
+  .IB (i_sysclk_n_200MHz),
+  .O  (clk_raw200MHz)
 );
 
-
 // Feedback buffer.
-wire clkfbout;
-wire clkfbin;
+wire clkfbout, clkfbin;
 BUFG u_bufg_clkf (
   .I (clkfbout),
   .O (clkfbin)
 );
 
 wire clkout0;
-wire _unused_clkout1;
+wire clkout1;
 wire _unused_clkout2;
 wire _unused_clkout3;
 wire _unused_clkout4;
@@ -35,18 +34,21 @@ wire [15:0] _unused_do;
 wire        _unused_drdy;
 
 PLLE2_ADV #(
-  .BANDWIDTH          ("OPTIMIZED"),
-  .COMPENSATION       ("ZHOLD"),
-  .STARTUP_WAIT       ("FALSE"),
-  .DIVCLK_DIVIDE      (5),
-  .CLKFBOUT_MULT      (24),
+  .CLKIN1_PERIOD      (5.000),  // 200MHz
+  .DIVCLK_DIVIDE      (5),      // 200 / 8 = 25MHz
+  .CLKFBOUT_MULT      (39),     // 25 * 39 = 975MHz
   .CLKFBOUT_PHASE     (0.000),
-  .CLKOUT0_DIVIDE     (20),
+  .CLKOUT0_DIVIDE     (37.500), // 975 / 37.5 = 26MHz
   .CLKOUT0_PHASE      (0.000),
   .CLKOUT0_DUTY_CYCLE (0.500),
-  .CLKIN1_PERIOD      (5.000)
+  .CLKOUT1_DIVIDE     (19.500), // 975 / 37.5 = 50MHz
+  .CLKOUT1_PHASE      (0.000),
+  .CLKOUT1_DUTY_CYCLE (0.500),
+  .BANDWIDTH          ("OPTIMIZED"),
+  .COMPENSATION       ("ZHOLD"),
+  .STARTUP_WAIT       ("FALSE")
 ) u_plle2_adv (
-  .CLKIN1             (clk_200MHz),
+  .CLKIN1             (clk_raw200MHz),
   .CLKIN2             (1'b0),
   .CLKINSEL           (1'b1),
 
@@ -54,7 +56,7 @@ PLLE2_ADV #(
   .CLKFBOUT           (clkfbout),
 
   .CLKOUT0            (clkout0),
-  .CLKOUT1            (_unused_clkout1),
+  .CLKOUT1            (clkout1),
   .CLKOUT2            (_unused_clkout2),
   .CLKOUT3            (_unused_clkout3),
   .CLKOUT4            (_unused_clkout4),
@@ -73,9 +75,14 @@ PLLE2_ADV #(
   .RST                (1'b0)
 );
 
-BUFG u_bufg_clkout0 (
-  .I (clkout0),
-  .O (o_clk_ulpi)
+BUFG bufg_clk_26MHz_u (
+  .I(clkout0),
+  .O(o_clk_26MHz)
+);
+
+BUFG bufg_clk_50MHz_u (
+  .I(clkout1),
+  .O(o_clk_50MHz)
 );
 
 endmodule

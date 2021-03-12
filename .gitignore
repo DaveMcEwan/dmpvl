@@ -16,7 +16,7 @@ tb/*/build/*
 prj/*/multipnr/*
 
 # Formalpro working files and logs.
-*/formalpro.cache/*
+**/formalpro.cache
 formalpro.log
 
 # HAL working files and logs.
@@ -25,7 +25,7 @@ formalpro.log
 */*.hal.log
 
 # JasperGold working files and logs.
-*/jgproject*
+jgproject
 
 # ModelSim working files and logs.
 qverilog.log
@@ -37,6 +37,7 @@ vivado*.log
 vivado*.str
 webtalk*.jou
 webtalk*.log
+.Xil
 
 # Xcelium working files and logs.
 xmvlog.log

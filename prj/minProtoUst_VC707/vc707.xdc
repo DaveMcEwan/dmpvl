@@ -1415,30 +1415,32 @@ set_property PACKAGE_PIN AG32 [get_ports FMC2_HPC_PRSNT_M2C_B_LS]
 
 # {{{ USB/ULPI interface to UltraSoC USB Communicator
 
-# USB clock
-create_clock -period 16.667 -name usbclk [get_ports FMC_LPC_LA00_CC_P]
+# USB clock (ulpi_clk_raw60MHz)
+create_clock -name clk_ulpi_raw60MHz -period 16.667 [get_ports FMC2_HPC_LA00_CC_P]
+create_clock -name clk_26MHz -period 38.46154 [get_nets clk_26MHz]
+create_clock -name clk_50MHz -period 20 [get_nets clk_50MHz]
 
 # USB port timings
-set ulpi_data    [get_ports {FMC_LPC_LA01_CC_N FMC_LPC_LA01_CC_P FMC_LPC_LA09_N FMC_LPC_LA09_P FMC_LPC_LA04_N FMC_LPC_LA04_P FMC_LPC_LA03_N FMC_LPC_LA03_P}]
-set ulpi_inputs  [get_ports {FMC_LPC_LA10_N FMC_LPC_LA02_P}]
-set ulpi_outputs [get_ports {FMC_LPC_LA05_P FMC_LPC_LA02_N}]
+set ulpi_data    [get_ports {FMC2_HPC_LA01_CC_N FMC2_HPC_LA01_CC_P FMC2_HPC_LA09_N FMC2_HPC_LA09_P FMC2_HPC_LA04_N FMC2_HPC_LA04_P FMC2_HPC_LA03_N FMC2_HPC_LA03_P}];
+set ulpi_inputs  [get_ports {FMC2_HPC_LA10_N FMC2_HPC_LA02_P}];
+set ulpi_outputs [get_ports {FMC2_HPC_LA05_P FMC2_HPC_LA02_N}];
 
 # SDR I/O
 # Specify the delay *external* to the FPGA
-set_input_delay  -clock usbpll_0_w  7.5 $ulpi_inputs       ;
-set_output_delay -clock usbpll_0_w  7.5 $ulpi_outputs      ;
-set_input_delay  -clock usbpll_0_w 12.0 $ulpi_data         ;
-set_output_delay -clock usbpll_0_w  7.5 $ulpi_data         ;
+set_input_delay  -clock clk_ulpi_raw60MHz  7.5 $ulpi_inputs;
+set_output_delay -clock clk_ulpi_raw60MHz  7.5 $ulpi_outputs;
+set_input_delay  -clock clk_ulpi_raw60MHz 12.0 $ulpi_data;
+set_output_delay -clock clk_ulpi_raw60MHz  7.5 $ulpi_data;
 
 # USB_DIR signal (the ULPI standard allows 2 cycles for this to happen)
-set_max_delay -from [get_ports FMC_LPC_LA10_N] -to [get_ports $ulpi_data] 30
+set_max_delay -from [get_ports FMC2_HPC_LA10_N] -to [get_ports $ulpi_data] 30;
 
 # Output tristate
-#set_max_delay -from [get_clocks usbclk] -through [get_cells ulpi_oe_q_r_reg] 16.667
+#set_max_delay -from [get_clocks ulpi_clk_raw60MHz] -through [get_cells ulpi_oe_q_r_reg] 16.667
 
-# Output reference clock
+# Output 13MHz reference clock
 # Specify the delay *external* to the FPGA
-set_output_delay -clock mmcm1_0_w 8 [get_ports FMC_LPC_LA10_P]  ;
+set_output_delay -clock clk_26MHz 8 [get_ports FMC2_HPC_LA10_P];
 
 # }}} USB/ULPI interface to UltraSoC USB Communicator
 

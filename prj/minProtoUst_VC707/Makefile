@@ -2,7 +2,10 @@
 DELIVERY_ENCRYPTED ?= protofiles.enc
 DELIVERY := $(basename $(DELIVERY_ENCRYPTED))
 
+# Dave McEwan 2021-03-12
+
 PRJ ?= minProtoUst
+BUILD := ./build
 
 # AC701 (Artix-7)             xc7a200tfbg676-2
 # KC705 (Kintex-7)            xc7k325tffg900-2
@@ -34,36 +37,42 @@ SRC_TOP := \
 	pll.sv \
 	top.sv
 
-
+default: synth
 
 # Delivery is a gzipped tarball encrypted with:
 #   openssl enc -bf-cbc -a -salt -in delivery.tar.gz
-TARBALL ?= $(DELIVERY).tar.gz
+TARBALL := $(BUILD)/$(DELIVERY).tar.gz
 $(TARBALL): $(DELIVERY_ENCRYPTED)
+	mkdir -p $(BUILD)
 	openssl enc -d -bf-cbc -a -in $(DELIVERY_ENCRYPTED) > $@
 decrypt: $(TARBALL)
 .PHONY: decrypt
 
 # Uncompress, unpack, and create a magic file for Make's dependency tracking.
-UNPACKED := $(DELIVERY)/unpacked
+UNPACKED := $(BUILD)/$(DELIVERY)/unpacked
 $(UNPACKED): $(TARBALL)
-	tar -xzvf $(TARBALL)
+	cd $(shell dirname $(TARBALL)); tar -xzf $(shell basename $(TARBALL))
 	touch $(UNPACKED)
 unpack: $(UNPACKED)
 .PHONY: unpack
 
-DELIVERY_INC = $(shell ls $(DELIVERY)/inc/*.vh | grep -vE '(_dpi_|_tb_)')
-DELIVERY_SRC = $(shell ls $(DELIVERY)/src/*.v | grep -vE '(_bfm_|_tb_)')
-vivado-addFiles.tcl: $(UNPACKED)
-	rm -f $@
-	for f in $(DELIVERY_INC); do echo "add_files $$f" >> $@; done
-	for f in $(DELIVERY_SRC); do echo "add_files $$f" >> $@; done
+# NOTE: All UltraSoC RTL files are Verilog2001 with .v extension, and any .sv
+# files are only for verif so are excluded from this generated script.
+# Desigs files from dmpvl are SystemVerilog2005 with .sv extension, so must be
+# added separately in vivado.tcl like other project in dmpvl.
+DELIVERY_EXCLUDE := (_bfm_|_dpi_|_sw_link_|_tb_)
+DELIVERY_INCDIR := $(shell dirname $(UNPACKED))/inc
+DELIVERY_SRCDIR := $(shell dirname $(UNPACKED))/src
+DELIVERY_SRC = $(shell ls $(DELIVERY_SRCDIR)/*.v | grep -vE '$(DELIVERY_EXCLUDE)')
+$(BUILD)/vivado-addFiles.tcl: $(UNPACKED)
+	echo "add_files \\" > $@
+	for f in $(DELIVERY_SRC); do echo "  $$f \\" >> $@; done
+	echo "" >> $@
 
 BITFILE ?= $(BUILD)/$(PRJ).bit
-$(BITFILE): vivado-addFiles.tcl $(SRC_TOP) vivado.tcl vc707.xdc
-	vivado -mode batch -source vivado.tcl \
-		-tclargs --prj $(PRJ) --part $(PART) --dirBuild $(BUILD) \
-			--synth_yosys $(SYNTH_YOSYS)
+$(BITFILE): $(BUILD)/vivado-addFiles.tcl $(SRC_TOP) vivado.tcl vc707.xdc
+	vivado -mode batch -source vivado.tcl -tclargs --prj $(PRJ) --part $(PART) \
+	--dirBuild $(BUILD) --deliveryIncdir $(DELIVERY_INCDIR)
 synth: $(BITFILE)
 .PHONY: synth
 
@@ -71,4 +80,15 @@ prog: $(BITFILE)
 	vivado -mode batch -source ../../tcl/vivado-program.tcl \
 		-tclargs --part $(PART) --bitstream $(BITFILE)
 .PHONY: prog
+
+clean:
+	rm -rf build
+	rm -rf .cache
+	rm -rf .Xil
+	rm -rf usage_statistics*
+	rm -rf vivado*.log
+	rm -rf vivado*.jou
+	rm -rf webtalk*.log
+	rm -rf webtalk*.jou
+.PHONY: clean
 
