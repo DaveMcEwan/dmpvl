@@ -97,10 +97,13 @@ module top (
   output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
 
   // SM enabled status
-  output GPIO_LED_5,
+  output GPIO_LED_1,
 
   // Test button,LEDs,
   input GPIO_SW_W,
+  input GPIO_SW_E,
+  output GPIO_LED_4,
+  output GPIO_LED_5,
   output GPIO_LED_6,
   output GPIO_LED_7
 );
@@ -132,7 +135,25 @@ fpgaReset u_rst (
   .o_rst        (rst)
 );
 
-// Test debouncing.
+// Test debouncing, and confirm that clocks are running.
+syncBit #(
+  .DEBOUNCE_CYCLES (250000), // 5ms at 50MHz
+  .EDGECNTR_W (1),
+  .N_SYNC     (2)
+) u_btnE (
+  .i_clk        (clk_26MHz),
+  .i_cg         (1'b1),
+  .i_rst        (rst),
+  .i_bit        (GPIO_SW_E),
+
+  .o_bit        (GPIO_LED_4),
+  .o_edge       (),
+  .o_rise       (),
+  .o_fall       (),
+  .o_nEdge      (),
+  .o_nRise      (GPIO_LED_5),
+  .o_nFall      ()
+);
 syncBit #(
   .DEBOUNCE_CYCLES (250000), // 5ms at 50MHz
   .EDGECNTR_W (1),
@@ -162,7 +183,7 @@ wire [7:0]  ust_usb0_ulpi_data_in_w;
 wire [7:0]  ust_usb0_ulpi_data_out_w;
 
 // TODO: Hookup to something useful?
-wire [3:0]  pcb004_card_led_w = 4'b0011;
+wire [3:0]  pcb004_card_led_w = 4'b0001;
 wire [1:0]  pcb004_card_sw_w;
 wire [4:0]  pcb004_joystick_w;
 wire        clk_ulpi_raw60MHz; // Generated on external PHY.
@@ -274,6 +295,8 @@ ust_pcb_003_004_m #( // {{{
   .ulpi_data_in_op    (ust_usb0_ulpi_data_in_w),
   .ulpi_data_out_ip   (ust_usb0_ulpi_data_out_w),
 
+  .select_004_ip(1'b0), // Gaj's personal is 003a, broken one was 004c
+
   // {{{ Additional unused interfaces
   // J64
   .j64_tdo_op   (),
@@ -282,7 +305,6 @@ ust_pcb_003_004_m #( // {{{
   .j64_tdi_ip   ('0),
 
   // Board select
-  .select_004_ip(1'b1),
   .jtag1_003_ip ('0), // If board 003 selected, set this to use JTAG port 1 (1.8V)
   .jtag_j64_ip  ('0),
 
@@ -347,7 +369,7 @@ ust_ss_corrdemo0_m ust_ss_corrdemo0_u (
   .ust_sm0_sts_data_valid_ip  ('0),
   .ust_sm0_sts_accum_ip       ('0),
   .ust_sm0_correlator_pwm_op  (o_pin_pwm),
-  .ust_en_sm0_sts_op          (GPIO_LED_5),
+  .ust_en_sm0_sts_op          (GPIO_LED_1),
   .ust_sm0_gpio_output_op     (), // unused
   .ust_sm0_testmode_ip        ('0),
   .ust_sm0_scan_shift_ip      ('0),
