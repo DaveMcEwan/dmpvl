@@ -1,6 +1,10 @@
 
 source ../../tcl/vivado-preSynth.tcl
 
+# Files added from UltraSoC delivery using Makefile-generated script.
+source ${dirBuild}/vivado-addFiles.tcl
+getopt argv --deliveryIncdir deliveryIncdir XXX
+
 add_files \
   ${dirHdl}/asrt.svh \
   ${dirHdl}/dff.svh \
@@ -24,11 +28,6 @@ read_verilog -sv \
   correlator.sv \
   pll.sv \
   top.sv
-
-
-# Files added from UltraSoC delivery using Makefile-generated script.
-source ${dirBuild}/vivado-addFiles.tcl
-getopt argv --deliveryIncdir deliveryIncdir XXX
 
 set_property is_global_include true [get_files -regexp .*\.vh]
 set_property is_global_include true [get_files -regexp .*\.svh]

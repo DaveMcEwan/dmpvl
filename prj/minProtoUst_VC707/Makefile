@@ -37,6 +37,8 @@ SRC_TOP := \
 	pll.sv \
 	top.sv
 
+# `make prog run` should work, but requires VC707 to be turned on while the
+# synthesis step takes its time.
 default: synth
 
 # Delivery is a gzipped tarball encrypted with:
@@ -56,6 +58,11 @@ $(UNPACKED): $(TARBALL)
 unpack: $(UNPACKED)
 .PHONY: unpack
 
+UST_CONN_SRC := $(BUILD)/$(DELIVERY)/ust_connection_utilities_release/ust_conn_usb
+$(BUILD)/ust_conn_usb: $(UNPACKED)
+	cd $(UST_CONN_SRC); make
+	cp $(UST_CONN_SRC)/ust_conn_usb $@
+
 # NOTE: All UltraSoC RTL files are Verilog2001 with .v extension, and any .sv
 # files are only for verif so are excluded from this generated script.
 # Desigs files from dmpvl are SystemVerilog2005 with .sv extension, so must be
@@ -70,11 +77,31 @@ $(BUILD)/vivado-addFiles.tcl: $(UNPACKED)
 	echo "" >> $@
 
 BITFILE ?= $(BUILD)/$(PRJ).bit
-$(BITFILE): $(BUILD)/vivado-addFiles.tcl $(SRC_TOP) vivado.tcl vc707.xdc
+$(BITFILE): $(SRC_TOP) vivado.tcl vc707.xdc
+$(BITFILE): $(BUILD)/vivado-addFiles.tcl
+$(BITFILE): $(BUILD)/ust_conn_usb
+$(BITFILE):
 	vivado -mode batch -source vivado.tcl -tclargs --prj $(PRJ) --part $(PART) \
 	--dirBuild $(BUILD) --deliveryIncdir $(DELIVERY_INCDIR)
 synth: $(BITFILE)
 .PHONY: synth
+
+#		--index-length=8
+#		--communicator-route=2
+# NOTE: Running with `python -m` means paths must be relative to py_link.
+run: $(UNPACKED)
+	cd $(BUILD)/$(DELIVERY); python3 -m py_link.run_test \
+		--verbose \
+		--manual \
+		--target=none \
+		--system-xml="../system-discovered.xml" \
+		--messages-xml="../messages.xml" \
+		--registry-xml="../registry.xml" \
+		--communicator=usb \
+		--communicator-type=usb \
+		--launch-cmd="../../ust_conn_usb"
+		tests/general-discovery.py
+.PHONY: run
 
 prog: $(BITFILE)
 	vivado -mode batch -source ../../tcl/vivado-program.tcl \

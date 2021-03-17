@@ -34,14 +34,14 @@ wire [15:0] _unused_do;
 wire        _unused_drdy;
 
 PLLE2_ADV #(
-  .CLKIN1_PERIOD      (5.000),  // 200MHz
-  .DIVCLK_DIVIDE      (5),      // 200 / 8 = 25MHz
-  .CLKFBOUT_MULT      (39),     // 25 * 39 = 975MHz
+  .CLKIN1_PERIOD      (5.000),    // 200MHz
+  .DIVCLK_DIVIDE      (2),        // 200 / 2 = 100MHz
+  .CLKFBOUT_MULT      (13),       // 100 * 13 = 1300MHz
   .CLKFBOUT_PHASE     (0.000),
-  .CLKOUT0_DIVIDE     (37.500), // 975 / 37.5 = 26MHz
+  .CLKOUT0_DIVIDE     (50),       // 1300 / 50 = 26MHz
   .CLKOUT0_PHASE      (0.000),
   .CLKOUT0_DUTY_CYCLE (0.500),
-  .CLKOUT1_DIVIDE     (19.500), // 975 / 37.5 = 50MHz
+  .CLKOUT1_DIVIDE     (26),       // 1300 / 26 = 50MHz
   .CLKOUT1_PHASE      (0.000),
   .CLKOUT1_DUTY_CYCLE (0.500),
   .BANDWIDTH          ("OPTIMIZED"),
