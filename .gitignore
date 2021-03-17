@@ -31,6 +31,11 @@ jgproject
 qverilog.log
 */work*
 
+# Spyglass working files and logs.
+**/spyglass
+**/spyglass-*
+sg_shell_command.log
+
 # Vivado journal and logs.
 vivado*.jou
 vivado*.log
@@ -49,5 +54,6 @@ xmvlog.log
 vcs.log
 
 # Temporary TCL scripts.
-hdl/vivado.tcl
 hdl/jaspergold.tcl
+hdl/spyglass.prj
+hdl/vivado.tcl

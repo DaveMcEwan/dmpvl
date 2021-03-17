@@ -49,7 +49,9 @@ lint_foss: lint_yosys
 
 lint_paid: lint_formalpro
 lint_paid: lint_jaspergold
+lint_paid: lint_hal
 lint_paid: lint_modelsim
+lint_paid: lint_spyglass
 lint_paid: lint_vcs
 lint_paid: lint_vivado
 lint_paid: lint_xmvlog
@@ -165,6 +167,20 @@ lint_modelsim/%:
 	vlog $(MODELSIM_FLAGS) $*
 	qverilog $(MODELSIM_FLAGS) $* > /dev/null
 .PHONY: lint_modelsim
+
+# FPGA bitstream compiler from Synopsys.
+# Tested with Spyglass 2020.12
+define SPYGLASS_TCL
+set_option enableSV yes
+read_file \
+	$(SRC_SINGLEHIER) \
+	$(SRC_MULTIHIER)
+endef
+export SPYGLASS_TCL
+lint_spyglass:
+	@echo "$$SPYGLASS_TCL" > spyglass.prj
+	spyglass -batch -designread -project spyglass.prj > /dev/null
+.PHONY: lint_spyglass
 
 # RTL simulator from Mentor/Siemens.
 # Tested with VCS 2018.09
