@@ -86,21 +86,21 @@ $(BITFILE):
 synth: $(BITFILE)
 .PHONY: synth
 
-#		--index-length=8
-#		--communicator-route=2
+#		--system-xml="../system-discovered.xml"
 # NOTE: Running with `python -m` means paths must be relative to py_link.
-run: $(UNPACKED)
+TEST ?= py_link/tests/general-discovery.py
+run: $(BUILD)/ust_conn_usb
 	cd $(BUILD)/$(DELIVERY); python3 -m py_link.run_test \
 		--verbose \
 		--manual \
 		--target=none \
-		--system-xml="../system-discovered.xml" \
 		--messages-xml="../messages.xml" \
 		--registry-xml="../registry.xml" \
 		--communicator=usb \
 		--communicator-type=usb \
-		--launch-cmd="../../ust_conn_usb"
-		tests/general-discovery.py
+		--launch-cmd="../../ust_conn_usb" \
+		$(TEST) \
+		timeout-seconds=2
 .PHONY: run
 
 prog: $(BITFILE)
