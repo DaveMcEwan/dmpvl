@@ -94,7 +94,7 @@ run: $(UNPACKED)
 		--verbose \
 		--manual \
 		--target=none \
-		--system-xml="../system-ss_corrdemo0.xml" \
+		--system-xml="../system-discovered.xml" \
 		--messages-xml="../messages.xml" \
 		--registry-xml="../registry.xml" \
 		--communicator=usb \

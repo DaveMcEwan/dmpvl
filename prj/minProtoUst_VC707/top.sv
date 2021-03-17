@@ -183,6 +183,8 @@ wire [7:0]  ust_usb0_ulpi_data_in_w;
 wire [7:0]  ust_usb0_ulpi_data_out_w;
 
 // TODO: Hookup to something useful?
+//// Debug clocks with oscilloscope on daughterboard LEDs.
+//wire [3:0]  pcb004_card_led_w = {2'b00, clk_50MHz, clk_26MHz};
 wire [3:0]  pcb004_card_led_w = 4'b0001;
 wire [1:0]  pcb004_card_sw_w;
 wire [4:0]  pcb004_joystick_w;

@@ -1417,8 +1417,8 @@ set_property PACKAGE_PIN AG32 [get_ports FMC2_HPC_PRSNT_M2C_B_LS]
 
 # USB clock (ulpi_clk_raw60MHz)
 create_clock -name clk_ulpi_raw60MHz -period 16.667 [get_ports FMC2_HPC_LA00_CC_P]
-create_clock -name clk_26MHz -period 38.46154 [get_nets clk_26MHz]
-create_clock -name clk_50MHz -period 20 [get_nets clk_50MHz]
+create_clock -name clk_26MHz -period 38.46154 [get_nets u_pll/o_clk_26MHz]
+create_clock -name clk_50MHz -period 20 [get_nets u_pll/o_clk_50MHz]
 
 # USB port timings
 set ulpi_data    [get_ports {FMC2_HPC_LA01_CC_N FMC2_HPC_LA01_CC_P FMC2_HPC_LA09_N FMC2_HPC_LA09_P FMC2_HPC_LA04_N FMC2_HPC_LA04_P FMC2_HPC_LA03_N FMC2_HPC_LA03_P}];
