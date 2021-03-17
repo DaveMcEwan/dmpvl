@@ -47,10 +47,6 @@ synth_design -part ${part} -top top \
   -include_dirs ${deliveryIncdir} \
   -include_dirs ${dirHdl}
 
-# NOTE: The clock period only needs to be less than 20.833ns.
-# The actual clock speed at runtime is set by the PLL settings.
-# Synthesizing with a lower value less just means the logic *could* function at
-# higher frequencies.
 set_property CONFIG_VOLTAGE 1.8 [current_design]
 set_property CFGBVS GND [current_design]
 

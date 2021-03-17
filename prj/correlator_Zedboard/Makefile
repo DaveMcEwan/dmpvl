@@ -60,11 +60,11 @@ synth_yosys: $(BUILD)/usbfsBpCorrelator.edif
 		-p 'write_verilog $*.yosys.v'
 
 BITFILE ?= $(BUILD)/$(PRJ).bit
-$(BITFILE): $(SRC) $(SRC_TOP) vivado.tcl zedboard_master_XDC_RevC_D_v3.xdc
+$(BITFILE): $(SRC) $(SRC_TOP) vivado-synth.tcl zedboard_master_XDC_RevC_D_v3.xdc
 ifneq ($(SYNTH_YOSYS), 0)
 $(BITFILE): $(BUILD)/usbfsBpCorrelator.edif
 endif
-	vivado -mode batch -source vivado.tcl \
+	vivado -mode batch -source vivado-synth.tcl \
 		-tclargs --prj $(PRJ) --part $(PART) --dirBuild $(BUILD) \
 			--synth_yosys $(SYNTH_YOSYS)
 

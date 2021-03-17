@@ -77,11 +77,11 @@ $(BUILD)/vivado-addFiles.tcl: $(UNPACKED)
 	echo "" >> $@
 
 BITFILE ?= $(BUILD)/$(PRJ).bit
-$(BITFILE): $(SRC_TOP) vivado.tcl vc707.xdc
+$(BITFILE): $(SRC_TOP) vivado-synth.tcl vc707.xdc
 $(BITFILE): $(BUILD)/vivado-addFiles.tcl
 $(BITFILE): $(BUILD)/ust_conn_usb
 $(BITFILE):
-	vivado -mode batch -source vivado.tcl -tclargs --prj $(PRJ) --part $(PART) \
+	vivado -mode batch -source vivado-synth.tcl -tclargs --prj $(PRJ) --part $(PART) \
 	--dirBuild $(BUILD) --deliveryIncdir $(DELIVERY_INCDIR)
 synth: $(BITFILE)
 .PHONY: synth
