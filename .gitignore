@@ -29,7 +29,7 @@ jgproject
 
 # ModelSim working files and logs.
 qverilog.log
-*/work*
+**/work*
 
 # Spyglass working files and logs.
 **/spyglass
@@ -46,14 +46,13 @@ webtalk*.log
 
 # Xcelium working files and logs.
 xmvlog.log
-*/xcelium.d*
+**/xcelium.d*
 
 # VCS working files and logs.
-*/csrc*
-*/simv.daidir*
+**/csrc*
+**/simv.daidir*
 vcs.log
 
 # Temporary TCL scripts.
-hdl/jaspergold.tcl
-hdl/spyglass.prj
-hdl/vivado.tcl
+*-lint_mk.tcl
+*-lint_mk.prj

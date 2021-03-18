@@ -40,6 +40,7 @@ wire usbRx_n;
 assign usbRx_p = usbOutputEnable ? 1'b1 : usb_p;
 assign usbRx_n = usbOutputEnable ? 1'b0 : usb_n;
 
+/* verilator lint_off PINMISSING */
 SB_IO #(
   .PIN_TYPE (6'b101001), // [5:2]->PIN_OUTPUT_TRISTATE, [1:0]->PIN_INPUT
   .PULLUP   (1'b0)
@@ -49,7 +50,9 @@ SB_IO #(
   .D_OUT_0        (usbTx_p),
   .D_IN_0         (usb_p)
 );
+/* verilator lint_on PINMISSING */
 
+/* verilator lint_off PINMISSING */
 SB_IO #(
   .PIN_TYPE (6'b101001), // [5:2]->PIN_OUTPUT_TRISTATE, [1:0]->PIN_INPUT
   .PULLUP   (1'b0)
@@ -59,6 +62,7 @@ SB_IO #(
   .D_OUT_0        (usbTx_n),
   .D_IN_0         (usb_n)
 );
+/* verilator lint_on PINMISSING */
 
 assign o_pin_pu = 1'b1;
 
