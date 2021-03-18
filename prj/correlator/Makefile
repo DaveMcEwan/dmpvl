@@ -1,50 +1,46 @@
 
 # Dave McEwan 2020-12-14
 
-SRC := \
-	../../hdl/fpgaReset.sv \
-	../../hdl/usbfsPktRx.sv \
-	../../hdl/usbfsPktTx.sv \
-	../../hdl/usbfsTxn.sv \
-	../../hdl/usbfsEndpRx.sv \
-	../../hdl/usbfsEndpTx.sv \
-	../../hdl/usbfsEndpCtrlSerial.sv \
-	../../hdl/usbfsSerial.sv \
-	../../hdl/fifoW1R1.sv \
-	../../hdl/fxcs.sv \
-	../../hdl/logdropWindow.sv \
-	../../hdl/mssbIdx.sv \
-	../../hdl/onehotIdx.sv \
-	../../hdl/prngXoshiro128p.sv \
-	../../hdl/strobe.sv \
-	../../hdl/pwm.sv \
-	../../hdl/dividerFsm.sv \
-	../../hdl/corrCountRect.sv \
-	../../hdl/corrCountLogdrop.sv \
-	../../hdl/xbar.sv \
-	correlator.sv \
-	bpReg.sv \
-	bpCorrelator.sv \
-	usbfsBpCorrelator.sv \
-	./build/pll48.sv \
-	top.sv
+SRC_SINGLEHIER :=
+SRC_SINGLEHIER += ../../hdl/corrCountRect.sv
+SRC_SINGLEHIER += ../../hdl/dividerFsm.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/fpgaReset.sv
+SRC_SINGLEHIER += ../../hdl/fxcs.sv
+SRC_SINGLEHIER += ../../hdl/onehotIdx.sv
+SRC_SINGLEHIER += ../../hdl/popcnt6.sv
+SRC_SINGLEHIER += ../../hdl/prngXoshiro128p.sv
+SRC_SINGLEHIER += ../../hdl/pwm.sv
+SRC_SINGLEHIER += ../../hdl/syncBit.sv
+SRC_SINGLEHIER += ../../hdl/usbfsEndpCtrlSerial.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktRx.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktTx.sv
 
-LINT_VERILATOR_SRC := \
-	correlator.sv \
-	bpReg.sv \
-	bpCorrelator.sv \
-	usbfsBpCorrelator.sv
+SRC_MULTIHIER :=
+SRC_MULTIHIER += ../../hdl/corrCountLogdrop.sv
+SRC_MULTIHIER += ../../hdl/logdropWindow.sv
+SRC_MULTIHIER += ../../hdl/mssbIdx.sv
+SRC_MULTIHIER += ../../hdl/strobe.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpRx.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpTx.sv
+SRC_MULTIHIER += ../../hdl/usbfsSerial.sv
+SRC_MULTIHIER += ../../hdl/usbfsTxn.sv
+SRC_MULTIHIER += ../../hdl/xbar.sv
+SRC_MULTIHIER += correlator.sv
+SRC_MULTIHIER += bpReg.sv
+SRC_MULTIHIER += bpCorrelator.sv
+SRC_MULTIHIER += usbfsBpCorrelator.sv
+SRC_MULTIHIER += top.sv
 
-LINT_IVERILOG_SRC := \
-	$(LINT_VERILATOR_SRC) \
-	top.sv
+INCDIRS = . ../../hdl
 
-LINT_YOSYS_SRC := \
-	$(LINT_VERILATOR_SRC) \
-	top.sv
+VERILATOR_SRC ?= $(subst top.sv,,$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
+VCS_SRC       ?= $(subst top.sv,,$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
+MK_LINT := ../../mk/lint.mk
+include $(MK_LINT)
 
-PREPROC_SRC := \
-	$(LINT_VERILATOR_SRC)
+MK_PREPROC := ../../mk/preproc.mk
+include $(MK_PREPROC)
 
 include ../common_ice40.mk
 

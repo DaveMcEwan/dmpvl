@@ -17,34 +17,13 @@ TGT_FMAX ?= 48
 # for other setups (minor code changes, tool versions, host OS version, etc).
 PNR_SEED ?= 5
 
-default: lint $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
+default: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
 
 synth: $(BUILD)/$(PROJ).yosys.json
 pnr: $(BUILD)/$(PROJ).nextpnr.asc
 pack: $(BUILD)/$(PROJ).icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt
-all: lint synth pnr pack rpt
-
-# Read in design files with a variety of tools to ensure there's nothing too
-# obviously wrong.
-lint: lint_verilator lint_iverilog lint_yosys
-.PHONY: lint lint_verilator lint_iverilog lint_yosys
-
-VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
-lint_verilator: $(addprefix lint_verilator/,$(LINT_VERILATOR_SRC))
-lint_verilator/%:
-	verilator $(VERILATOR_FLAGS) $*
-
-IVERILOG_LANG ?= -g2005-sv
-IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
-lint_iverilog: $(addprefix lint_iverilog/,$(LINT_IVERILOG_SRC))
-lint_iverilog/%:
-	iverilog $(IVERILOG_FLAGS) -i $*
-
-lint_yosys: $(addprefix lint_yosys/,$(LINT_YOSYS_SRC))
-lint_yosys/%:
-	yosys -q -p 'read_verilog -sv -I../../hdl/ $*'
+all: synth pnr pack rpt
 
 # TinyFPGA-BX has onboard 16MHz crystal oscillator.
 PLL_INPUT_MHZ ?= 16
@@ -89,12 +68,6 @@ gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 
 prog: $(BUILD)/$(PROJ).icepack.bin
 	tinyprog -p $<
-
-preproc: $(addprefix $(BUILD)/preproc/,$(PREPROC_SRC))
-preproc: $(addprefix $(BUILD)/preproc/,$(PREPROC_SRC))
-build/preproc/%:
-	mkdir -p $(shell dirname $@)
-	verilator -E -P $(VERILATOR_LANG) -I../../hdl $* > $@
 
 # NOTE: Hardcoded device.
 # NOTE: Use multipnr to find suitable seed.
