@@ -1,47 +1,47 @@
 
-SRC := \
-	../../hdl/edgeDetect.sv \
-	../../hdl/fifoW1R1.sv \
-	../../hdl/fpgaReset.sv \
-	usbPktTxMux.sv \
-	usbPktTx.sv \
-	usbPktRx.sv \
-	usbEpInArbiter.sv \
-	usbEpOutArbiter.sv \
-	usbPeIn.sv \
-	usbPeOut.sv \
-	usbPe.sv \
-	usbEpBridge.sv \
-	usbCtrlSerial.sv \
-	usbSerial.sv \
-	./build/pll48.sv \
-	top.sv
+default: lint_foss
+default: default_ice40
 
-LINT_VERILATOR_SRC := \
-	usbPktTxMux.sv \
-	usbPktTx.sv \
-	usbPktRx.sv \
-	usbEpInArbiter.sv \
-	usbEpOutArbiter.sv \
-	usbPeIn.sv \
-	usbPeOut.sv \
-	usbPe.sv \
-	usbEpBridge.sv \
-	usbCtrlSerial.sv
+SRC_SINGLEHIER += ../../hdl/edgeDetect.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/fpgaReset.sv
+SRC_SINGLEHIER += usbPktTxMux.sv
+SRC_SINGLEHIER += usbPktTx.sv
+SRC_SINGLEHIER += usbPktRx.sv
+SRC_SINGLEHIER += usbEpInArbiter.sv
+SRC_SINGLEHIER += usbEpOutArbiter.sv
+SRC_SINGLEHIER += usbPeIn.sv
+SRC_SINGLEHIER += usbPeOut.sv
 
-LINT_IVERILOG_SRC := \
-	$(LINT_VERILATOR_SRC) \
-	top.sv
+SRC_MULTIHIER += usbPe.sv
+SRC_MULTIHIER += usbEpBridge.sv
+SRC_MULTIHIER += usbCtrlSerial.sv
+SRC_MULTIHIER += usbSerial.sv
+SRC_MULTIHIER += top.sv
 
-LINT_YOSYS_SRC := \
-	$(LINT_VERILATOR_SRC) \
-	top.sv
+SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
 
-include ../common_ice40.mk
+INCDIRS = . ../../hdl
 
-MULTIPNR_MK := ../multipnr_ice40.mk
+# NOTE: VGWM design displeases Verilator greatly with many UNOPTFLAT warnings.
+VERILATOR_SRC ?=
+MK_LINT := ../../mk/lint.mk
+include $(MK_LINT)
+
+MK_PREPROC := ../../mk/preproc.mk
+include $(MK_PREPROC)
+
+YOSYS_SRC := $(SRC_SINGLEHIER) $(SRC_MULTIHIER) $(BUILD)/pll48.sv
+#PNR_SEED ?= 1
+MK_ICE40 := ../../mk/ice40.mk
+include $(MK_ICE40)
+
 MULTIPNR_ARACHNE := 1
-include $(MULTIPNR_MK)
+MK_MULTIPNR := ../../mk/multipnr_ice40.mk
+include $(MK_MULTIPNR)
+
+MK_CLEAN := ../../mk/clean.mk
+include $(MK_CLEAN)
 
 # {{{ WIP
 
