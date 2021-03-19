@@ -23,8 +23,8 @@ lint_paid: lint_vivado
 lint_paid: lint_xmvlog
 
 # RTL simulator from Steve Icarus.
-IVERILOG_SRC_SINGLEHIER ?= $(SRC_SINGLEHIER)
-IVERILOG_SRC_MULTIHIER ?= $(SRC_MULTIHIER)
+IVERILOG_SRC_SINGLEHIER ?= $(filter-out $(IVERILOG_SRC_EXCLUDE),$(SRC_SINGLEHIER))
+IVERILOG_SRC_MULTIHIER ?= $(filter-out $(IVERILOG_SRC_EXCLUDE),$(SRC_MULTIHIER))
 IVERILOG_INCDIRS ?= $(INCDIRS)
 IVERILOG_LANG ?= -g2005-sv
 IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null $(addprefix -I,$(IVERILOG_INCDIRS))
@@ -39,7 +39,7 @@ lint_iverilog_multihier/%:
 .PHONY: lint_iverilog lint_iverilog_singlehier lint_iverilog_multihier
 
 # Two-state simulator via C++ from Wilson Snyder.
-VERILATOR_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+VERILATOR_SRC ?= $(filter-out $(VERILATOR_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 VERILATOR_INCDIRS ?= $(INCDIRS)
 VERILATOR_LANG ?= --language 1800-2005
 VERILATOR_FLAGS := $(VERILATOR_LANG) $(addprefix -I,$(VERILATOR_INCDIRS))
@@ -49,7 +49,7 @@ lint_verilator/%:
 .PHONY: lint_verilator
 
 # Generic synthesis from Clifford Wolf.
-YOSYS_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+YOSYS_SRC ?= $(filter-out $(YOSYS_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 YOSYS_INCDIRS ?= $(INCDIRS)
 lint_yosys: $(addprefix lint_yosys/,$(YOSYS_SRC))
 lint_yosys/%:
@@ -60,7 +60,7 @@ lint_yosys/%:
 # Equivalence checker from Mentor/Siemens.
 # Tested with Formalpro v2020.1
 # NOTE: SYNTHESIS is defined to remove asserts using $onehot0.
-FORMALPRO_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+FORMALPRO_SRC ?= $(filter-out $(FORMALPRO_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 FORMALPRO_INCDIRS ?= $(INCDIRS)
 FORMALPRO_LANG ?= -sv2005
 FORMALPRO_FLAGS := $(FORMALPRO_LANG) +define+SYNTHESIS
@@ -76,7 +76,7 @@ lint_formalpro/%:
 # NOTE: SYNTHESIS is defined to remove asserts using $onehot0.
 # NOTE: Not all warnings are removed, because some serve as useful confirmations
 # about design decisions.
-HAL_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+HAL_SRC ?= $(filter-out $(HAL_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 HAL_INCDIRS ?= $(INCDIRS)
 HAL_LANG ?= -SV
 HAL_NOCHECK := LCVARN UCCONN VERCAS NUMSUF MAXLEN SEPLIN
@@ -113,7 +113,7 @@ lint_hal/%:
 
 # Formal proof assistant from Cadence.
 # Tested with JasperGold 2020.03
-JASPERGOLD_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+JASPERGOLD_SRC ?= $(filter-out $(JASPERGOLD_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 JASPERGOLD_INCDIRS ?= $(INCDIRS)
 #	+define+SYNTHESIS
 define JASPERGOLD_TCL
@@ -134,7 +134,7 @@ lint_jaspergold:
 # RTL simulator from Mentor/Siemens.
 # Tested with Modelsim 10.4
 # NOTE: Questa is the premium edition.
-MODELSIM_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+MODELSIM_SRC ?= $(filter-out $(MODELSIM_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 MODELSIM_LANG ?= -sv05compat
 MODELSIM_FLAGS := $(MODELSIM_LANG) -lint -quiet
 QVERILOG_LOGFILE = $(LOG_PREFIX)qverilog$(LOG_SUFFIX)
@@ -146,7 +146,7 @@ lint_modelsim/%:
 
 # Linter from Synopsys.
 # Tested with Spyglass 2020.12
-SPYGLASS_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+SPYGLASS_SRC ?= $(filter-out $(SPYGLASS_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 SPYGLASS_INCDIRS ?= $(INCDIRS)
 define SPYGLASS_TCL
 set_option enableSV yes
@@ -164,7 +164,7 @@ lint_spyglass:
 
 # RTL simulator from Synopsys.
 # Tested with VCS 2018.09
-VCS_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+VCS_SRC ?= $(filter-out $(VCS_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 VCS_INCDIRS ?= $(INCDIRS)
 VCS_LANG ?= -sverilog
 VCS_FLAGS := $(VCS_LANG) +lint=all -C -q $(addprefix +incdir+,$(VCS_INCDIRS))
@@ -175,7 +175,7 @@ lint_vcs:
 
 # FPGA bitstream compiler from Xilinx.
 # Tested with Vivado 2018.2, 2018.3
-VIVADO_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+VIVADO_SRC ?= $(filter-out $(VIVADO_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 define VIVADO_TCL
 create_project -in_memory projectDummy
 create_fileset -blockset filesetDummy
@@ -199,7 +199,7 @@ lint_vivado:
 
 # RTL simulator from Cadence, successor to Incisive.
 # Tested with Xcelium 20.03
-XMVLOG_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+XMVLOG_SRC ?= $(filter-out $(XMVLOG_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 XMVLOG_INCDIRS ?= $(INCDIRS)
 XMVLOG_LANG ?= -SYSV05
 XMVLOG_FLAGS := $(XMVLOG_LANG) -NOLOG $(addprefix -INCDIR ,$(XMVLOG_INCDIRS))

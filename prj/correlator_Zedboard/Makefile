@@ -47,14 +47,12 @@ SRC_MULTIHIER += usbfsBpCorrelator.sv
 SRC_MULTIHIER += pll48.sv
 SRC_MULTIHIER += top.sv
 
-SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
-
 INCDIRS = . ../../hdl
 
-VERILATOR_SRC			?= $(subst top.sv,,$(SRC_COMBINED))
+VERILATOR_SRC_EXCLUDE += top.sv
 VERILATOR_INCDIRS := $(INCDIRS) ../../hdl/primitives/xilinx_7s
-VCS_SRC       ?= $(subst top.sv,,$(SRC_COMBINED))
-YOSYS_SRC     ?= $(subst pll48.sv,,$(SRC_COMBINED))
+VCS_SRC_EXCLUDE += top.sv
+YOSYS_SRC_EXCLUDE += pll48.sv
 MK_LINT := ../../mk/lint.mk
 include $(MK_LINT)
 
