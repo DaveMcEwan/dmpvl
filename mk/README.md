@@ -14,3 +14,4 @@ Primary make targets are:
 - `multipnr` - Use many PnR runs to plot a Probability Density Function of the
   attained FMAX.
   Only the Lattice iCE40 flow (yosys, nextpnr) is currently supported.
+- `wavedrom` - Use JSON definitions of waveforms to draw pretty diagrams.
