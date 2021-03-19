@@ -7,15 +7,15 @@
 
 BUILD ?= ./build
 LOG_PREFIX = $(BUILD)/$(notdir $*)-
-LOG_SUFFIX = -lint_mk.log
+LOG_SUFFIX = -mk_lint.log
 
 lint_foss: lint_iverilog
 lint_foss: lint_verilator
 lint_foss: lint_yosys
 
 lint_paid: lint_formalpro
-lint_paid: lint_jaspergold
 lint_paid: lint_hal
+lint_paid: lint_jaspergold
 lint_paid: lint_modelsim
 lint_paid: lint_spyglass
 lint_paid: lint_vcs
@@ -115,6 +115,7 @@ lint_hal/%:
 # Tested with JasperGold 2020.03
 JASPERGOLD_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
 JASPERGOLD_INCDIRS ?= $(INCDIRS)
+#	+define+SYNTHESIS
 define JASPERGOLD_TCL
 clear -all
 analyze -sv05 \
@@ -122,7 +123,7 @@ analyze -sv05 \
 	$(JASPERGOLD_SRC)
 endef
 export JASPERGOLD_TCL
-JASPERGOLD_TCLFILE ?= jaspergold-lint_mk.tcl
+JASPERGOLD_TCLFILE ?= jaspergold-mk_lint.tcl
 lint_jaspergold:
 	rm -rf jgproject
 	echo "$$JASPERGOLD_TCL" > $(JASPERGOLD_TCLFILE)
@@ -153,7 +154,7 @@ set_option incdir $(SPYGLASS_INCDIRS)
 read_file $(SPYGLASS_SRC)
 endef
 export SPYGLASS_TCL
-SPYGLASS_TCLFILE ?= $(BUILD)/spyglass-lint_mk.prj
+SPYGLASS_TCLFILE ?= $(BUILD)/spyglass-mk_lint.prj
 SPYGLASS_LOGFILE = $(BUILD)/spyglass$(LOG_SUFFIX)
 lint_spyglass:
 	mkdir -p $(BUILD)
@@ -167,7 +168,7 @@ VCS_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
 VCS_INCDIRS ?= $(INCDIRS)
 VCS_LANG ?= -sverilog
 VCS_FLAGS := $(VCS_LANG) +lint=all -C -q $(addprefix +incdir+,$(VCS_INCDIRS))
-VCS_LOGFILE ?= $(BUILD)/vcs-lint_mk.tcl
+VCS_LOGFILE ?= $(BUILD)/vcs-mk_lint.log
 lint_vcs:
 	mkdir -p $(BUILD)
 	vcs $(VCS_FLAGS) $(VCS_SRC) > $(VCS_LOGFILE)
@@ -182,7 +183,7 @@ add_files $(VIVADO_SRC) -fileset filesetDummy
 check_syntax -fileset filesetDummy
 endef
 export VIVADO_TCL
-VIVADO_TCLFILE ?= $(BUILD)/vivado-lint_mk.tcl
+VIVADO_TCLFILE ?= $(BUILD)/vivado-mk_lint.tcl
 VIVADO_LOGFILE = $(BUILD)/vivado$(LOG_SUFFIX)
 lint_vivado:
 	rm -f vivado*.jou
@@ -207,5 +208,14 @@ lint_xmvlog: $(addprefix lint_xmvlog/,$(XMVLOG_SRC))
 lint_xmvlog/%:
 	mkdir -p $(BUILD)
 	xmvlog $(XMVLOG_FLAGS) $* > $(XMVLOG_LOGFILE)
+
+
+CLEAN_PATHS += $(BUILD)
+CLEAN_PATHS += work
+CLEAN_PATHS += jgproject
+CLEAN_PATHS += .Xil
+CLEAN_PATHS += vivado*.log
+CLEAN_PATHS += vivado*.jou
+CLEAN_PATHS += *-mk_lint.*
 
 .SECONDARY:

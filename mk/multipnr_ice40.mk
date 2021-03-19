@@ -5,8 +5,6 @@
 # Create a CSV log with these values:
 #		seed, nextpnr.log, icetime.rpt, arachne.icetime.rpt
 
-MULTIPNR_MK ?= ../multipnr_ice40/multipnr_ice40.mk
-MULTIPNR_DIR := $(dir $(MULTIPNR_MK))
 
 # TinyFPGA-BX
 DEVICE ?= lp8k
@@ -46,7 +44,7 @@ $(RPT_NEXTPNR): multipnr/%/nextpnr.rpt: multipnr/%/nextpnr.asc
 	icetime -d $(DEVICE) -mtr $@ $<
 
 
-# arachne takes BLIF
+# NOTE: Arachne takes BLIF
 $(ASC_ARACHNE): multipnr/%/arachne.asc:
 	mkdir -p $(@D)
 	-arachne-pnr \
@@ -73,6 +71,7 @@ multipnr/nextpnr.rpt.extracted: ${RPT_NEXTPNR}
 	grep -H 'Total path delay:' multipnr/*/nextpnr.rpt > \
 		multipnr/nextpnr.rpt.extracted
 
+# NOTE: Arachne often fails to finish, so ignore those runs.
 multipnr/arachne.rpt.extracted: ${RPT_ARACHNE}
 	-grep -H 'Total path delay:' multipnr/*/arachne.rpt > \
 		multipnr/arachne.rpt.extracted
@@ -84,11 +83,15 @@ ifneq ($(MULTIPNR_ARACHNE), 0)
 multipnr/results.csv.pdf: multipnr/arachne.rpt.extracted
 endif
 multipnr/results.csv.pdf:
-	$(MULTIPNR_DIR)/multipnrPlot.py \
+	$(dir $(MK_MULTIPNR))/multipnrPlot.py \
 		--xlim=$(MULTIPNR_XLIM) --ylim=$(MULTIPNR_YLIM) \
 		--doArachne=$(MULTIPNR_ARACHNE)
 
 
-.PHONY: multipnr
-multipnr: $(PCF) $(BUILD)/$(PROJ).yosys.json
+multipnr: $(PCF) synth
 multipnr: multipnr/results.csv.pdf
+.PHONY: multipnr
+
+# NOTE: No CLEAN_PATHS for multipnr because accidentally deleting results is a
+# much bigger inconvenience that typing `rm -rf multipnr` when you need to.
+

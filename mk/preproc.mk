@@ -8,6 +8,7 @@ VERILATOR_LANG ?= --language 1800-2005
 preproc: $(addprefix $(BUILD)/preproc/,$(PREPROC_SRC))
 $(BUILD)/preproc/%:
 	mkdir -p $(shell dirname $@)
-	verilator -E -P $(VERILATOR_LANG) $(addprefix -I,$(VERILATOR_INCDIRS)) $* \
+	verilator -E -P -Mdir $(BUILD)/obj_dir $(VERILATOR_LANG) \
+		$(addprefix -I,$(VERILATOR_INCDIRS)) $* \
 		> $(BUILD)/preproc/$(notdir $*)
 
