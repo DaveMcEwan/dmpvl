@@ -26,11 +26,9 @@ SRC_MULTIHIER += ../../hdl/usbfsTxn.sv
 SRC_MULTIHIER += xoroshiro.sv
 SRC_MULTIHIER += top.sv
 
-SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
-
 INCDIRS = . ../../hdl
 
-VERILATOR_SRC ?= $(subst top.sv,,$(SRC_COMBINED))
+VERILATOR_SRC_EXCLUDE += top.sv
 MK_LINT := ../../mk/lint.mk
 include $(MK_LINT)
 

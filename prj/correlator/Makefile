@@ -33,12 +33,10 @@ SRC_MULTIHIER += bpCorrelator.sv
 SRC_MULTIHIER += usbfsBpCorrelator.sv
 SRC_MULTIHIER += top.sv
 
-SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
-
 INCDIRS = . ../../hdl
 
-VERILATOR_SRC ?= $(subst top.sv,,$(SRC_COMBINED))
-VCS_SRC       ?= $(subst top.sv,,$(SRC_COMBINED))
+VERILATOR_SRC_EXCLUDE += top.sv
+VCS_SRC_EXCLUDE += top.sv
 MK_LINT := ../../mk/lint.mk
 include $(MK_LINT)
 

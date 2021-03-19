@@ -19,8 +19,6 @@ SRC_MULTIHIER += usbCtrlSerial.sv
 SRC_MULTIHIER += usbSerial.sv
 SRC_MULTIHIER += top.sv
 
-SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
-
 INCDIRS = . ../../hdl
 
 # NOTE: VGWM design displeases Verilator greatly with many UNOPTFLAT warnings.

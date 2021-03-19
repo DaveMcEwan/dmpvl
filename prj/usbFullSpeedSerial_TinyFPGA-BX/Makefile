@@ -16,11 +16,9 @@ SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointReceiver.sv
 SRC_MULTIHIER += ../../verif/usbFullSpeedSerial.sv
 SRC_MULTIHIER += top.sv
 
-SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
-
 INCDIRS = . ../../hdl ../../verif
 
-VERILATOR_SRC ?= $(subst top.sv,,$(SRC_COMBINED))
+VERILATOR_SRC_EXCLUDE += top.sv
 MK_LINT := ../../mk/lint.mk
 include $(MK_LINT)
 
