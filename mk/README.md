@@ -15,3 +15,7 @@ Primary make targets are:
   attained FMAX.
   Only the Lattice iCE40 flow (yosys, nextpnr) is currently supported.
 - `wavedrom` - Use JSON definitions of waveforms to draw pretty diagrams.
+- `signoff` - Run logfile through a regex filter to signoff warnings.
+  Currently only supported on Vivado flows, because FOSS tools don't emit so
+  much noise.
+- `prog` - Upload bitstream to a connected FPGA development board.
