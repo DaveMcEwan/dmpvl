@@ -15,119 +15,57 @@ BUILD := ./build
 # ZCU102 (Zynq UltraScale+)   xczu9eg-ffvb1156-2-i
 PART := xc7z020clg484-1
 
-SRC := \
-	../../hdl/fifoW1R1.sv \
-	../../hdl/fxcs.sv \
-	../../hdl/logdropWindow.sv \
-	../../hdl/mssbIdx.sv \
-	../../hdl/onehotIdx.sv \
-	../../hdl/prngXoshiro128p.sv \
-	../../hdl/strobe.sv \
-	../../hdl/pwm.sv \
-	../../hdl/dividerFsm.sv \
-	../../hdl/corrCountRect.sv \
-	../../hdl/corrCountLogdrop.sv \
-	../../hdl/xbar.sv \
-	../../hdl/usbfsPktRx.sv \
-	../../hdl/usbfsPktTx.sv \
-	../../hdl/usbfsTxn.sv \
-	../../hdl/usbfsEndpRx.sv \
-	../../hdl/usbfsEndpTx.sv \
-	../../hdl/usbfsEndpCtrlSerial.sv \
-	../../hdl/usbfsSerial.sv \
-	bpReg.sv \
-	correlator.sv \
-	bpCorrelator.sv \
-	usbfsBpCorrelator.sv
+default: lint_foss
+default: signoff
 
-SRC_TOP := \
-	../../hdl/fpgaReset.sv \
-	pll48.sv \
-	top.sv
+SRC_SINGLEHIER += ../../hdl/corrCountRect.sv
+SRC_SINGLEHIER += ../../hdl/dividerFsm.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/fpgaReset.sv
+SRC_SINGLEHIER += ../../hdl/fxcs.sv
+SRC_SINGLEHIER += ../../hdl/onehotIdx.sv
+SRC_SINGLEHIER += ../../hdl/popcnt6.sv
+SRC_SINGLEHIER += ../../hdl/prngXoshiro128p.sv
+SRC_SINGLEHIER += ../../hdl/pwm.sv
+SRC_SINGLEHIER += ../../hdl/usbfsEndpCtrlSerial.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktRx.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktTx.sv
 
-default: lint signoff
+SRC_MULTIHIER += ../../hdl/corrCountLogdrop.sv
+SRC_MULTIHIER += ../../hdl/logdropWindow.sv
+SRC_MULTIHIER += ../../hdl/mssbIdx.sv
+SRC_MULTIHIER += ../../hdl/strobe.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpRx.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpTx.sv
+SRC_MULTIHIER += ../../hdl/usbfsSerial.sv
+SRC_MULTIHIER += ../../hdl/usbfsTxn.sv
+SRC_MULTIHIER += ../../hdl/xbar.sv
+SRC_MULTIHIER += correlator.sv
+SRC_MULTIHIER += bpReg.sv
+SRC_MULTIHIER += bpCorrelator.sv
+SRC_MULTIHIER += usbfsBpCorrelator.sv
+SRC_MULTIHIER += pll48.sv
+SRC_MULTIHIER += top.sv
 
+SRC_COMBINED := $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
 
-SYNTH_YOSYS ?= 0
-synth_yosys: $(BUILD)/usbfsBpCorrelator.edif
-%.edif: $(SRC)
-	mkdir -p $(BUILD)
-	yosys -q \
-		-l $*.yosys.log \
-		-p 'read_verilog -sv -I../../hdl/ $^' \
-		-p 'synth_xilinx -top usbfsBpCorrelator -edif $*.edif' \
-		-p 'flatten' \
-		-p 'write_verilog $*.yosys.v'
+INCDIRS = . ../../hdl
 
-BITFILE ?= $(BUILD)/$(PRJ).bit
-$(BITFILE): $(SRC) $(SRC_TOP) vivado-synth.tcl zedboard_master_XDC_RevC_D_v3.xdc
-ifneq ($(SYNTH_YOSYS), 0)
-$(BITFILE): $(BUILD)/usbfsBpCorrelator.edif
-endif
-	vivado -mode batch -source vivado-synth.tcl \
-		-tclargs --prj $(PRJ) --part $(PART) --dirBuild $(BUILD) \
-			--synth_yosys $(SYNTH_YOSYS)
+VERILATOR_SRC			?= $(subst top.sv,,$(SRC_COMBINED))
+VERILATOR_INCDIRS := $(INCDIRS) ../../hdl/primitives/xilinx_7s
+VCS_SRC       ?= $(subst top.sv,,$(SRC_COMBINED))
+YOSYS_SRC     ?= $(subst pll48.sv,,$(SRC_COMBINED))
+MK_LINT := ../../mk/lint.mk
+include $(MK_LINT)
 
-synth: $(BITFILE)
+MK_PREPROC := ../../mk/preproc.mk
+include $(MK_PREPROC)
 
+YOSYS_TOP ?= usbfsBpCorrelator
+CONSTRAINTS := zedboard_master_XDC_RevC_D_v3.xdc
+MK_XILINX7S := ../../mk/xilinx7s.mk
+include $(MK_XILINX7S)
 
-VIVADO_SIGNOFF ?= signoffVivado.regex
-$(BUILD)/vivado.warnings: $(BITFILE) $(VIVADO_SIGNOFF)
-	grep -n WARNING vivado.log | lineFilter $(VIVADO_SIGNOFF) > $@
+MK_CLEAN := ../../mk/clean.mk
+include $(MK_CLEAN)
 
-signoff: $(BUILD)/vivado.warnings
-	! test -s $<
-
-
-prog: signoff
-	vivado -mode batch -source ../../tcl/vivado-program.tcl \
-		-tclargs --part $(PART) --bitstream $(BITFILE)
-
-
-# Read in design files with a variety of tools to ensure there's nothing too
-# obviously wrong.
-lint: lint_verilator lint_iverilog lint_yosys
-
-VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_FLAGS := --lint-only $(VERILATOR_LANG) -I../../hdl
-lint_verilator:
-	verilator $(VERILATOR_FLAGS) correlator.sv
-	verilator $(VERILATOR_FLAGS) bpReg.sv
-	verilator $(VERILATOR_FLAGS) bpCorrelator.sv
-	verilator $(VERILATOR_FLAGS) usbfsBpCorrelator.sv
-	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s pll48.sv
-	verilator $(VERILATOR_FLAGS) -I../../hdl/primitives/xilinx_7s top.sv
-
-IVERILOG_LANG ?= -g2005-sv
-IVERILOG_FLAGS := $(IVERILOG_LANG) -o /dev/null -I../../hdl
-lint_iverilog:
-	iverilog $(IVERILOG_FLAGS) -i correlator.sv
-	iverilog $(IVERILOG_FLAGS) -i bpReg.sv
-	iverilog $(IVERILOG_FLAGS) -i bpCorrelator.sv
-	iverilog $(IVERILOG_FLAGS) -i usbfsBpCorrelator.sv
-	iverilog $(IVERILOG_FLAGS) -i pll48.sv
-	iverilog $(IVERILOG_FLAGS) -i top.sv
-
-# pll48.sv emits warnings because the PLL primitive uses real parameters which
-# yosys treats as strings.
-lint_yosys:
-	yosys -q -p 'read_verilog -sv -I../../hdl/ correlator.sv'
-	yosys -q -p 'read_verilog -sv -I../../hdl/ bpReg.sv'
-	yosys -q -p 'read_verilog -sv -I../../hdl/ bpCorrelator.sv'
-	yosys -q -p 'read_verilog -sv -I../../hdl/ usbfsBpCorrelator.sv'
-	yosys -q -p 'read_verilog -sv -I../../hdl/ top.sv'
-
-
-clean:
-	rm -rf build
-	rm -rf .cache
-	rm -rf .Xil
-	rm -rf usage_statistics*
-	rm -rf vivado*.log
-	rm -rf vivado*.jou
-	rm -rf webtalk*.log
-	rm -rf webtalk*.jou
-
-.SECONDARY:
-.PHONY: default synth signoff prog clean
-.PHONY: lint lint_verilator lint_iverilog lint_yosys

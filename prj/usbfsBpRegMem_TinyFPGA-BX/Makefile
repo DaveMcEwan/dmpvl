@@ -44,9 +44,10 @@ include $(MK_CLEAN)
 MK_WAVEDROM := ../../mk/wavedrom.mk
 include $(MK_WAVEDROM)
 
-# Setup venv for Python 3.6+ ...
-# git clone https://github.com/DaveMcEwan/dmppl.git
-# pip install -e ./dmppl
+# NOTE: bytePipe-utils and plotCsv are bundled with dmppl.
+#		Setup venv for Python 3.6+ ...
+#		git clone https://github.com/DaveMcEwan/dmppl.git
+#		pip install -e ./dmppl
 test: $(BUILD)/$(PROJ).icepack.bin
 	bytePipe-utils -v --prog --bitfile $< test
 	for i in $(shell seq 0 270); do \
