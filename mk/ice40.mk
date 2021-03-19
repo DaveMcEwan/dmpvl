@@ -96,6 +96,4 @@ prog_arachne: $(BUILD)/$(PROJ).arachne.icepack.bin
 .PHONY: prog_arachne
 
 
-CLEAN_PATHS += $(BUILD)
-
 .SECONDARY:

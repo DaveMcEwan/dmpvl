@@ -210,7 +210,6 @@ lint_xmvlog/%:
 	xmvlog $(XMVLOG_FLAGS) $* > $(XMVLOG_LOGFILE)
 
 
-CLEAN_PATHS += $(BUILD)
 CLEAN_PATHS += work
 CLEAN_PATHS += jgproject
 CLEAN_PATHS += .Xil
