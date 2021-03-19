@@ -1,5 +1,4 @@
 
-
 # TinyFPGA-BX
 DEVICE ?= lp8k
 PACKAGE ?= cm81
@@ -17,13 +16,12 @@ TGT_FMAX ?= 48
 # for other setups (minor code changes, tool versions, host OS version, etc).
 PNR_SEED ?= 5
 
-default: $(BUILD)/$(PROJ).icetime.rpt $(BUILD)/$(PROJ).icepack.bin
-
+default_ice40: pack rpt
 synth: $(BUILD)/$(PROJ).yosys.json
 pnr: $(BUILD)/$(PROJ).nextpnr.asc
 pack: $(BUILD)/$(PROJ).icepack.bin
 rpt: $(BUILD)/$(PROJ).icetime.rpt
-all: synth pnr pack rpt
+.PHONY: default_ice40 synth pnr pack rpt
 
 # TinyFPGA-BX has onboard 16MHz crystal oscillator.
 PLL_INPUT_MHZ ?= 16
@@ -38,10 +36,13 @@ $(BUILD)/pll%.sv:
 
 # JSON netlist format - specific to yosys/nextpnr.
 # BLIF netlist is usable with other tools, like Vivado and arachne-pnr.
-%.yosys.json: $(SRC)
+YOSYS_SRC ?= $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
+YOSYS_INCDIRS ?= $(INCDIRS)
+%.yosys.json: $(YOSYS_SRC)
+	mkdir -p $(BUILD)
 	yosys -q \
 		-l $*.yosys.log \
-		-p 'read_verilog -sv -I../../hdl/ $^' \
+		-p 'read_verilog -sv $(addprefix -I,$(YOSYS_INCDIRS)) $^' \
 		-p 'synth_ice40 -top $(PROJ) -blif $*.yosys.blif -json $@'
 
 %.nextpnr.asc: $(PCF) %.yosys.json
@@ -54,11 +55,12 @@ $(BUILD)/pll%.sv:
 		--json $*.yosys.json \
 		--asc $@
 
-gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
+nextpnr_gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 	nextpnr-ice40 --gui \
 		--$(DEVICE) --package $(PACKAGE) --pcf $(PCF) \
 		--json $(BUILD)/$(PROJ).yosys.json \
 		--asc $(BUILD)/$(PROJ).asc
+.PHONY: nextpnr_gui
 
 %.icepack.bin: %.nextpnr.asc
 	icepack $< $@
@@ -68,6 +70,8 @@ gui: $(PCF) $(BUILD)/$(PROJ).yosys.json
 
 prog: $(BUILD)/$(PROJ).icepack.bin
 	tinyprog -p $<
+.PHONY: prog
+
 
 # NOTE: Hardcoded device.
 # NOTE: Use multipnr to find suitable seed.
@@ -89,10 +93,10 @@ prog: $(BUILD)/$(PROJ).icepack.bin
 
 prog_arachne: $(BUILD)/$(PROJ).arachne.icepack.bin
 	tinyprog -p $<
+.PHONY: prog_arachne
 
-clean:
-	rm -rf build
-	rm -f *.wavedrom.svg
+
+CLEAN_PATHS += $(BUILD)
+CLEAN_PATHS += $(*.wavedrom.svg)
 
 .SECONDARY:
-.PHONY: default all synth pnr pack rpt prog clean gui

@@ -3,7 +3,6 @@
 default: lint_foss
 all: preproc lint_foss lint_paid
 
-SRC_SINGLEHIER :=
 SRC_SINGLEHIER += axi4liteMonitor.sv
 SRC_SINGLEHIER += binToGray.sv
 SRC_SINGLEHIER += bpRegMem.sv
@@ -28,7 +27,6 @@ SRC_SINGLEHIER += usbfsEndpCtrlSerial.sv
 SRC_SINGLEHIER += usbfsPktRx.sv
 SRC_SINGLEHIER += usbfsPktTx.sv
 
-SRC_MULTIHIER :=
 SRC_MULTIHIER += axi4liteRandomMaster.sv
 SRC_MULTIHIER += axi4liteRandomSlave.sv
 SRC_MULTIHIER += cdcData.sv
@@ -48,7 +46,6 @@ INCDIRS = .
 MK_LINT := ../mk/lint.mk
 include $(MK_LINT)
 
-PREPROC_SRC = $(SRC_SINGLEHIER) $(SRC_MULTIHIER)
 MK_PREPROC := ../mk/preproc.mk
 include $(MK_PREPROC)
 
