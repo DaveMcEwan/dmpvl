@@ -1,9 +1,6 @@
 
-# Begin work with something like:
-#		sudo make -f tools.mk apt_prereqs
-#		make -f tools.mk
-#		export PATH=$PWD/tools/bin:$PATH
 # NOTE: Specific commits are just the latest ones I've tested.
+
 TOOLS := $(PWD)/tools
 TOOLBUILD := $(PWD)/tools/build
 N_JOBS ?= 6
