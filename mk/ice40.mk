@@ -97,6 +97,5 @@ prog_arachne: $(BUILD)/$(PROJ).arachne.icepack.bin
 
 
 CLEAN_PATHS += $(BUILD)
-CLEAN_PATHS += $(*.wavedrom.svg)
 
 .SECONDARY:
