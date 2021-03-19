@@ -13,8 +13,6 @@ default: yosys_equiv
 MK_TB = ../../mk/tb.mk
 include $(MK_TB)
 
-default: $(VERILATOR_VCD)
-
 # Check that logic evaluates as per golden reference.
 yosys_equiv:
 	mkdir -p $(BUILD)

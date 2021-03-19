@@ -1,19 +1,21 @@
 
-TB := logdropWindow_tb
+SRC_SINGLEHIER += ../../hdl/fxcs.sv
+SRC_SINGLEHIER += ../../hdl/onehotIdx.sv
 
-V_SRC := \
-	../../hdl/fxcs.sv \
-	../../hdl/onehotIdx.sv \
-	../../hdl/mssbIdx.sv \
-	../../hdl/logdropWindow.sv \
-	$(TB).sv
+SRC_MULTIHIER += ../../hdl/mssbIdx.sv
+SRC_MULTIHIER += ../../hdl/logdropWindow.sv
+SRC_MULTIHIER += logdropWindow_tb.sv
 
-# NOTE: Verilator only - no support for Icarus yet.
-VCD_IVERILOG :=
+IVERILOG_SRC_EXCLUDE += logdropWindow_tb.sv
+YOSYS_SRC_EXCLUDE += logdropWindow_tb.sv
 
-include ../common.mk
+default: lint_foss
+default: verilator_vcd
 
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
 
+# NOTE: plotDistBytes is bundled with dmppl.
 w_rand:
 	mkdir -p $(BUILD)
 	verilator --cc \
