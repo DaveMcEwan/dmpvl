@@ -62,7 +62,6 @@ MK_PREPROC := ../../mk/preproc.mk
 include $(MK_PREPROC)
 
 YOSYS_TOP ?= usbfsBpCorrelator
-CONSTRAINTS := zedboard_master_XDC_RevC_D_v3.xdc
 MK_XILINX7S := ../../mk/xilinx7s.mk
 include $(MK_XILINX7S)
 

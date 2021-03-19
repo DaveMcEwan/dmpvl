@@ -12,7 +12,7 @@ endif
 $(BITFILE): $(VIVADO_SRC) $(CONSTRAINTS) vivado-synth.tcl
 	vivado -mode batch -source vivado-synth.tcl \
 		-tclargs --prj $(PRJ) --part $(PART) --dirBuild $(BUILD) \
-			$(VIVADO_FLAGS)
+		$(VIVADO_FLAGS)
 
 synth: $(BITFILE)
 .PHONY: synth
