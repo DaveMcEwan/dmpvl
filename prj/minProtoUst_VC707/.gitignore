@@ -3,3 +3,6 @@
 protofiles.tar.gz
 protofiles/*
 vivado-addFiles.tcl
+
+# Bitfiles I want to keep hanging around for testing.
+minProtoUst.bit
