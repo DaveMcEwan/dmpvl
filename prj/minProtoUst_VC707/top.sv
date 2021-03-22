@@ -3,7 +3,8 @@ module top (
   input  SYSCLK_P, // (E19 LVDS VC707.U51.4)
   input  SYSCLK_N, // (E18 LVDS VC707.U51.5)
 
-  // TODO: ULPI, copied from examples/maia
+  // {{{ pcb_003_004
+  // ULPI, copied from examples/maia
   // FMC connector ports               UST-PCB-003a         UST-PCB-004a
   input  wire FMC2_HPC_LA00_CC_P,        // ulpi_clkout          ulpi_clkout
   output wire FMC2_HPC_LA00_CC_N,        //                      spdif_in0
@@ -92,6 +93,7 @@ module top (
   input  wire FMC2_HPC_LA33_P,           // TDI2    i
 (* PULLUP = "TRUE" *)
   input  wire FMC2_HPC_LA33_N,           // TRST2   i
+  // }}} pcb_003_004
 
   // PWM
   output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
