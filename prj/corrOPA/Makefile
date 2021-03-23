@@ -114,25 +114,32 @@ synth: $(BITFILE)
 rmbit:
 	rm -f $(BITFILE)
 
-prog: $(BITFILE)
+prog:
 	vivado -mode batch -source ../../tcl/vivado-program.tcl \
 		-tclargs --part $(PART) --bitstream $(BITFILE)
 
-#		--system-xml="../system-discovered.xml"
 # NOTE: Running with `python -m` means paths must be relative to py_link.
+PYLINK_FLAGS += --verbose
+PYLINK_FLAGS += --manual
+PYLINK_FLAGS += --target=none
+PYLINK_FLAGS += --communicator=usb
+PYLINK_FLAGS += --communicator-type=usb
+PYLINK_FLAGS += --launch-cmd="../../ust_conn_usb"
+PYLINK_FLAGS += --messages-xml="../messages.xml"
+PYLINK_FLAGS += --registry-xml="../registry.xml"
+ifneq ($(TEST),)
+PYLINK_FLAGS += --system-xml="../system-discovered.xml"
+endif
+# NOTE: Default value of TEST must be defined after the above ifneq.
+# General discovery test produces what is contained in system-discovered.xml, so
+# XML must not be provided in that case.
 TEST ?= py_link/tests/general-discovery.py
+TEST_PARAMS += timeout-seconds=2
 run: $(BUILD)/ust_conn_usb
 	cd $(BUILD)/$(DELIVERY); python3 -m py_link.run_test \
-		--verbose \
-		--manual \
-		--target=none \
-		--messages-xml="../messages.xml" \
-		--registry-xml="../registry.xml" \
-		--communicator=usb \
-		--communicator-type=usb \
-		--launch-cmd="../../ust_conn_usb" \
+		$(PYLINK_FLAGS) \
 		$(TEST) \
-		timeout-seconds=2
+		$(TEST_PARAMS) > $(basename $(notdir $(TEST))).log
 .PHONY: run
 
 

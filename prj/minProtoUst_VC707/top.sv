@@ -95,6 +95,17 @@ module top (
   input  wire FMC2_HPC_LA33_N,           // TRST2   i
   // }}} pcb_003_004
 
+  // {{{ Custom LEDs on XM105.J20 odd
+  output FMC1_HPC_LA20_P, // (Y29 LVCMOS18 VC707.J17.G21 XM105.J20.1)
+  output FMC1_HPC_LA20_N, // (Y30 LVCMOS18 VC707.J17.G22 XM105.J20.3)
+  output FMC1_HPC_LA21_P, // (N28 LVCMOS18 VC707.J17.H25 XM105.J20.5)
+  output FMC1_HPC_LA21_N, // (N29 LVCMOS18 VC707.J17.H26 XM105.J20.7)
+  output FMC1_HPC_LA22_P, // (R28 LVCMOS18 VC707.J17.G24 XM105.J20.9)
+  output FMC1_HPC_LA22_N, // (P28 LVCMOS18 VC707.J17.G25 XM105.J20.11)
+  output FMC1_HPC_LA23_P, // (P30 LVCMOS18 VC707.J17.D23 XM105.J20.13)
+  output FMC1_HPC_LA23_N,  // (N31 LVCMOS18 VC707.J17.D24 XM105.J20.15)
+  // }}} Custom LEDs on XM105.J20 odd
+
   // PWM
   output GPIO_LED_0, // (AM39 LVCMOS18 VC707.DS2.2)
 
@@ -112,6 +123,18 @@ module top (
 
 localparam N_PROBE  = 16;
 localparam N_ENGINE = 1;
+
+wire [7:0] o_pin_extled;
+assign {
+  FMC1_HPC_LA23_N,
+  FMC1_HPC_LA23_P,
+  FMC1_HPC_LA22_N,
+  FMC1_HPC_LA22_P,
+  FMC1_HPC_LA21_N,
+  FMC1_HPC_LA21_P,
+  FMC1_HPC_LA20_N,
+  FMC1_HPC_LA20_P
+} = o_pin_extled;
 
 // TODO: probes,
 wire [N_PROBE-1:0] i_pin_probe = '0;
@@ -184,10 +207,9 @@ wire        ust_usb0_ulpi_stp_w;
 wire [7:0]  ust_usb0_ulpi_data_in_w;
 wire [7:0]  ust_usb0_ulpi_data_out_w;
 
-// TODO: Hookup to something useful?
-//// Debug clocks with oscilloscope on daughterboard LEDs.
-//wire [3:0]  pcb004_card_led_w = {2'b00, clk_50MHz, clk_26MHz};
-wire [3:0]  pcb004_card_led_w = 4'b0001;
+// NOTE: 003a board only has 2 LEDs.
+// Debug clocks with oscilloscope on daughterboard LEDs.
+wire [3:0]  pcb004_card_led_w = {2'b00, clk_50MHz, clk_26MHz};
 wire [1:0]  pcb004_card_sw_w;
 wire [4:0]  pcb004_joystick_w;
 wire        clk_ulpi_raw60MHz; // Generated on external PHY.
@@ -381,5 +403,7 @@ ust_ss_corrdemo0_m ust_ss_corrdemo0_u (
   .ust_sm0_instance_id_ip     ('0) // Same as TB.
 );
 
+assign o_pin_extled[4:0] = 5'b10101;
+assign o_pin_extled[7:5] = 3'b000;
 
 endmodule
