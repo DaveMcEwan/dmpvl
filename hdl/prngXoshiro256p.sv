@@ -53,6 +53,14 @@ wire [63:0] s3;
 `dff_cg_norst(reg [63:0], s3, i_clk, i_cg)
 `dff_cg_norst(reg [63:0], result, i_clk, i_cg)
 
+`ifndef SYNTHESIS
+initial s0_q = '0;
+initial s1_q = '0;
+initial s2_q = '0;
+initial s3_q = '0;
+initial result_q = '0;
+`endif
+
 // const uint64_t result = s[0] + s[3];
 always @* result_d = s0_q + s3_q;
 

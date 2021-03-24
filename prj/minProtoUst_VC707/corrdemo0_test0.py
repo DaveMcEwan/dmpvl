@@ -11,7 +11,7 @@ if __name__ == "__main__":
     print("Not a standalone module.")
     sys.exit(1)
 
-from dmppl.base import verb, dbg
+#from dmppl.base import verb, dbg
 
 from test_env import send_msg, recv_msg
 from ust_evaluation import configureMessageInfrastructure, \
@@ -19,18 +19,20 @@ from ust_evaluation import configureMessageInfrastructure, \
 
 # NOTE: test_params is used by receiveStatusMonCounterDataMessages().
 if "sample_limit" not in test_params:
-    test_params["sample_limit"] = 10
+    test_params["sample_limit"] = 5
 sample_limit = int(test_params["sample_limit"])
 
 
 fnameo = "test0.csv"
+nQualifiers = 16
+
 windowLengthExp     = 15        # 32k samples
 windowShape         = "logdrop" # 1'd1
-samplePeriodExp     = 8         # 1/256 cycles
-sampleJitterExp     = 2         # variance of 4/256
+samplePeriodExp     = 0         # Lockstep with interval-timer.
+sampleJitterExp     = 0         # Jitter not supported because of interval-timer message-push mechanism.
 pwmSelect           = 5         # Cov
-probeX              = 22        #
-probeY              = 5         #
+probeX              = 11        # 22    <-->    11
+probeY              = 2         # 5     <-->    2
 
 # Configure the UltraDebug message infrastructure and return handles to the
 # message engine and status monitor.
@@ -139,7 +141,7 @@ send_msg(
 recv_msg()
 # }}} Setup monitor module counter
 
-# {{{ Setup interval timer
+# {{{ Setup interval-timer
 send_msg(
     module=sm,
     fields={
@@ -168,7 +170,7 @@ send_msg(
     }
 )
 recv_msg()
-# }}} Setup interval timer
+# }}} Setup interval-timer
 
 # {{{ Setup correlator
 # View initial state.
@@ -221,6 +223,51 @@ send_msg(
         "byte"                  : 0x55,
     }
 )
+
+# {{{ Setup qualifiers.
+for i in range(nQualifiers):
+    send_msg(
+        module=sm,
+        fields={
+            "msg_type"              : "sc",                 # 2'b00
+            "control_code"          : "get_sts_qualifier",  # 6'h3b
+            "qualifier"             : i,                    # 4'
+        }
+    )
+    recv_msg()
+
+    send_msg(
+        module=sm,
+        fields={
+            "msg_type"              : "sc",                 # 2'b00
+            "control_code"          : "set_sts_qualifier",  # 6'h3c
+            "qualifier"             : i,                    # 4'
+            "qualifier_enable"      : 1,                    # 1'
+            "issue_mode"            : 0,                    # 3' Don't issue anything.
+            "input_select"          : i,                    # 8' Wire qual(i) from match(i)
+            "pfunction"             : 0,                    # 3' Match when input high
+            "sfunction"             : 0,                    # 3' Ignored
+            "match_mode"            : 0,                    # 2' Ignored
+            "event"                 : 0,                    # 8'
+            "enable_trigger"        : 0,                    # 17'
+            "event_enable_control"  : 0,                    # 1'
+            "disable_trigger"       : 0,                    # 17'
+            "event_disable_control" : 0,                    # 1'
+            "match_threshold"       : 0,                    # 16'
+            "threshold_mode"        : 0,                    # 3'
+        }
+    )
+
+    send_msg(
+        module=sm,
+        fields={
+            "msg_type"              : "sc",                 # 2'b00
+            "control_code"          : "get_sts_qualifier",  # 6'h3b
+            "qualifier"             : i,                    # 4'
+        }
+    )
+    recv_msg()
+# }}} Setup qualifiers.
 
 # {{{ Enable module and all qualifiers. (UG 5.1.16)
 send_msg(
