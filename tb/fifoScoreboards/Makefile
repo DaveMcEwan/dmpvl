@@ -5,24 +5,11 @@ N_CYCLES ?= 1000000
 
 BUILD ?= ./build
 
-CSV ?= all.csv
-CSV_KEYS := $(shell grep -v "^\w*$$\|^\\\#" $(CSV) | head -n1)
-CSV_ROWS := $(shell grep -v "^\w*$$\|^\\\#" $(CSV) | tail -n+2 | sed 's/\s*//g')
-N_CSV_KEYS := $(shell echo $(CSV_KEYS) | wc -w)
+MK_CSV = ../../mk/csv.mk
+include $(MK_CSV)
 
-# Map each row in CSV to a preprocessor define (-Dkey=value).
-# Row selected using the pattern stem variable ($*).
-CSV_MAP = \
-	for i in $$(seq 1 $(N_CSV_KEYS)); do \
-		KEY=$$(echo $(CSV_KEYS) | cut -d' ' -f$$i); \
-		VALUE=$$(echo $* | cut -d',' -f$$i); \
-		echo -D$$KEY=$$VALUE; \
-  done
-
-TB_VERILATOR_VCD = $(BUILD)/$(ROW)/$(TB).verilator.fst
-TB_IVERILOG_VCD = $(BUILD)/$(ROW)/$(TB).iverilog.fst
-ALL_TB_VERILATOR_VCD := $(foreach ROW,$(CSV_ROWS),$(TB_VERILATOR_VCD))
-ALL_TB_IVERILOG_VCD := #$(foreach ROW,$(CSV_ROWS),$(TB_IVERILOG_VCD))
+ALL_TB_VERILATOR_VCD := $(addprefix $(BUILD)/,$(addsuffix /$(TB).verilator.fst,$(CSV_ROWS)))
+ALL_TB_IVERILOG_VCD := #$(addprefix $(BUILD)/,$(addsuffix /$(TB).iverilog.fst,$(CSV_ROWS)))
 .PHONY: all
 all: $(ALL_TB_VERILATOR_VCD) $(ALL_TB_IVERILOG_VCD)
 	@echo $(TB) PASSED
@@ -56,14 +43,14 @@ $(BUILD)/%/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 		--exe \
 		$(VERILATOR_INCDIRS) \
 		--Mdir $(BUILD)/$* \
-		$(shell $(CSV_MAP)) \
+		$(call CSV_ROWMAP,$*,$(CSV_ROWMAP_CFLAGDEFINE)) \
 		-DN_CYCLES=$(N_CYCLES) \
 		-CFLAGS -DN_CYCLES=$(N_CYCLES) \
 		-CFLAGS -I../../../../verif \
 		$(VERILATOR_DPI_OBJS) \
 		--clk common_clk \
 		--top-module $(VERILATOR_TOP) \
-		$(foreach src,$(CC_SRC),../$(src)) \
+		$(addprefix ../,$(CC_SRC)) \
 		$(VERILATOR_TOP).sv
 
 # Compile verilated C++ into executable.
