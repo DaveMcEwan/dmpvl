@@ -29,8 +29,8 @@ windowShape         = "logdrop" # 1'd1
 samplePeriodExp     = 8         # 1/256 cycles
 sampleJitterExp     = 2         # variance of 4/256
 pwmSelect           = 5         # Cov
-probeX              = 9         #
-probeY              = 10        #
+probeX              = 22        #
+probeY              = 5         #
 
 # Configure the UltraDebug message infrastructure and return handles to the
 # message engine and status monitor.
@@ -255,6 +255,37 @@ recv_msg()
 
 with open(fnameo, 'w') as fd:
     receiveStatusMonCounterDataMessages(sm, discovery, fd)
+
+# {{{ Finally disable module and all qualifiers. (UG 5.1.16)
+send_msg(
+    module=sm,
+    fields={
+        "msg_type"              : "sc",                 # 2'b00
+        "control_code"          : "get_enabled",        # 6'h03
+    }
+)
+recv_msg()
+
+send_msg(
+    module=sm,
+    fields={
+        "msg_type"              : "sc",                 # 2'b00
+        "control_code"          : "set_enabled",        # 6'h04
+        "operation"             : "apply",              # 2'b00
+        "module_enable"         : 0,                    # 1'
+        "qualifier_enable"      : 0x0000,               # 16'
+    }
+)
+
+send_msg(
+    module=sm,
+    fields={
+        "msg_type"              : "sc",                 # 2'b00
+        "control_code"          : "get_enabled",        # 6'h03
+    }
+)
+recv_msg()
+# }}} Finally disable module and all qualifiers. (UG 5.1.16)
 
 print("Test FINISHED")
 
