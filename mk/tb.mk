@@ -2,6 +2,10 @@
 INCDIRS ?= . ../../hdl ../../verif
 TB ?= $(shell basename $(PWD))_tb
 
+# Convenient default sources
+SRC_MULTIHIER += $(TB).sv
+CC_SRC += $(TB).cc
+
 vcd: verilator_vcd
 vcd: iverilog_vcd
 
@@ -10,8 +14,6 @@ include $(MK_LINT)
 
 MK_CLEAN := ../../mk/clean.mk
 include $(MK_CLEAN)
-
-CC_SRC ?= $(TB).cc
 
 # External objects for DPI imports.
 $(BUILD)/ptyBytePipe.o: ../../verif/ptyBytePipe.c
@@ -22,7 +24,7 @@ VERILATOR_TRACE_DEPTH ?= 3
 VERILATOR_SRC ?= $(filter-out $(VERILATOR_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
 VERILATOR_INCDIRS ?= $(INCDIRS)
 VERILATOR_LANG ?= --language 1800-2005
-VERILATOR_C_INCDIRS ?= ../../../verif
+VERILATOR_C_INCDIRS ?= ../ ../../../verif
 VERILATOR_DPI_DEPS := $(addprefix $(BUILD)/,$(DPI_OBJS))
 VERILATOR_TB_TOP ?= $(TB)
 VERILATOR_TB_VCD ?= $(BUILD)/$(TB).verilator.vcd

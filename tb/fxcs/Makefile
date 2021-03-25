@@ -1,8 +1,6 @@
 
 SRC_SINGLEHIER += ../../hdl/fxcs.sv
 
-SRC_MULTIHIER += fxcs_tb.sv
-
 YOSYS_SRC_EXCLUDE += fxcs_tb.sv
 
 default: lint_foss
