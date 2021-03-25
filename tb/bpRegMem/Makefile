@@ -1,23 +1,20 @@
 
-TB := bpRegMem_tb
-
 N_CYCLES ?= 1000000
 
-V_SRC := \
-	$(TB).sv \
-	../../verif/generateClock.sv \
-	../../hdl/bpRegMem.sv
+SRC_SINGLEHIER += ../../hdl/bpRegMem.sv
+SRC_SINGLEHIER += ../../verif/generateClock.sv
 
-CC_SRC := \
-	bpRegMem_model.cc \
-	../../verif/modelPrint.cc \
-	$(TB).cc
+YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += bpRegMem_tb.sv
 
-CC_H := \
-	bpRegMem_model.h \
-	../../verif/modelPrint.h
+CC_SRC += bpRegMem_model.cc
+CC_SRC += ../../verif/modelPrint.cc
 
-# NOTE: Verilator only - no checking support for Icarus yet.
-#VCD_IVERILOG :=
+CC_H += bpRegMem_model.h
+CC_H += ../../verif/modelPrint.h
 
-include ../common.mk
+default: lint_foss
+default: verilator_vcd
+
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
