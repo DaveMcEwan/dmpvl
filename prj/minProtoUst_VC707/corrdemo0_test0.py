@@ -31,7 +31,7 @@ windowShape         = "logdrop" # 1'd1
 samplePeriodExp     = 0         # Lockstep with interval-timer.
 sampleJitterExp     = 0         # Jitter not supported because of interval-timer message-push mechanism.
 pwmSelect           = 5         # Cov
-probeX              = 11        # 22    <-->    11
+probeX              = 10        # 22    <-->    10
 probeY              = 2         # 5     <-->    2
 
 # Configure the UltraDebug message infrastructure and return handles to the

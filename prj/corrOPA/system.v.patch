@@ -1,5 +1,5 @@
 diff --git a/piton/design/rtl/system.v b/piton/design/rtl/system.v
-index 2e5244d..3c017df 100644
+index 2e5244d..7adc368 100644
 --- a/piton/design/rtl/system.v
 +++ b/piton/design/rtl/system.v
 @@ -142,7 +142,9 @@ module system(
@@ -629,27 +629,27 @@ index 2e5244d..3c017df 100644
 +); // }}} ust_pcb_003_004_m
 +
 +wire [15:0] corrdemo0_probes = {
-+  chip_o_probe_q[36],
-+  chip_o_probe_q[35],
-+  chip_o_probe_q[34],
++  chip_o_probe_q[36], // 36 -> 15
++  chip_o_probe_q[35], // 35 -> 14
++  chip_o_probe_q[34], // 34 -> 13
 +
-+  chip_o_probe_q[24],
-+  chip_o_probe_q[23],
-+  chip_o_probe_q[22],
++  chip_o_probe_q[24], // 24 -> 12
++  chip_o_probe_q[23], // 23 -> 11
++  chip_o_probe_q[22], // 22 -> 10
 +
-+  chip_o_probe_q[18],
-+  chip_o_probe_q[17],
-+  chip_o_probe_q[16],
++  chip_o_probe_q[18], // 18 -> 9
++  chip_o_probe_q[17], // 17 -> 8
++  chip_o_probe_q[16], // 16 -> 7
 +
-+  chip_o_probe_q[12],
-+  chip_o_probe_q[11],
-+  chip_o_probe_q[10],
++  chip_o_probe_q[12], // 12 -> 6
++  chip_o_probe_q[11], // 11 -> 5
++  chip_o_probe_q[10], // 10 -> 4
 +
-+  chip_o_probe_q[6],
-+  chip_o_probe_q[5],
-+  chip_o_probe_q[4],
++  chip_o_probe_q[6],  // 6  -> 3
++  chip_o_probe_q[5],  // 5  -> 2
++  chip_o_probe_q[4],  // 4  -> 1
 +
-+  1'b0
++  1'b0                // 0  -> 0
 +};
 +ust_ss_corrdemo0_m ust_ss_corrdemo0_u (
 +  .ust_clk_udb_ip             (clk_48MHz),
