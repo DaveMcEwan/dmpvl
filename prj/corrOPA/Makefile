@@ -1,6 +1,8 @@
 # source /space/xilinx/Vivado/2018.2/settings64.sh
 # pushd openpiton; source piton/ariane_setup.sh; popd
 # make clean && make apply && make prog
+# make run TEST=../../corrdemo0_test0.py TEST_PARAMS="probeX=5"
+# make collect RUNNAME=idle
 
 apply:
 	cd openpiton; git apply ../*.patch
@@ -139,8 +141,23 @@ run: $(BUILD)/ust_conn_usb
 	cd $(BUILD)/$(DELIVERY); python3 -m py_link.run_test \
 		$(PYLINK_FLAGS) \
 		$(TEST) \
-		$(TEST_PARAMS) > $(basename $(notdir $(TEST))).log
+		$(TEST_PARAMS) > ../../$(basename $(notdir $(TEST))).log
 .PHONY: run
+
+RUNDIR := results/$(RUNNAME)_$(shell date +%FT%H%M)
+collect:
+	mkdir -p $(RUNDIR)
+	cd $(BUILD)/$(DELIVERY); \
+	for x in $(shell seq 1 15); do \
+		for y in $(shell seq 1 15); do \
+			python3 -m py_link.run_test \
+				$(PYLINK_FLAGS) --system-xml="../system-discovered.xml" \
+				../../corrdemo0_test0.py $(TEST_PARAMS) \
+				probeX=$${x} probeY=$${y} fnameo=$(RUNDIR)/x$${x}_y$${y}.csv \
+				> ../../$(RUNDIR)/x$${x}_y$${y}.log; \
+		done \
+	done
+.PHONY: collect
 
 
 clean:
