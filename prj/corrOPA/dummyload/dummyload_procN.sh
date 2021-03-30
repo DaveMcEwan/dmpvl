@@ -3,7 +3,11 @@
 # Bash/Busybox compatible dummy workload for multiple processes.
 # The intention is to create many inter-dependent processes in order to
 # visualize the interactions between cores on SMP Linux.
-
+# This may be tested on desktop Linux/Bash before being run on embedded
+# Linux/Busybox in exactly the same manner.
+# On desktop, use a "System Monitor" equivalent to validate that all cores are
+# utilized for the desilered runtime.
+#
 # First, configure parameters in dummyproc_proc1.sh, like how long to run for.
 # Run like:
 #   ./dummyload_procN.sh 100 > /dev/null

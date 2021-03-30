@@ -23,7 +23,11 @@ SECONDS_RUNTIME=10
 N_DST_RETRIES=5
 
 # Number of seconds to attempt reading this process's FIFO.
-SRC_TIMOUT=1
+# NOTE: Busybox version of timeout requires -t.
+SRC_TIMEOUT="1"
+if ! timeout 1 true; then
+  SRC_TIMEOUT="-t ${SRC_TIMEOUT}"
+fi
 
 # Find location of dummyload scripts.
 DUMMYLOAD_DIR=$(dirname $0)
@@ -102,7 +106,7 @@ while [ "$(($(date -u +%s) - SECONDS_BEGIN))" -lt "${SECONDS_RUNTIME}" ]; do
   verb DST ${DST}
 
   # Consume all available blocks from the FIFO.
-  BLOCKS=$(timeout ${SRC_TIMOUT} cat ${INSTANCE_FIFO})
+  BLOCKS=$(timeout ${SRC_TIMEOUT} cat ${INSTANCE_FIFO})
   for BLOCK in ${BLOCKS}; do
     # Data is a space-separated list of decimal-formatted uint8's.
     # NOTE: hexdump -v is essential to avoid repetitions being replaced with *'s.
