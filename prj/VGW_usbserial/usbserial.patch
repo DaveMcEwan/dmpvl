@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index a6f5518..c9fa610 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,7 +43,7 @@ pll.v:
+ synth: $(PROJTOP).json
+ 
+ $(PROJTOP).json: $(SRC)
+-	yosys -q -p 'synth_ice40 -top $(PROJTOP) -json $@' $^
++	yosys -q -p 'synth_ice40 -top $(PROJTOP) -blif $(PROJTOP).blif -json $@' $^
+ 
+ %.asc: $(PIN_DEF) %.json
+ 	nextpnr-ice40 --$(DEVICE) --freq $(CLK_MHZ) --opt-timing --package $(PACKAGE) --pcf $(PIN_DEF) --json $*.json --asc $@
