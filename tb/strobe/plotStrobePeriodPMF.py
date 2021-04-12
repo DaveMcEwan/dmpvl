@@ -55,7 +55,7 @@ def nodePr(count, nSteps, pathPr=(0.25, 0.5, 0.25)): # {{{
 def atLeastPr(count, nSteps, j): # {{{
     '''Probability of reaching at least count over n steps.
        Set count to the desired period, then the CMF of period finishing in n
-       steps is calculated with atLeastPr( periodLength, n ∊ [0, ∞) )
+       steps is calculated with atLeastPr(count, nSteps).
     '''
     if count > (nSteps*2):
         ret = 0.0
@@ -90,8 +90,6 @@ def plot(s, js, CMFs, PMFs): # {{{
     pltRange = range(len(CMFs[0]))
 
     plt.figure(figsize=(8, 5))
-    #plt.title("PMF of #cycles in sample period")
-    #plt.title("j = i_ctrlJitter/2**CTRL_JITTER_W; i_ctrlPeriodM1 = %d" % (s-1))
     plt.xlabel("#cycles")
     plt.ylabel("Probability")
 
@@ -125,15 +123,12 @@ PMFs = []
 for j in js:
     cmf = []
     for n in plotRangeCMF:
-        #print("atLeastPr(count=%d, nSteps=%d, j=%f)" % (s, n, j))
         cmf.append(atLeastPr(s, n, j))
-    #print("CMF", j, cmf)
     CMFs.append(cmf)
 
     pmf = [0]
     for i in plotRangePMF:
         pmf.append(cmf[i+1] - cmf[i])
-    #print("PMF", j, pmf)
     PMFs.append(pmf)
 
 plot(s, js, CMFs, PMFs)
