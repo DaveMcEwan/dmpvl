@@ -1,6 +1,6 @@
 
 BUILD = ./build
-PROJ = probsys0
+PROJ = praxi
 N_CYCLES ?= 100
 
 VCD_VERILATOR = $(BUILD)/$(PROJ).verilator.vcd

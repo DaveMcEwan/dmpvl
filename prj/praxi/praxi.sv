@@ -4,7 +4,7 @@
 `define N_CYCLES 'd100
 `endif
 
-module probsys0 (
+module praxi (
   input  wire   i_clk,
   input  wire   i_rst
 );

@@ -5,13 +5,13 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 #include "VerilatorTb.h"
-#include "Vprobsys0.h"
+#include "Vpraxi.h"
 
 int main(int argc, char **argv, char **env) {
 
   Verilated::commandArgs(argc, argv);
-  VerilatorTb<Vprobsys0> *tb = new VerilatorTb<Vprobsys0>();
-  tb->opentrace("build/probsys0.verilator.vcd");
+  VerilatorTb<Vpraxi> *tb = new VerilatorTb<Vpraxi>();
+  tb->opentrace("build/praxi.verilator.vcd");
   tb->m_trace->dump(0); // Initialize waveform at beginning of time.
 
   tb->reset();
