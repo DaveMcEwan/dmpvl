@@ -137,6 +137,10 @@ assign tDoWrap = |tDoWrapVec && counterStrobe;
 `dff_cg_norst(reg, y, i_clk, i_cg && sampleStrobeY)
 always @* y_d = i_y;
 always @* x_d = i_x;
+`ifndef SYNTHESIS
+initial x_q = '0;
+initial y_q = '0;
+`endif
 
 // }}} Generate sampling strobe
 
@@ -207,6 +211,12 @@ assign pktIdx_wrap = i_cg &&
 `dff_cg_norst(reg [TIME_W-1:0], countY,       i_clk, i_cg && tDoWrap)
 `dff_cg_norst(reg [TIME_W-1:0], countIsect,   i_clk, i_cg && tDoWrap)
 `dff_cg_norst(reg [TIME_W-1:0], countSymdiff, i_clk, i_cg && tDoWrap)
+`ifndef SYNTHESIS
+initial countX_q = '0;
+initial countY_q = '0;
+initial countIsect_q = '0;
+initial countSymdiff_q = '0;
+`endif
 
 // Metric calculations only use top bits from the counters.
 wire [METRIC_PRECISION-1:0] countX_narrow =

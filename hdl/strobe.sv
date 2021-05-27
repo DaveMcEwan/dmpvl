@@ -94,6 +94,10 @@ wire [N_STROBE-1:0] jitterShorten = jitterThisCycle & ~extendNotShorten;
 // -2 <-- Shortened period
 generate for (i = 0; i < N_STROBE; i=i+1) begin
   `dff_cg_norst(reg [CTRL_PERIOD_W-1:0], downCounter, i_clk, i_cg && !jitterExtend[i])
+
+`ifndef SYNTHESIS
+  initial downCounter_q = '0;
+`endif
   always @*
     if (downCounter_q == '0)
       downCounter_d = i_ctrlPeriodM1;

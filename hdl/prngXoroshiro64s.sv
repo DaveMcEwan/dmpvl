@@ -41,6 +41,12 @@ wire [31:0] s1;
 `dff_cg_norst(reg [31:0], s1, i_clk, i_cg)
 `dff_cg_norst(reg [31:0], result, i_clk, i_cg)
 
+`ifndef SYNTHESIS
+initial s0_q = '0;
+initial s1_q = '0;
+initial result_q = '0;
+`endif
+
 always @* result_d = s0_q * 32'h9E3779BB; // const uint32_t result = s0 * 0x9E3779BB;
 
 assign s0 = s0_q;                     // const uint32_t s0 = s[0];

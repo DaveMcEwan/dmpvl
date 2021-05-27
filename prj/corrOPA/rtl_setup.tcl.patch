@@ -1,8 +1,8 @@
 diff --git a/piton/tools/src/proto/common/rtl_setup.tcl b/piton/tools/src/proto/common/rtl_setup.tcl
-index 7064df6..344ee9e 100644
+index 7064df6..274336b 100644
 --- a/piton/tools/src/proto/common/rtl_setup.tcl
 +++ b/piton/tools/src/proto/common/rtl_setup.tcl
-@@ -49,10 +49,36 @@ set GLOBAL_DEFAULT_VERILOG_MACROS "NO_SCAN FPGA_SYN PITON_FPGA_SYNTH PITON_PROTO
+@@ -49,12 +49,45 @@ set GLOBAL_DEFAULT_VERILOG_MACROS "NO_SCAN FPGA_SYN PITON_FPGA_SYNTH PITON_PROTO
  # RTL implementation files
  
  set SYSTEM_RTL_IMPL_FILES [list \
@@ -39,8 +39,17 @@ index 7064df6..344ee9e 100644
 +    "${DV_ROOT}/../../../../hdl/dff.svh"                 \
  ]
  
++# UltraSoC files from delivery.
++source "${DV_ROOT}/../../build/protofiles_src.tcl"
++#source "${DV_ROOT}/../../build/protofiles_inc.tcl"
++set SYSTEM_RTL_IMPL_FILES [concat $SYSTEM_RTL_IMPL_FILES $PROTOFILES_SRC]
++#set SYSTEM_INCLUDE_FILES [concat $SYSTEM_INCLUDE_FILES $PROTOFILES_INC]
++
++
  set SYSTEM_IP_FILE_PREFIXES [list \
-@@ -409,7 +435,6 @@ set CHIP_RTL_IMPL_FILES [list \
+ ]
+ 
+@@ -409,7 +442,6 @@ set CHIP_RTL_IMPL_FILES [list \
      "${DV_ROOT}/design/chip/tile/ariane/src/util/axi_slave_connect.sv"                        \
      "${DV_ROOT}/design/chip/tile/ariane/src/util/axi_slave_connect_rev.sv"                    \
      "${DV_ROOT}/design/chip/tile/ariane/src/common_cells/src/deprecated/rrarbiter.sv"         \

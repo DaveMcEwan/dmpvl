@@ -59,10 +59,11 @@ $(RPT_ARACHNE): multipnr/%/arachne.rpt: multipnr/%/arachne.asc
 	icetime -d $(DEVICE) -mtr $@ $< || \
 		echo "Total path delay: 0.0 ns (0.0 MHz)" > $@
 
-
+MULTIPNR_NEXTPNR_LOG_RE ?= clk_48MHz_
 multipnr/nextpnr.log.extracted: ${RPT_NEXTPNR}
 	for f in multipnr/*/nextpnr.log; do \
-		grep --with-filename 'Max frequency for clock' $$f | grep clk_48MHz_ | \
+		grep --with-filename 'Max frequency for clock' $$f | \
+			grep ${MULTIPNR_NEXTPNR_LOG_RE} | \
 			tail -1 >> multipnr/nextpnr.log.extracted; \
 	done
 

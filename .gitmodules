@@ -1,3 +1,9 @@
 [submodule "prj/corrOPA/openpiton"]
-	path = prj/corrOPA/openpiton
-	url = https://github.com/PrincetonUniversity/openpiton.git
+  path = prj/corrOPA/openpiton
+  url = https://github.com/PrincetonUniversity/openpiton.git
+  ignore = dirty
+
+[submodule "prj/VGW_usbserial/tinyfpga_bx_usbserial"]
+  path = prj/VGW_usbserial/tinyfpga_bx_usbserial
+  url = https://github.com/davidthings/tinyfpga_bx_usbserial.git
+  ignore = dirty
