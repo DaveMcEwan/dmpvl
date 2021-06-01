@@ -3,7 +3,7 @@
 `include "asrt.svh"
 `include "dff.svh"
 
-module serialEchoer_tb (
+module usbFullSpeedSerial_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!
   input wire i_rootClk,
@@ -55,7 +55,7 @@ reg rst;
 
 initial begin
   $dumpfile("build/usbFullSpeedSerial_tb.iverilog.vcd");
-  $dumpvars(0, serialEchoer_tb);
+  $dumpvars(0, usbFullSpeedSerial_tb);
 end
 
 driveHost v_driveHost ( // {{{

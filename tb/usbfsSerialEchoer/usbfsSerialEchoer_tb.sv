@@ -1,6 +1,9 @@
 /** Testbench for USB Full Speed Abstract Communication Module device.
  */
-module serialEchoer_tb (
+`include "asrt.svh"
+`include "dff.svh"
+
+module usbfsSerialEchoer_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!
   input wire i_rootClk,
@@ -51,8 +54,8 @@ reg rst;
 `ifndef VERILATOR // {{{ Non-V_erilator tb
 
 initial begin
-  $dumpfile("build/usbfsSerial_tb.iverilog.vcd");
-  $dumpvars(0, serialEchoer_tb);
+  $dumpfile("build/usbfsSerialEchoer_tb.iverilog.vcd");
+  $dumpvars(0, usbfsSerialEchoer_tb);
 end
 
 driveHost v_driveHost ( // {{{
