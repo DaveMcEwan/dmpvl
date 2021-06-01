@@ -1,6 +1,10 @@
 `include "asrt.svh"
 `include "dff.svh"
 
+`ifndef N_CYCLES
+`define N_CYCLES 'd100000
+`endif
+
 /** dividerFsm_tb.sv - Testbench for dividerFsm
  * Instance name should be u_dividerFsm_<width>_[abstract]
  * Connecting wires should be <instance>_<port>
@@ -70,7 +74,7 @@ initial begin
 end
 
 // Finish sim after an upper limit on the number of clock cycles.
-always @* if (nCycles_q > 100000) $finish;
+always @* if (nCycles_q > `N_CYCLES) $finish;
 `endif
 
 // }}} clock,clockgate,reset,dump

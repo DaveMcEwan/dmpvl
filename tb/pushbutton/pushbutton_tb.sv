@@ -1,10 +1,15 @@
-`include "asrt.svh"
-`include "dff.svh"
-
-/** pushbutton_tb.sv - Testbench for pushbutton
+/** pushbutton_tb.sv - Generate waves for what a pushbutton might do.
+ * Not really a testbench, just a demonstrator for syncBit.
  * Instance name should be u_pushbutton_<debounceCycles>
  * Connecting wires should be <instance>_<port>
  */
+`include "asrt.svh"
+`include "dff.svh"
+
+`ifndef N_CYCLES
+`define N_CYCLES 'd100000
+`endif
+
 module pushbutton_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   input  wire           i_clk,
