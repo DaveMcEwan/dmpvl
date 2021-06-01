@@ -18,17 +18,19 @@ check_hdl:
 check_verif:
 	make -C verif
 
+# NOTE: Not compatible with "make -C" because $(TB) is defined by $(PWD).
 run_tbs:
-	make -C tb/bpRegMem
-	make -C tb/dividerFsm
-	make -C tb/fifoW1R1
-	make -C tb/fifoScoreboards
-	make -C tb/fxcs
-	make -C tb/logdropWindow
-	make -C tb/onehotIdx
-	make -C tb/popcnt6
-	make -C tb/usbFullSpeedPackets
-	make -C tb/usbFullSpeedTransactions
+	cd tb/bpRegMem; make
+	cd tb/dividerFsm; make
+	cd tb/fifoW1R1; make
+	cd tb/fifoScoreboards; make
+	cd tb/fxcs; make
+	cd tb/logdropWindow; make
+	cd tb/onehotIdx; make
+	cd tb/praxi; make
+	cd tb/popcnt6; make
+	cd tb/usbFullSpeedPackets; make
+	cd tb/usbFullSpeedTransactions; make
 
 clean_tbs:
 	make -C tb/bpRegMem clean
@@ -39,6 +41,7 @@ clean_tbs:
 	make -C tb/logdropWindow clean
 	make -C tb/onehotIdx clean
 	make -C tb/popcnt6 clean
+	make -C tb/praxi clean
 	make -C tb/usbFullSpeedPackets clean
 	make -C tb/usbFullSpeedTransactions clean
 	make -C tb/usbFullSpeedSerial clean
@@ -48,7 +51,6 @@ clean_tbs:
 # Some projects may be allowed to fail when timing is known to be tight and
 # subject to randomization.
 build_projects:
-	make -C prj/probsys0
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX
 	make -C prj/usbfsSerialEchoer_TinyFPGA-BX
@@ -56,7 +58,6 @@ build_projects:
 	make -C prj/usbfsXoroshiro_TinyFPGA-BX
 
 clean_projects:
-	make -C prj/probsys0 clean
 	make -C prj/usbFullSpeedSerial_TinyFPGA-BX clean
 	make -C prj/VGWM_usbSerialEchoer_TinyFPGA-BX clean
 	make -C prj/usbfsSerialEchoer_TinyFPGA-BX clean
