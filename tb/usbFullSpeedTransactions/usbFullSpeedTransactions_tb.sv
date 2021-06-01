@@ -2,6 +2,9 @@
  *
  * 1. usbFullSpeedTransactor[host] (verif) <--> usbFullSpeedTransactor[device] (verif)
  */
+`include "asrt.svh"
+`include "dff.svh"
+
 module usbFullSpeedTransactions_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!

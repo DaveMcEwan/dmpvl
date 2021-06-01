@@ -16,6 +16,7 @@ SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointReceiver.sv
 SRC_MULTIHIER += ../../verif/usbFullSpeedSerial.sv
 
 YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += ../../verif/tristateBuffer.sv
 YOSYS_SRC_EXCLUDE += driveHost.sv
 YOSYS_SRC_EXCLUDE += usbFullSpeedSerial_tb.sv
 VERILATOR_SRC_EXCLUDE += usbFullSpeedSerial_tb.sv
