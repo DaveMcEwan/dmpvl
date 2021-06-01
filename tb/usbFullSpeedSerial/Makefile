@@ -1,25 +1,30 @@
 
-TB := usbFullSpeedSerial_tb
+# NOTE: Expected to fail.
 
-V_SRC := \
-	../../hdl/resetDetect.sv \
-	../../verif/generateClock.sv \
-	../../verif/tristateBuffer.sv \
-	../../hdl/fifoW1R1.sv \
-	../../verif/usbFullSpeedPacketSender.sv \
-	../../verif/usbFullSpeedPacketReceiver.sv \
-	../../verif/usbFullSpeedTransactor.sv \
-	../../verif/usbFullSpeedControlSerial.sv \
-	../../verif/usbFullSpeedEndpointSender.sv \
-	../../verif/usbFullSpeedEndpointReceiver.sv \
-	../../verif/usbFullSpeedSerial.sv \
-	driveHost.sv \
-	$(TB).sv
+SRC_SINGLEHIER += ../../hdl/resetDetect.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../verif/generateClock.sv
+SRC_SINGLEHIER += ../../verif/tristateBuffer.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketSender.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketReceiver.sv
+SRC_SINGLEHIER += driveHost.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedControlSerial.sv
 
-LINT_SRC := driveHost.sv
-IVERILOG_TOP := serialEchoer_tb
+SRC_MULTIHIER += ../../verif/usbFullSpeedTransactor.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointSender.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointReceiver.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedSerial.sv
 
-# NOTE: Icarus only - no support for Verilator yet.
-VCD_VERILATOR :=
+YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += driveHost.sv
+YOSYS_SRC_EXCLUDE += usbFullSpeedSerial_tb.sv
+VERILATOR_SRC_EXCLUDE += usbFullSpeedSerial_tb.sv
 
-include ../common.mk
+IVERILOG_TB_TOP := serialEchoer_tb
+
+default: lint_foss
+default: iverilog_vcd
+
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
+
