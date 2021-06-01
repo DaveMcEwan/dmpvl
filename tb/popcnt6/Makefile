@@ -1,8 +1,10 @@
 
-TB := popcnt6_tb
+SRC_SINGLEHIER += ../../hdl/popcnt6.sv
 
-V_SRC := \
-	../../hdl/popcnt6.sv \
-	$(TB).sv
+default: lint_foss
+default: verilator_vcd
+default: iverilog_vcd
 
-include ../common.mk
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
+
