@@ -4,16 +4,58 @@
 `define N_CYCLES 'd100
 `endif
 
-module praxi (
+module praxi_tb (
+`ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   input  wire   i_clk,
   input  wire   i_rst
+`endif
 );
 
-`dff_nocg_srst(reg [63:0], timetrack, i_clk, 1'b0, 'd0)
-always_comb timetrack_d = timetrack_q + 1;
-always @* begin
-  if (timetrack_q >= `N_CYCLES) $finish();
+// {{{ clock,clockgate,reset,dump
+
+wire clk;
+//reg cg;
+reg rst;
+
+generateClock u_clk (
+`ifdef VERILATOR // V_erilator must drive its own root clock
+  .i_rootClk        (i_clk),
+`endif
+  .o_clk            (clk),
+  .i_periodHi       (8'd0),
+  .i_periodLo       (8'd0),
+  .i_jitterControl  (8'd0)
+);
+
+`dff_nocg_norst(reg [31:0], nCycles, clk)
+initial nCycles_q = '0;
+always @*
+  nCycles_d = nCycles_q + 'd1;
+
+//initial cg = 1'b1;
+`ifdef VERILATOR // V_erilator tb drives its own clockgate,reset
+//always @* cg = i_cg;
+always @* rst = i_rst;
+`else
+//always @(posedge clk) cg = ($urandom_range(9, 0) != 0); // TODO: Dynamic cg.
+
+initial rst = 1'b1;
+always @*
+  if (nCycles_q > 20)
+    rst = 1'b0;
+  else
+    rst = 1'b1;
+
+initial begin
+  $dumpfile("build/praxi_tb.iverilog.vcd");
+  $dumpvars(0, praxi_tb);
 end
+
+// Finish sim after an upper limit on the number of clock cycles.
+always @* if (nCycles_q > `N_CYCLES) $finish;
+`endif
+
+// }}} clock,clockgate,reset,dump
 
 localparam PROB_W = 8;
 localparam AXI_ADDR_W = 16;
@@ -85,8 +127,8 @@ axi4liteRandomMaster #( // {{{ mst0
   .DATA_BYTEW           (AXI_DATA_BYTEW),
   .ID_W                 (AXI_ID_W)
 ) u_mst0 (
-  .i_clk                (i_clk),
-  .i_rst                (i_rst),
+  .i_clk                (clk),
+  .i_rst                (rst),
 
   // Signals ordered according to the document:
   // AMBA AXI and ACE Proctocol Specification
@@ -141,8 +183,8 @@ axi4liteRandomSlave #( // {{{ slv0
   .DATA_BYTEW           (AXI_DATA_BYTEW),
   .ID_W                 (AXI_ID_W)
 ) u_slv0 (
-  .i_clk                (i_clk),
-  .i_rst                (i_rst),
+  .i_clk                (clk),
+  .i_rst                (rst),
 
   // Signals ordered according to the document:
   // AMBA AXI and ACE Proctocol Specification
