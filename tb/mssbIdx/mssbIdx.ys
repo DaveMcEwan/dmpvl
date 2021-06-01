@@ -1,9 +1,9 @@
 
 # Not a testbench, but gives some insight to how the module is processed by
 # the synthesis tool.
-read_verilog -sv ../../hdl/fxcs.v
-read_verilog -sv ../../hdl/onehotIdx.v
-read_verilog -sv ../../hdl/mssbIdx.v
+read_verilog -sv ../../hdl/fxcs.sv
+read_verilog -sv ../../hdl/onehotIdx.sv
+read_verilog -sv ../../hdl/mssbIdx.sv
 synth -top mssbIdx
 cd mssbIdx
 flatten

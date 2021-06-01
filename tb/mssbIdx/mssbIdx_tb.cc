@@ -23,7 +23,8 @@ int main(int argc, char **argv, char **env) {
   mssbIdx_tb->mssbIdx_9_i_vector = 0;
   mssbIdx_tb->mssbIdx_16_i_vector = 0;
   mssbIdx_tb->eval();
-  vcd->dump(0);
+  int unsigned t = 0;
+  vcd->dump(t);
 
   if (mssbIdx_tb->mssbIdx_7_o_index != 0) {
     printf("ERROR: Initial mssbIdx_7 != 0\n");
@@ -51,44 +52,42 @@ int main(int argc, char **argv, char **env) {
     n_errors++;
   }
 
-  for (int unsigned t = 0; t < (1 << 16); t++) {
+  while ((t++) < (1 << 16)) {
+
     mssbIdx_tb->mssbIdx_7_i_vector = t & 0x7f;
     mssbIdx_tb->mssbIdx_9_i_vector = t & 0x1ff;
     mssbIdx_tb->mssbIdx_16_i_vector = t & 0xffff;
 
     mssbIdx_tb->eval();
-    vcd->dump(t+1);
+    vcd->dump(t);
 
-    if (t < 7) {
-      if (mssbIdx_tb->mssbIdx_7_o_index != t) {
-        printf("ERROR: t=%d mssbIdx_7 != %d\n", t, t);
-        n_errors++;
-      }
-
-      if (mssbIdx_tb->mssbIdx_7_o_valid == 0) {
-        printf("ERROR: t=%d mssbIdx_7 == invalid\n", t);
-        n_errors++;
-      }
-    }
-
-    if (t < 9) {
-      if (mssbIdx_tb->mssbIdx_9_o_index != t) {
-        printf("ERROR: t=%d mssbIdx_9 != %d\n", t, t);
-        n_errors++;
-      }
-
-      if (mssbIdx_tb->mssbIdx_9_o_valid == 0) {
-        printf("ERROR: t=%d mssbIdx_9 == invalid\n", t);
-        n_errors++;
-      }
-    }
-
-    if (mssbIdx_tb->mssbIdx_16_o_index != t) {
-      printf("ERROR: t=%d mssbIdx_16 != %d\n", t, t);
+    if (mssbIdx_tb->mssbIdx_7_o_index != mssbIdx_tb->mssbIdx_7_abstract_o_index) {
+      printf("ERROR: t=%d mssbIdx_7_o_index\n", t);
       n_errors++;
     }
-    if (mssbIdx_tb->mssbIdx_16_o_valid == 0) {
-      printf("ERROR: t=%d mssbIdx_16 == invalid\n", t);
+
+    if (mssbIdx_tb->mssbIdx_7_o_valid != (0 != mssbIdx_tb->mssbIdx_7_i_vector)) {
+      printf("ERROR: t=%d mssbIdx_7_o_valid\n", t);
+      n_errors++;
+    }
+
+    if (mssbIdx_tb->mssbIdx_9_o_index != mssbIdx_tb->mssbIdx_9_abstract_o_index) {
+      printf("ERROR: t=%d mssbIdx_9_o_index\n", t);
+      n_errors++;
+    }
+
+    if (mssbIdx_tb->mssbIdx_9_o_valid != (0 != mssbIdx_tb->mssbIdx_9_i_vector)) {
+      printf("ERROR: t=%d mssbIdx_9_o_valid\n", t);
+      n_errors++;
+    }
+
+    if (mssbIdx_tb->mssbIdx_16_o_index != mssbIdx_tb->mssbIdx_16_abstract_o_index) {
+      printf("ERROR: t=%d mssbIdx_16_o_index\n", t);
+      n_errors++;
+    }
+
+    if (mssbIdx_tb->mssbIdx_16_o_valid != (0 != mssbIdx_tb->mssbIdx_16_i_vector)) {
+      printf("ERROR: t=%d mssbIdx_16_o_valid\n", t);
       n_errors++;
     }
   }
@@ -98,8 +97,8 @@ int main(int argc, char **argv, char **env) {
   mssbIdx_tb->mssbIdx_9_i_vector = 0;
   mssbIdx_tb->mssbIdx_16_i_vector = 0;
   mssbIdx_tb->eval();
-  vcd->dump(17);
-  vcd->dump(18);
+  vcd->dump(t++);
+  vcd->dump(t++);
 
   vcd->close();
   exit(n_errors);

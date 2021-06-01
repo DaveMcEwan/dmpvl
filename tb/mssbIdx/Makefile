@@ -1,20 +1,19 @@
 
-TB := mssbIdx_tb
+SRC_SINGLEHIER += ../../hdl/fxcs.sv
+SRC_SINGLEHIER += ../../hdl/onehotIdx.sv
 
-V_SRC := \
-	../../hdl/fxcs.sv \
-	../../hdl/onehotIdx.sv \
-	../../hdl/mssbIdx.sv \
-	$(TB).sv
+SRC_MULTIHIER += ../../hdl/mssbIdx.sv
 
-# NOTE: No Icarus or Verilator testbenches yet.
-VCD_VERILATOR :=
-#VCD_IVERILOG :=
+default: lint_foss
+default: verilator_vcd
+default: yosys_equiv
 
-include ../common.mk
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
 
 # Check that logic evaluates as per golden reference.
-yosys:
+yosys_equiv:
 	mkdir -p $(BUILD)
 	yosys -q -s mssbIdx.ys
 	diff yosys.eval.txt $(BUILD)/yosys.eval.txt
+
