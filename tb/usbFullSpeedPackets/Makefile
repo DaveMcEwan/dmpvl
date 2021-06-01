@@ -1,19 +1,20 @@
 
-TB := usbFullSpeedPackets_tb
+SRC_SINGLEHIER += ../../hdl/resetDetect.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktRx.sv
+SRC_SINGLEHIER += ../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.sv
+SRC_SINGLEHIER += ../../verif/generateClock.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketSender.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketReceiver.sv
+SRC_SINGLEHIER += drivePackets.sv
 
-V_SRC := \
-	../../hdl/resetDetect.sv \
-	../../hdl/usbfsPktRx.sv \
-	../../prj/VGWM_usbSerialEchoer_TinyFPGA-BX/usbPktRx.sv \
-	../../verif/generateClock.sv \
-	../../verif/usbFullSpeedPacketSender.sv \
-	../../verif/usbFullSpeedPacketReceiver.sv \
-	drivePackets.sv \
-	$(TB).sv
+YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += drivePackets.sv
+YOSYS_SRC_EXCLUDE += usbFullSpeedPackets_tb.sv
+VERILATOR_SRC_EXCLUDE += usbFullSpeedPackets_tb.sv
 
-LINT_SRC := drivePackets.sv
+default: lint_foss
+default: iverilog_vcd
 
-# NOTE: Icarus only - no support for Verilator yet.
-VCD_VERILATOR :=
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
 
-include ../common.mk

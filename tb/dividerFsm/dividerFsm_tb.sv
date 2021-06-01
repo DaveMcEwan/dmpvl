@@ -1,3 +1,7 @@
+/** dividerFsm_tb.sv - Testbench for dividerFsm
+ * Instance name should be u_dividerFsm_<width>_[abstract]
+ * Connecting wires should be <instance>_<port>
+ */
 `include "asrt.svh"
 `include "dff.svh"
 
@@ -5,10 +9,6 @@
 `define N_CYCLES 'd100000
 `endif
 
-/** dividerFsm_tb.sv - Testbench for dividerFsm
- * Instance name should be u_dividerFsm_<width>_[abstract]
- * Connecting wires should be <instance>_<port>
- */
 module dividerFsm_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   input  wire           i_clk,

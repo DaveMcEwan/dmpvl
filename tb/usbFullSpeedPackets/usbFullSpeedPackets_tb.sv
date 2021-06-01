@@ -5,6 +5,9 @@
  * 3. usbFullSpeedPacketSender[host] (verif) --> usbfsPktRx (design)
  * TODO: usbfsPktTx[dev] (design) --> usbFullSpeedPacketReceiver[device] (verif)
  */
+`include "asrt.svh"
+`include "dff.svh"
+
 module usbFullSpeedPackets_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!
