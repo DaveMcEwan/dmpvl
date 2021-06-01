@@ -1,29 +1,34 @@
 
-TB := usbfsBpRegMem_tb
+SRC_SINGLEHIER += ../../hdl/resetDetect.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktRx.sv
+SRC_SINGLEHIER += ../../hdl/usbfsPktTx.sv
+SRC_SINGLEHIER += ../../hdl/usbfsEndpCtrlSerial.sv
+SRC_SINGLEHIER += ../../hdl/bpRegMem.sv
+SRC_SINGLEHIER += ../../verif/generateClock.sv
+SRC_SINGLEHIER += ../../verif/tristateBuffer.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketSender.sv
+SRC_SINGLEHIER += ../../verif/usbFullSpeedPacketReceiver.sv
+SRC_SINGLEHIER += driveHost.sv
 
-V_SRC := \
-	../../hdl/resetDetect.sv \
-	../../hdl/fifoW1R1.sv \
-	../../verif/generateClock.sv \
-	../../verif/tristateBuffer.sv \
-	../../verif/usbFullSpeedPacketSender.sv \
-	../../verif/usbFullSpeedPacketReceiver.sv \
-	../../verif/usbFullSpeedTransactor.sv \
-	../../hdl/usbfsPktRx.sv \
-	../../hdl/usbfsPktTx.sv \
-	../../hdl/usbfsTxn.sv \
-	../../hdl/usbfsEndpRx.sv \
-	../../hdl/usbfsEndpTx.sv \
-	../../hdl/usbfsEndpCtrlSerial.sv \
-	../../hdl/usbfsSerial.sv \
-	../../hdl/bpRegMem.sv \
-	driveHost.sv \
-	$(TB).sv
+SRC_MULTIHIER += ../../hdl/usbfsTxn.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpRx.sv
+SRC_MULTIHIER += ../../hdl/usbfsEndpTx.sv
+SRC_MULTIHIER += ../../hdl/usbfsSerial.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedTransactor.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointSender.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedEndpointReceiver.sv
+SRC_MULTIHIER += ../../verif/usbFullSpeedSerial.sv
 
-LINT_SRC := driveHost.sv
-IVERILOG_TOP := usbfsBpRegMem_tb
+YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += ../../verif/tristateBuffer.sv
+YOSYS_SRC_EXCLUDE += driveHost.sv
+YOSYS_SRC_EXCLUDE += usbfsBpRegMem_tb.sv
+VERILATOR_SRC_EXCLUDE += usbfsBpRegMem_tb.sv
 
-# NOTE: Icarus only - no support for Verilator yet.
-VCD_VERILATOR :=
+default: lint_foss
+default: iverilog_vcd
 
-include ../common.mk
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
+

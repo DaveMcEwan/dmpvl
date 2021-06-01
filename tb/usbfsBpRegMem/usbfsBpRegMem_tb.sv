@@ -1,5 +1,8 @@
 /** Testbench for USB Full Speed Abstract Communication Module device.
  */
+`include "asrt.svh"
+`include "dff.svh"
+
 module usbfsBpRegMem_tb (
 `ifdef VERILATOR // V_erilator testbench can only drive IO from C++.
   `error No Verilator testbench here!
