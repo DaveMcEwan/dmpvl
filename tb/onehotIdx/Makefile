@@ -1,14 +1,17 @@
 
-TB := onehotIdx_tb
+SRC_SINGLEHIER += ../../hdl/onehotIdx.sv
 
-V_SRC := \
-	../../hdl/onehotIdx.sv \
-	$(TB).sv
+default: lint_foss
+default: verilator_vcd
+default: iverilog_vcd
+default: yosys_equiv
 
-include ../common.mk
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
 
 # Check that logic evaluates as per golden reference.
-yosys:
+yosys_equiv:
 	mkdir -p $(BUILD)
 	yosys -q -s onehotIdx.ys
 	diff yosys.eval.txt $(BUILD)/yosys.eval.txt
+
