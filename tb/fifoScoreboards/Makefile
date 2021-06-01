@@ -1,57 +1,66 @@
 
-TB := fifoScoreboards_tb
-
+BUILD ?= ./build
+TB ?= $(shell basename $(PWD))_tb
 N_CYCLES ?= 1000000
 
-BUILD ?= ./build
+INCDIRS ?= . ../../hdl ../../verif
+
+SRC_SINGLEHIER += ../../hdl/binToGray.sv
+SRC_SINGLEHIER += ../../hdl/grayToBin.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/syncBit.sv
+
+SRC_MULTIHIER += ../../hdl/cdcData.sv
+SRC_MULTIHIER += ../../hdl/cdcFifo.sv
+
+CC_SRC += ../../verif/modelPrint.cc
+
+CC_H += ../../verif/modelPrint.h
+
+SRC_MULTIHIER += $(TB).sv
+CC_SRC += $(TB).cc
+
+default: all
+
+MK_CLEAN := ../../mk/clean.mk
+include $(MK_CLEAN)
 
 MK_CSV = ../../mk/csv.mk
 include $(MK_CSV)
 
 ALL_TB_VERILATOR_VCD := $(addprefix $(BUILD)/,$(addsuffix /$(TB).verilator.fst,$(CSV_ROWS)))
-ALL_TB_IVERILOG_VCD := #$(addprefix $(BUILD)/,$(addsuffix /$(TB).iverilog.fst,$(CSV_ROWS)))
 .PHONY: all
-all: $(ALL_TB_VERILATOR_VCD) $(ALL_TB_IVERILOG_VCD)
+all: $(ALL_TB_VERILATOR_VCD)
 	@echo $(TB) PASSED
 
-V_SRC := \
-	$(TB).sv \
-	../../hdl/binToGray.sv \
-	../../hdl/grayToBin.sv \
-	../../hdl/cdcData.sv \
-	../../hdl/cdcFifo.sv \
-	../../hdl/fifoW1R1.sv
+VERILATOR_TRACE_DEPTH ?= 3
 
-CC_SRC := \
-	../../verif/modelPrint.cc \
-	$(TB).cc
+VERILATOR_SRC ?= $(filter-out $(VERILATOR_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
+VERILATOR_INCDIRS ?= $(INCDIRS)
+VERILATOR_TB_FLAGS := --cc $(VERILATOR_LANG) $(addprefix -I,$(VERILATOR_INCDIRS))
+VERILATOR_LANG ?= --language 1800-2005
+VERILATOR_C_INCDIRS ?= ../ ../../../../verif
+VERILATOR_DPI_DEPS := $(addprefix $(BUILD)/,$(DPI_OBJS))
+VERILATOR_TB_TOP ?= $(TB)
 
-CC_H := \
-	../../verif/modelPrint.h
+VERILATOR_TB_FLAGS := --cc $(VERILATOR_LANG) $(addprefix -I,$(VERILATOR_INCDIRS))
+VERILATOR_TB_FLAGS += --trace --trace-depth $(VERILATOR_TRACE_DEPTH)
+VERILATOR_TB_FLAGS += --exe
+VERILATOR_TB_FLAGS += -DN_CYCLES=$(N_CYCLES) -CFLAGS -DN_CYCLES=$(N_CYCLES)
+VERILATOR_TB_FLAGS += $(addprefix -CFLAGS -I,$(VERILATOR_C_INCDIRS))
+VERILATOR_TB_FLAGS += $(addprefix -LDFLAGS ,$(notdir $(VERILATOR_DPI_DEPS)))
+VERILATOR_TB_FLAGS += --clk common_clk
+VERILATOR_TB_FLAGS += --top-module $(VERILATOR_TB_TOP)
+VERILATOR_TB_FLAGS += $(addprefix ../,$(CC_SRC))
 
-V_INCDIRS := ../../hdl ../../verif
-VERILATOR_INCDIRS := $(addprefix -I,$(V_INCDIRS))
 
 # Verilator compile verilog into C++.
-VERILATOR_TOP ?= $(TB)
-VERILATOR_TRACE_DEPTH ?= 3
 $(BUILD)/%/V$(TB).mk: $(V_SRC) $(CC_SRC) $(CC_H)
 	mkdir -p $(BUILD)/$*
-	verilator --cc \
-		--trace \
-		--trace-depth $(VERILATOR_TRACE_DEPTH) \
-		--exe \
-		$(VERILATOR_INCDIRS) \
+	verilator $(VERILATOR_TB_FLAGS) \
 		--Mdir $(BUILD)/$* \
 		$(call CSV_ROWMAP,$*,$(CSV_ROWMAP_CFLAGDEFINE)) \
-		-DN_CYCLES=$(N_CYCLES) \
-		-CFLAGS -DN_CYCLES=$(N_CYCLES) \
-		-CFLAGS -I../../../../verif \
-		$(VERILATOR_DPI_OBJS) \
-		--clk common_clk \
-		--top-module $(VERILATOR_TOP) \
-		$(addprefix ../,$(CC_SRC)) \
-		$(VERILATOR_TOP).sv
+		$(VERILATOR_TB_TOP).sv
 
 # Compile verilated C++ into executable.
 $(BUILD)/%/V$(TB): $(BUILD)/%/V$(TB).mk $(VERILATOR_DPI_DEPS)
@@ -75,10 +84,5 @@ $(BUILD)/%/$(TB).verilator.fst: $(BUILD)/%/V$(TB)
 	tail -n+2 $(BUILD)/$*/pushed.log | cut -f2 -d' ' > $(BUILD)/$*/pushed.data
 	tail -n+2 $(BUILD)/$*/popped.log | cut -f2 -d' ' > $(BUILD)/$*/popped.data
 	diff $(BUILD)/$*/pushed.data $(BUILD)/$*/popped.data > $(BUILD)/$*/data.diff
-
-
-.PHONY: clean
-clean:
-	rm -rf $(BUILD)
 
 .SECONDARY:
