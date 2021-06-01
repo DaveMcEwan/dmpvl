@@ -1,11 +1,16 @@
 
-TB := dividerFsm_tb
-
 N_CYCLES ?= 1000000
 
-V_SRC := \
-	../../verif/generateClock.sv \
-	../../hdl/dividerFsm.sv \
-	$(TB).sv
+SRC_SINGLEHIER += ../../verif/generateClock.sv
+SRC_SINGLEHIER += ../../hdl/dividerFsm.sv
 
-include ../common.mk
+YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
+YOSYS_SRC_EXCLUDE += dividerFsm_tb.sv
+
+default: lint_foss
+default: verilator_vcd
+default: iverilog_vcd
+
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
+
