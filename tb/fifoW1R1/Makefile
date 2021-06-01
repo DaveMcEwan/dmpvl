@@ -1,22 +1,17 @@
 
-TB := fifoW1R1_tb
-
 N_CYCLES ?= 1000000
 
-V_SRC := \
-	$(TB).sv \
-	../../hdl/fifoW1R1.sv
+SRC_SINGLEHIER += ../../hdl/fifoW1R1.sv
 
-CC_SRC := \
-	fifo_model.cc \
-	../../verif/modelPrint.cc \
-	$(TB).cc
+CC_SRC += ../../verif/modelPrint.cc
+CC_SRC += fifo_model.cc
 
-CC_H := \
-	fifo_model.h \
-	../../verif/modelPrint.h
+CC_H += ../../verif/modelPrint.h
+CC_H += fifo_model.h
 
-# NOTE: Verilator only - no support for Icarus yet.
-VCD_IVERILOG :=
+default: lint_foss
+default: verilator_vcd
 
-include ../common.mk
+MK_TB = ../../mk/tb.mk
+include $(MK_TB)
+
