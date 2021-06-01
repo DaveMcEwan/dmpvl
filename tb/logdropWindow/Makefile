@@ -7,7 +7,6 @@ SRC_MULTIHIER += ../../hdl/logdropWindow.sv
 SRC_MULTIHIER += logdropWindow_tb.sv
 
 IVERILOG_SRC_EXCLUDE += logdropWindow_tb.sv
-YOSYS_SRC_EXCLUDE += logdropWindow_tb.sv
 
 default: lint_foss
 default: verilator_vcd

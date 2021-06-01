@@ -1,8 +1,6 @@
 
 SRC_SINGLEHIER += ../../hdl/fxcs.sv
 
-YOSYS_SRC_EXCLUDE += fxcs_tb.sv
-
 default: lint_foss
 default: verilator_vcd
 default: iverilog_vcd
@@ -17,3 +15,4 @@ yosys_equiv:
 	yosys -q -s fxcs.ys
 	diff yosys.eval.mssb.txt $(BUILD)/yosys.eval.mssb.txt
 	diff yosys.eval.lssb.txt $(BUILD)/yosys.eval.lssb.txt
+

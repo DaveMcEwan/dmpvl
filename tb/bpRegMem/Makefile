@@ -5,7 +5,6 @@ SRC_SINGLEHIER += ../../hdl/bpRegMem.sv
 SRC_SINGLEHIER += ../../verif/generateClock.sv
 
 YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
-YOSYS_SRC_EXCLUDE += bpRegMem_tb.sv
 
 CC_SRC += bpRegMem_model.cc
 CC_SRC += ../../verif/modelPrint.cc

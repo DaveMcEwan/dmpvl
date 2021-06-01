@@ -9,6 +9,9 @@ CC_SRC += $(TB).cc
 vcd: verilator_vcd
 vcd: iverilog_vcd
 
+# Testbenches are not supposed to synthesize, so don't lint with yosys.
+YOSYS_SRC_EXCLUDE += $(TB).sv
+
 MK_LINT := ../../mk/lint.mk
 include $(MK_LINT)
 

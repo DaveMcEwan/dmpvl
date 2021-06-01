@@ -11,7 +11,6 @@ SRC_MULTIHIER += ../../hdl/axi4liteRandomSlave.sv
 SRC_MULTIHIER += ../../hdl/axi4liteRandomMaster.sv
 
 YOSYS_SRC_EXCLUDE += ../../verif/generateClock.sv
-YOSYS_SRC_EXCLUDE += praxi_tb.sv
 
 default: lint_foss
 default: verilator_vcd
