@@ -1,6 +1,6 @@
 /** mssbIdx.v - Calculate the index of the most significant set bit.
  * mssb(x) := max(y | 2**y ≤ x)
- * o_index = max(o_index | 2**o_index ≤ i_vector)
+ * o_index = max(index | 2**index ≤ i_vector)
  * Purely combinatorial.
  */
 module mssbIdx #(
