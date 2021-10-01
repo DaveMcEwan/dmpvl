@@ -81,8 +81,41 @@
 
 \subsection{Tool Support} % {{{
 \label{sec:toolSupport}
-\TODO{Tool Support}
-\TODO{Summarize from \texttt{lint.mk}}
+These selected \gls{FOSS} and commercial tools have been specifically tested,
+and examples of their usage is contained in \texttt{dmpvl/mk/lint.mk}.
+Full support is provided by all modern tools when the appropriate flags are
+used for System Verilog mode.
+Only the oldest tested version of each tool is shown because no regressions
+have been seen in newer versions.
+
+% TODO: Tidy up description style.
+\begin{description}
+\item[Icarus, AKA iverilog (\gls{FOSS})]
+  Simulator.
+  Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[Verilator (\gls{FOSS})]
+  Fast, 2-state simulator.
+  Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[Yosys - (\gls{FOSS})]
+  Generic synthesis tool primarily targeting Lattice and Xilinx \glspl{FPGA}.
+\item[HAL 20.03 (Cadence)]
+  Linter.
+\item[JasperGold 2020.03 (Cadence)]
+  Formal proof assistant.
+\item[Xcelium 20.03 (Cadence)]
+  Simulator.
+\item[Formalpro v2020.1 (Siemens)]
+  Equivalence checker.
+\item[Design Compiler TODO (Synopsys)]
+  Generic synthesis tool for \glspl{ASIC}.
+  \TODO{Full support for \gls{DFF} macros.???}
+\item[Spyglass 2020.12 (Synopsys)]
+  Linter.
+\item[VCS 2018.09 (Synopsys)]
+  Simulator.
+\item[Vivado 2018.02 (Xilinx)]
+  Complete \gls{FPGA} flow including synthesis (Synplify Pro) and simulation.
+\end{description}
 
 % }}} sec:toolSupport
 
