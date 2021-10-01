@@ -1,0 +1,116 @@
+% setup_misc.tex
+% Just provide some convenient environments.
+% Nothing in here should make sweeping changes to layout or the overall look.
+
+% Place a horizontal rule.
+\newcommand{\Hrule}{\hfil \rule{0.67\linewidth}{0.4pt} \hfil \\}
+
+% Temporary note highlighting TODO.
+\newcommand{\TODO}[1]{[\textbf{TODO} \textsl{#1}]}
+
+% Just a nice way to typeset the word BibTeX.
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{ifthen}
+
+% Put pages landscape in PDF.
+% http://mirror.ox.ac.uk/sites/ctan.org/macros/latex/contrib/oberdiek/pdflscape.pdf
+% \begin{landscape} ... \end{landscape}
+\usepackage{pdflscape}
+
+\usepackage{grffile} % Allow dots in filenames.
+
+\ifdefined\NoGRAPHICX \else
+\usepackage{graphicx}
+\graphicspath{{./}{./img/}{./shr/img/}}
+\fi
+
+% \fref and Fref for nicer references.
+\usepackage[english]{babel}
+\usepackage[plain]{fancyref}
+\vrefwarning % NOTE: Comment and check errors before releasing documents.
+\newcommand*{\fancyrefapplabelprefix}{app}
+\fancyrefaddcaptions{english}{%
+  \providecommand*{\frefappname}{appendix}%
+  \providecommand*{\Frefappname}{Appendix}%
+}
+\frefformat{plain}{\fancyrefapplabelprefix}{\frefappname\fancyrefdefaultspacing#1}
+\Frefformat{plain}{\fancyrefapplabelprefix}{\Frefappname\fancyrefdefaultspacing#1}
+\frefformat{vario}{\fancyrefapplabelprefix}{\frefappname\fancyrefdefaultspacing#1#3}
+\Frefformat{vario}{\fancyrefapplabelprefix}{\Frefappname\fancyrefdefaultspacing#1#3}
+
+% Text Companion fonts for text symbols.
+\usepackage{textcomp}
+
+% Greek letters in text mode without changing to math mode.
+\usepackage{textgreek}
+
+% Algorithm typesetting environment.
+% \begin{algorithm} ... \end{algorithm}
+\usepackage{algorithmic}
+
+\ifdefined\NoXCOLOR \else
+% Lots of commands to control color.
+% http://mirror.ox.ac.uk/sites/ctan.org/macros/latex/contrib/xcolor/xcolor.pdf
+\usepackage[usenames,svgnames]{xcolor}
+\fi
+
+\ifdefined\NoENUMITEM \else
+% Allow list customization (enumerate, itemize, description).
+% http://mirror.ox.ac.uk/sites/ctan.org/macros/latex/contrib/enumitem/enumitem.pdf
+\usepackage[shortlabels]{enumitem}
+\fi
+
+% Define the \FloatBarrier command.
+\usepackage{placeins} % \FloatBarrier
+
+% Extensions to the tabular environment.
+% Cells which can span multiple rows.
+\usepackage{multirow}
+\usepackage{makecell} % \thead and other macros for table cell formatting.
+\renewcommand\theadalign{bc}
+\renewcommand\theadfont{\bfseries}
+\renewcommand\theadgape{\Gape[4pt]}
+\renewcommand\cellgape{\Gape[4pt]}
+\usepackage{longtable} % Tables split over multiple pages.
+
+\ifdefined\NoTIKZ \else
+% Drawing in LaTeX.
+\usepackage{tikz}
+\usetikzlibrary{shapes, shapes.arrows}
+\fi
+
+\ifdefined\NoGLOSSARIES \else
+% Typeset abbreviations using glossary.tex.
+\usepackage{glossaries}
+\makenoidxglossaries
+\input{shr/tex/glossary.tex}
+\fi
+
+% Captions for subfigures.
+\usepackage{subcaption} % subfigure, subtable, subcaption
+
+% Typesetting for URLs, allowing line breaks.
+\usepackage{breakurl}
+
+% Set \today to ISO format.
+\usepackage{datetime}
+\yyyymmdddate
+\renewcommand{\dateseparator}{-}
+
+% Add some paragraph space between lines and prefer to break a page there.
+\newcommand{\blankline}{\quad\pagebreak[2]}
+
+% Format lists with multiple columns by wrapping enumerate environment with
+% \begin{multicols}{2}
+%   \begin{enumerate}
+%     \item foo
+%     \item bar
+%     \item baz
+%   \end{enumerate}
+% \end{multicols}
+\usepackage{multicol}
+

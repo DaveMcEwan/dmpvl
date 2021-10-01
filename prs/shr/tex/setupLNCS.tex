@@ -1,0 +1,20 @@
+
+\input{shr/tex/setup_misc.tex}
+\input{shr/tex/setup_math.tex}
+\input{shr/tex/setup_units.tex}
+\input{shr/tex/setup_listings.tex} % Include after fancyref (in setup_misc).
+
+\usepackage{cite} % Modify citation handling.
+
+% Links are supposed to be certain colors.
+\hypersetup{
+    colorlinks,
+    filecolor=black,
+    citecolor=red,
+    linkcolor=red,
+    urlcolor=blue
+}
+
+% Fancyref abbreviations to be consistent with Fig. used my llncs.cls
+\renewcommand*{\Frefeqname}{Eq.}
+%\renewcommand*{\Freflstname}{Lst.}

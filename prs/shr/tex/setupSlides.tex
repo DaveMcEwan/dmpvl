@@ -1,0 +1,75 @@
+
+\newcommand*{\NoENUMITEM}{} % The enumitem package disturbs Beamer.
+
+\input{shr/tex/setup_misc.tex}
+\input{shr/tex/setup_math.tex}
+\input{shr/tex/setup_units.tex}
+\input{shr/tex/setup_listings.tex} % Include after fancyref (in setup_misc).
+
+\usepackage{setspace} % Modifiy spacings in footnotes and floats.
+
+% Compact notes
+\usetemplatenote{\tiny \insertnote}
+\newcommand{\notepage}[1]{\note{\setlength{\parskip}{0.7em}
+    \setlength{\parindent}{0.4em} \scriptsize #1 }}
+
+\mode<presentation> {
+    % The Beamer class comes with a number of default slide themes
+    % which change the colors and layouts of slides.
+    %\usetheme{default}
+    %\usetheme{AnnArbor}
+    %\usetheme{Antibes}
+    %\usetheme{Bergen}
+    %\usetheme{Berkeley}
+    %\usetheme{Berlin}
+    %\usetheme{Boadilla}
+    %\usetheme{CambridgeUS}
+    %\usetheme{Copenhagen}
+    %\usetheme{Darmstadt}
+    %\usetheme{Dresden}
+    %\usetheme{Frankfurt}
+    %\usetheme{Goettingen}
+    %\usetheme{Hannover}
+    %\usetheme{Ilmenau}
+    %\usetheme{JuanLesPins}
+    %\usetheme{Luebeck}
+    \usetheme{Madrid}
+    %\usetheme{Malmoe}
+    %\usetheme{Marburg}
+    %\usetheme{Montpellier}
+    %\usetheme{PaloAlto}
+    %\usetheme{Pittsburgh}
+    %\usetheme{Rochester}
+    %\usetheme{Singapore}
+    %\usetheme{Szeged}
+    %\usetheme{Warsaw}
+
+    % As well as themes, the Beamer class has a number of color themes
+    % for any slide theme.
+    %\usecolortheme{albatross}
+    \usecolortheme{beaver}
+    %\usecolortheme{beetle}
+    %\usecolortheme{crane}
+    %\usecolortheme{dolphin}
+    %\usecolortheme{dove}
+    %\usecolortheme{fly}
+    %\usecolortheme{lily}
+    %\usecolortheme{orchid}
+    %\usecolortheme{rose}
+    %\usecolortheme{seagull}
+    %\usecolortheme{seahorse}
+    %\usecolortheme{whale}
+    %\usecolortheme{wolverine}
+
+    % Math fonts should look as normal with serifs.
+    \usefonttheme{professionalfonts}
+
+    % To remove the footer line in all slides uncomment
+    %\setbeamertemplate{footline}
+
+    % To replace the footer line in all slides with a simple slide count uncomment
+    %\setbeamertemplate{footline}[page number]
+
+    % To remove the navigation symbols from the bottom of all slides uncomment
+    \setbeamertemplate{navigation symbols}{}
+}

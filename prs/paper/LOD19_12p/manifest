@@ -1,0 +1,25 @@
+# List of files used to create a standalone tarball.
+# Lines beginning with # are ignored.
+# Line ordering not important for tarball.
+# This is used to produce a space-separated list of the contents of each line:
+#   cat manifest | grep -vP '^#' | tr '\n' ' '
+
+shr/tex/setupLNCS.tex
+shr/tex/setup_misc.tex
+shr/tex/setup_math.tex
+shr/tex/setup_units.tex
+shr/tex/setup_listings.tex
+shr/tex/glossary.tex
+shr/img/eg_soc_relest.pdf
+shr/img/relest_all_TPR.pdf
+shr/img/relest_all_TNR.pdf
+shr/img/relest_all_PPV.pdf
+shr/img/relest_all_NPV.pdf
+shr/img/relest_all_ACC.pdf
+shr/img/relest_all_BACC.pdf
+shr/img/relest_all_BMI.pdf
+shr/img/relest_all_MCC.pdf
+llncs.cls
+splncs04.bst
+main.bbl
+main.tex

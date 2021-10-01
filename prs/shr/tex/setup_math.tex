@@ -1,0 +1,71 @@
+% setup_math.tex
+% Common math symbols.
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{relsize} % mathlarger
+
+\DeclareMathOperator{\NaN}{NaN}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+% NOTE: \! defines a negative thin space in math mode, normally 1/6 of a quad.
+\newcommand{\indep}{\perp\!\!\!\!\perp} % Define the independent symbol
+\newcommand{\nindep}{\centernot{\indep}} % Define the not-independent symbol
+\newcommand{\nimplies}{\centernot{\implies}} % Define the not-implies symbol
+\newcommand{\niff}{\centernot{\iff}} % Define the not-iff symbol
+\newcommand{\Gr}{\mathcal{G}} % Graph
+\newcommand{\Ed}{\mathcal{E}} % Edges
+\newcommand{\Ve}{\mathcal{V}} % Nodes (vertices)
+\DeclareMathOperator{\sgn}{sgn}
+\newcommand{\cond}[3]{ \left( {#1} \right) \, ? \, {#2} \, : \, {#3} }
+
+% Always use AMS font for Expectation symbol, fourier looks wrong.
+\DeclareMathSymbol{\Expectation}{\mathrel}{AMSb}{"45}
+\DeclareMathOperator{\Ex}{\Expectation} % Expectation
+\newcommand{\sEx}[1]{ {\Ex}{\left[ {#1} \right]} } % Expectation
+\newcommand{\sCex}[2]{ {\Ex}{\left[ {#1} | {#2} \right]} }
+
+\DeclareMathOperator{\var}{var} % Variance
+\DeclareMathOperator{\cov}{cov} % Covariance
+\DeclareMathOperator{\Mean}{Mean} % Arithmetic Median
+\DeclareMathOperator{\WMean}{WeightedMean} % Weighted Arithmetic Median
+\DeclareMathOperator{\Median}{Median} % Median
+\DeclareMathOperator{\WMedian}{WeightedMedian} % Weighted Median
+\newcommand{\booleans}{\mathbb{B}}
+\newcommand{\unitreals}{\mathbb{I}}
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\rationals}{\mathbb{Q}}
+\newcommand{\integers}{\mathbb{Z}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\complex}{\mathbb{C}}
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+\renewcommand{\vec}[1]{\mathbf{#1}} % Vector as bold, not the overhead arrow.
+\newcommand{\transpose}[1]{{#1}^\mathrm{T}}
+\newcommand\restrict[1]{\raisebox{-.7ex}{$|$}_{#1}} % Function restriction
+\renewcommand{\leq}{\leqslant} % Non-US convention
+\renewcommand{\geq}{\geqslant} % Non-US convention
+\renewcommand{\nleq}{\nleqslant} % Non-US convention
+\renewcommand{\ngeq}{\ngeqslant} % Non-US convention
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\normal}{\mathcal{N}}
+\DeclareMathOperator{\erf}{erf}
+\newcommand{\delsig}{\textDelta\textSigma}
+
+% Some of my own stuff used in several papers.
+\DeclareMathOperator{\Ham}{\dot{H}am}
+\DeclareMathOperator{\Tmt}{\dot{T}mt}
+\DeclareMathOperator{\Cls}{\dot{C}ls}
+\DeclareMathOperator{\Cos}{\dot{C}os}
+\DeclareMathOperator{\Dep}{\dot{D}ep}
+\DeclareMathOperator{\Cov}{\dot{C}ov}
+\newcommand{\sHam}[2]{ {\Ham}{\left( {#1}, {#2} \right)} }
+\newcommand{\sTmt}[2]{ {\Tmt}{\left( {#1}, {#2} \right)} }
+\newcommand{\sCls}[2]{ {\Cls}{\left( {#1}, {#2} \right)} }
+\newcommand{\sCos}[2]{ {\Cos}{\left( {#1}, {#2} \right)} }
+\newcommand{\sDep}[2]{ {\Dep}{\left( {#1}, {#2} \right)} }
+\newcommand{\sCov}[2]{ {\Cov}{\left( {#1}, {#2} \right)} }
+
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}} % checkmark, tick, correct, good
+\newcommand{\xmark}{\ding{55}} % X-mark, cross, incorrect, bad

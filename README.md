@@ -4,11 +4,14 @@ dmpvl - Dave McEwan's Personal Verilog Library
 
 Verilog/SystemVerilog projects.
 
-  - hdl - HDL (Hardware Description Language) code which may be shared between
-    design projects.
+  - doc - External documentation.
+  - hdl - HDL (Hardware Description Language) code shared between projects.
+  - misc - Miscellaneous items related to this repository.
+  - mk - A collection of makefile fragments.
   - prj - A concrete realisation of code on a specific platform.
     May be a specific type of simulation, FPGA, or (wishfully!) ASIC.
     Each of these has some practical usecase.
+  - prs - Presentation material like slidesets or papers.
   - tb - Testbenches for verifying modules by simulation.
     These don't really have any practical usecase other than verification.
   - verif - Components which may be shared between verification tasks.

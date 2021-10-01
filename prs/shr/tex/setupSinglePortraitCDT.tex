@@ -1,0 +1,39 @@
+
+
+\newcommand*{\NoENUMITEM}{} % The enumitem package disturbs Beamer.
+\newcommand*{\NoTIKZ}{} % The tikz package disturbs Beamer.
+\input{shr/tex/setup_misc.tex}
+\input{shr/tex/setup_math.tex}
+\input{shr/tex/setup_units.tex}
+
+%
+% colortheme
+%
+\definecolor{WinterSkin}{HTML}{EFE4CA}
+\definecolor{Drift}{HTML}{E1E8D9}
+\definecolor{Smak}{HTML}{790800}
+\definecolor{Zen}{HTML}{DA6D5E}
+
+\definecolor{DarkBlueCDT}{HTML}{002F5F}
+\definecolor{LightBlueCDT}{HTML}{0F7CA4}
+\definecolor{LightGrayCDT}{HTML}{EFEEE9}
+
+% Theme colors for main structure.
+\setbeamercolor{cdtline}{fg=Drift,bg=LightBlueCDT}
+\setbeamercolor{titleline}{fg=Drift,bg=DarkBlueCDT}
+\setbeamercolor{separation line}{bg=LightBlueCDT,fg=black}
+\setbeamercolor{sponsorline}{fg=black,bg=white}
+
+% Styling colors for list bullets/numbers.
+\setbeamercolor{itemize item}{fg=Zen}
+\setbeamercolor{itemize subitem}{fg=Zen}
+\setbeamercolor{enumerate item}{fg=Zen}
+\setbeamercolor{enumerate subitem}{fg=Zen}
+
+\setbeamercolor{alerted text}{fg=Smak}
+\setbeamercolor{structure}{fg=DarkBlueCDT}
+\setbeamercolor{palette primary}{fg=black,bg=LightGrayCDT}
+\setbeamercolor{palette secondary}{fg=Zen, bg=LightGrayCDT}
+\setbeamercolor{palette quarternary}{fg=Zen, bg=LightGrayCDT}
+\setbeamercolor{block body}{bg=LightGrayCDT,fg=black}
+\setbeamercolor{block title}{fg=DarkBlueCDT,bg=WinterSkin}

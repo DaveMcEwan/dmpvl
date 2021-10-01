@@ -1,0 +1,21 @@
+% setup_units.tex
+% Units, mostly SI.
+
+\usepackage[binary-units]{siunitx}
+\sisetup{tight-spacing=true}
+
+\DeclareSIUnit{\nothing}{\relax} % prefix-only. E.g. Buy 3k balloons.
+
+\DeclareSIUnit{\dBi}{dBi} % Relative to an isotropic radiator.
+
+% siunitx bug workaround
+% https://tex.stackexchange.com/questions/501197/re-declaring-bit-in-siunitx
+\DeclareSIUnit{\b}{b} %
+
+\let\DeclareUSUnit\DeclareSIUnit
+\let\US\SI
+\DeclareUSUnit{\ounce}{oz} % Ounce
+\DeclareUSUnit{\inch}{in} % Inch
+\DeclareUSUnit{\foot}{ft} % 12 inches
+\DeclareUSUnit{\mil}{mil} % Thousands of an inch
+
