@@ -1,0 +1,101 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+% {{{ setup
+\documentclass[a4paper]{article}
+
+\newcommand*{\ShowReferences}{} % Comment to hide the References.
+%\newcommand*{\ShowGlossary}{} % Comment to hide the Glossary.
+
+\newcommand{\doctitle}{Foo: Template Paper}
+
+\usepackage[pdftex,pdfauthor={Dave McEwan},pdftitle={\doctitle},breaklinks,hidelinks]{hyperref}
+
+\input{shr/tex/setupGeneric.tex}
+
+% }}} setup
+
+\begin{document}
+% {{{ prolog
+
+\title{
+  \doctitle
+}
+
+\author{
+  Dave M\textsuperscript{c}Ewan\orcidID{0000-0002-1125-2022}
+}
+
+\maketitle
+
+\begin{abstract}
+\TODO{Abstract}
+\end{abstract}
+
+% }}} prolog
+
+\section{Introduction} % {{{
+\label{sec:introduction}
+\TODO{Introduction}
+
+\subsection{Problem Description} % {{{
+\label{sec:problem}
+\TODO{Problem Description}
+
+% }}} sec:problem
+
+\subsection{Objective} % {{{
+\label{sec:objective}
+\TODO{Objective}
+
+% }}} sec:objective
+
+\subsection{Approach} % {{{
+\label{sec:approach}
+\TODO{Approach}
+
+% }}} sec:approach
+
+% }}} sec:introduction
+
+\section{Background and Related Work} % {{{
+\label{sec:background}
+\TODO{Background}
+
+% }}} sec:background
+
+\section{Methodology} % {{{
+\label{sec:methodology}
+\TODO{Methodology}
+
+% }}} sec:methodology
+
+\section{Discussion} % {{{
+\label{sec:discussion}
+\TODO{Discussion}
+
+% }}} sec:discussion
+
+\section{Conclusion} % {{{
+\label{sec:conclusion}
+\TODO{Conclusion}
+
+% }}} sec:conclusion
+
+% {{{ epilog
+
+\ifdefined\ShowReferences
+  \newpage
+  \bibliographystyle{shr/tex/IEEEtran}
+  \bibliography{shr/refs}{} % refs.bib
+\fi
+
+\ifdefined\ShowGlossary
+  \clearpage
+  \phantomsection
+  \addcontentsline{toc}{section}{Glossary}
+  \printnoidxglossary[sort=letter]
+\fi
+
+% }}} epilog
+
+\end{document}
