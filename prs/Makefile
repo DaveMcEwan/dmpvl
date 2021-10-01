@@ -1,5 +1,6 @@
 
 PRS =
+PRS += paper/BoringFlops
 PRS += paper/Foo
 PRS += paper/LOD19_12p
 PRS += slideset/CorrelatorOverview_0h30m

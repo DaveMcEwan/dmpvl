@@ -1,0 +1,1 @@
+../../../mk/texArticle.mk
