@@ -1,0 +1,30 @@
+
+[rules]
+blocking_assignment_in_always_ff = true
+case_default = true
+# TODO default_nettype_none = true
+enum_with_type = true
+for_with_begin = true
+function_same_as_system_function = true
+function_with_automatic = true
+# TODO generate_for_with_label = true
+# TODO generate_if_with_label = true
+generate_keyword_required = true
+# NO genvar_declaration_in_loop = true
+genvar_declaration_out_loop = true
+# NO if_with_begin = true
+# TODO inout_with_tri = true
+# TODO input_with_var = true
+interface_port_with_modport = true
+# TODO legacy_always = true
+# TODO level_sensitive_always = true
+# TODO loop_variable_declaration = true
+non_ansi_module = true
+non_blocking_assignment_in_always_comb = true
+# NO output_with_var = true
+parameter_in_package = true
+priority_keyword = true
+tab_character = true
+unique0_keyword = true
+unique_keyword = true
+# NO wire_reg = true

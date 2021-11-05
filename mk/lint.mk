@@ -10,6 +10,7 @@ LOG_PREFIX = $(BUILD)/$(notdir $*)-
 LOG_SUFFIX = -mk_lint.log
 
 lint_foss: lint_iverilog
+lint_foss: lint_svlint
 lint_foss: lint_verilator
 lint_foss: lint_yosys
 
@@ -37,6 +38,15 @@ lint_iverilog_singlehier/%:
 lint_iverilog_multihier/%:
 	iverilog $(IVERILOG_LINT_FLAGS) -i $*
 .PHONY: lint_iverilog lint_iverilog_singlehier lint_iverilog_multihier
+
+# Linter written in Rust.
+# https://github.com/dalance/svlint
+SVLINT_SRC ?= $(filter-out $(SVLINT_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
+SVLINT_INCDIRS ?= $(INCDIRS)
+lint_svlint: $(addprefix lint_svlint/,$(SVLINT_SRC))
+lint_svlint/%:
+	svlint $(addprefix -i ,$(SVLINT_INCDIRS)) $*
+.PHONY: lint_svlint
 
 # Two-state simulator via C++ from Wilson Snyder.
 VERILATOR_SRC ?= $(filter-out $(VERILATOR_SRC_EXCLUDE),$(SRC_SINGLEHIER) $(SRC_MULTIHIER))
