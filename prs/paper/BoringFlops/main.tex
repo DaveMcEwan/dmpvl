@@ -6,7 +6,7 @@
 \newcommand*{\ShowReferences}{} % Comment to hide the References.
 %\newcommand*{\ShowGlossary}{} % Comment to hide the Glossary.
 
-\newcommand{\doctitle}{Boring Flops}
+\newcommand{\doctitle}{{Boring Flops: Some Opinions on Synthesisable RTL}}
 
 \usepackage[pdftex,pdfauthor={Dave McEwan},pdftitle={\doctitle},breaklinks,hidelinks]{hyperref}
 
@@ -29,58 +29,307 @@
 
 \begin{abstract}
 \TODO{Abstract}
+\TODO{Written for RTL designers with some experience.}
+\TODO{Focus on SystemVerilog, but also applicable to both Verilog and VHDL.}
+\TODO{These are not rules which apply to every case, but do apply to the
+majority of clocked digital logic design.}
 \end{abstract}
 
 % }}} prolog
 
-\section{Introduction} % {{{
-\label{sec:introduction}
-\TODO{Introduction}
 
-\subsection{Problem Description} % {{{
-\label{sec:problem}
-\TODO{Problem Description}
+\section{Hungarian Notation} % {{{
+\label{sec:HungarianNotation}
+This opinion concerns the naming conventions of objects in \gls{RTL} to help
+designers comprehend large designs by introducing a set of optional prefixes
+and suffixes.
+
+\paragraph{Problem Description} % {{{
+\label{sec:HungarianNotation_problem}
+
+\gls{RTL} development is similar to software development is in some ways but
+quite different in several important aspects.
+Where software development targets executing instructions on
+\glspl{CPU}, \gls{RTL} development aims towards physical implementation on a
+\gls{FPGA} or \gls{ASIC}.
+
+In C code, a file can contain many variables, each of which is defined in a
+particular scope.
+Although global variables are certainly essential in specific contexts, their
+usage is discouraged because reasoning about the soundness of a program becomes
+difficult.
+The state space of a program (every combination of all possible values on all
+variables) is typically so large that it is not worthwhile to worrying much
+about additional variables.
+For example, another integer is just said to cost a single word in stack memory
+and the instructions required to update it.
+In ``normal'' (single-threaded) C code, the designer can reason about the state
+of the program because only one thing happens at once and things happen in a
+defined order (serial execution).
+
+By comparison, it is common for all nets and variables of an \gls{RTL} design
+to be global.
+Even objects declared within SystemVerilog generate blocks are globally
+accessible through hierarchical paths.
+Every bit of state in an \gls{RTL} design implies an additional piece of
+physical hardware with an associated real-world cost in terms of area and
+power;
+therefore, \gls{RTL} designers spend a great deal of time worrying about their
+state space and should understand the implications of things which software
+designers would dismiss as trivial.
+For example, adding another integer might consist of 32 additional \glspl{DFF},
+wires and gates to drive the inputs to each \gls{DFF}, and wires to route the
+outputs to other locations on the \gls{FPGA}/\gls{ASIC}.
+TODO exe parallel
+
+TODO scopes are not so useful to manage process of comprehension in RTL vs sw.
+TODO integration is lots of hookup, many lines, easy to lose track.
 
 % }}} sec:problem
 
-\subsection{Objective} % {{{
-\label{sec:objective}
+\paragraph{Objective} % {{{
+\label{sec:HungarianNotation_objective}
 \TODO{Objective}
 
 % }}} sec:objective
 
-\subsection{Approach} % {{{
-\label{sec:approach}
+\paragraph{Approach} % {{{
+\label{sec:HungarianNotation_approach}
 \TODO{Approach}
 
 % }}} sec:approach
 
-% }}} sec:introduction
-
-\section{Background and Related Work} % {{{
-\label{sec:background}
+\subsection{Background and Related Work} % {{{
+\label{sec:HungarianNotation_background}
 \TODO{Background}
 
 % }}} sec:background
 
-\section{Methodology} % {{{
-\label{sec:methodology}
+\subsection{Methodology} % {{{
+\label{sec:HungarianNotation_methodology}
 \TODO{Methodology}
+Prefix for type as a reminder when browsing source code. (input, output, inout, instance, label)
+Suffix for inferred attributes as aid for investigating output from tools. (d,
+q, clk, rst, cg, lat, differential pair)
+Module names begin with lowercase, package names begin with uppercase.
 
 % }}} sec:methodology
 
-\section{Discussion} % {{{
-\label{sec:discussion}
+\subsection{Discussion} % {{{
+\label{sec:HungarianNotation_discussion}
 \TODO{Discussion}
 
-\subsection{Worked Example} % {{{
-\label{sec:workedExample}
-\TODO{Worked Example}
+\subsubsection{Worked Examples} % {{{
+\label{sec:HungarianNotation_workedExamples}
+\TODO{Worked Examples}
 
 % }}} sec:workedExample
 
-\subsection{Tool Support} % {{{
-\label{sec:toolSupport}
+\subsubsection{Tool Support} % {{{
+\label{sec:HungarianNotation_toolSupport}
+The only class of tools which care about naming conventions are those which
+perform stylistic lint checks.
+
+% TODO: Tidy up description style.
+\begin{description}
+%\item[Icarus, AKA iverilog (\gls{FOSS})]
+%  Simulator.
+%  Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[Verilator (\gls{FOSS})]
+  Fast, 2-state simulator.
+  The \texttt{{-}{-}lint-only} flag invokes only structural lint checks such as
+  unconnected module ports and mismatching widths.
+  No stylistic checks are performed.
+\item[svlint]
+  Linter.
+  \TODO{Naming convention checks are WIP.}
+%\item[Yosys - (\gls{FOSS})]
+%  Generic synthesis tool primarily targeting Lattice and Xilinx \glspl{FPGA}.
+\item[HAL 20.03 (Cadence)]
+  Linter.
+%\item[JasperGold 2020.03 (Cadence)]
+%  Formal proof assistant.
+%\item[Xcelium 20.03 (Cadence)]
+%  Simulator.
+%\item[Formalpro v2020.1 (Siemens)]
+%  Equivalence checker.
+%\item[Design Compiler TODO (Synopsys)]
+%  Generic synthesis tool for \glspl{ASIC}.
+%  \TODO{Full support for \gls{DFF} macros.???}
+\item[Spyglass 2020.12 (Synopsys)]
+  Linter.
+%\item[VCS 2018.09 (Synopsys)]
+%  Simulator.
+%\item[Vivado 2018.02 (Xilinx)]
+%  Complete \gls{FPGA} flow including synthesis (Synplify Pro) and simulation.
+\end{description}
+
+% }}} sec:toolSupport
+
+\subsubsection{Potential Problems} % {{{
+\label{sec:HungarianNotation_potentialProblems}
+\TODO{Potential Problems}
+
+% }}} sec:potentialProblems
+
+% }}} sec:discussion
+
+\subsection{Conclusion} % {{{
+\label{sec:HungarianNotation_conclusion}
+\TODO{Conclusion}
+
+% }}} sec:conclusion
+
+% }}} sec:HungarianNotation
+
+\section{Simple, Always} % {{{
+\label{sec:SimpleAlways}
+\TODO{Introduction}
+
+\paragraph{Problem Description} % {{{
+\label{sec:SimpleAlways_problem}
+\TODO{Problem Description}
+
+% }}} sec:SimpleAlways_problem
+
+\paragraph{Objective} % {{{
+\label{sec:SimpleAlways_objective}
+\TODO{Objective}
+
+% }}} sec:SimpleAlways_objective
+
+\paragraph{Approach} % {{{
+\label{sec:SimpleAlways_approach}
+\TODO{Approach}
+\TODO{Restriction on structure of always blocks.}
+\TODO{Restriction on use of wire/reg/logic/var.}
+
+% }}} sec:aSimpleAlways_pproach
+
+\subsection{Background and Related Work} % {{{
+\label{sec:SimpleAlways_background}
+\TODO{Background}
+\TODO{assign, always, always\_comb, ...}
+\TODO{var vs net}
+
+% }}} sec:SimpleAlways_background
+
+\subsection{Methodology} % {{{
+\label{sec:SimpleAlways_methodology}
+\TODO{Methodology}
+
+% }}} sec:SimpleAlways_methodology
+
+\subsection{Discussion} % {{{
+\label{sec:SimpleAlways_discussion}
+\TODO{Discussion}
+
+\subsubsection{Worked Examples} % {{{
+\label{sec:SimpleAlways_workedExamples}
+\TODO{Worked Examples}
+
+% }}} sec:SimpleAlways_workedExample
+
+\subsubsection{Tool Support} % {{{
+\label{sec:SimpleAlways_toolSupport}
+The only class of tools which care about naming conventions are those which
+perform stylistic lint checks.
+
+% TODO: Tidy up description style.
+\begin{description}
+%\item[Icarus, AKA iverilog (\gls{FOSS})]
+%  Simulator.
+%  Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[Verilator (\gls{FOSS})]
+  Fast, 2-state simulator.
+\item[svlint]
+  Linter.
+  \TODO{Naming convention checks are WIP.}
+%\item[Yosys - (\gls{FOSS})]
+%  Generic synthesis tool primarily targeting Lattice and Xilinx \glspl{FPGA}.
+\item[HAL 20.03 (Cadence)]
+  Linter.
+%\item[JasperGold 2020.03 (Cadence)]
+%  Formal proof assistant.
+%\item[Xcelium 20.03 (Cadence)]
+%  Simulator.
+%\item[Formalpro v2020.1 (Siemens)]
+%  Equivalence checker.
+%\item[Design Compiler TODO (Synopsys)]
+%  Generic synthesis tool for \glspl{ASIC}.
+%  \TODO{Full support for \gls{DFF} macros.???}
+\item[Spyglass 2020.12 (Synopsys)]
+  Linter.
+%\item[VCS 2018.09 (Synopsys)]
+%  Simulator.
+%\item[Vivado 2018.02 (Xilinx)]
+%  Complete \gls{FPGA} flow including synthesis (Synplify Pro) and simulation.
+\end{description}
+
+% }}} sec:SimpleAlways_toolSupport
+
+\subsubsection{Potential Problems} % {{{
+\label{sec:SimpleAlways_potentialProblems}
+\TODO{Potential Problems}
+
+% }}} sec:SimpleAlways_potentialProblems
+
+% }}} sec:SimpleAlways_discussion
+
+\subsection{Conclusion} % {{{
+\label{sec:SimpleAlways_conclusion}
+\TODO{Conclusion}
+
+% }}} sec:SimpleAlways_conclusion
+
+% }}} sec:SimpleAlways
+
+\section{Boring Flops} % {{{
+\label{sec:BoringFlops}
+\TODO{Introduction}
+
+\paragraph{Problem Description} % {{{
+\label{sec:BoringFlops_problem}
+\TODO{Problem Description}
+
+% }}} sec:BoringFlops_problem
+
+\paragraph{Objective} % {{{
+\label{sec:BoringFlops_objective}
+\TODO{Objective}
+
+% }}} sec:BoringFlops_objective
+
+\paragraph{Approach} % {{{
+\label{sec:BoringFlops_approach}
+\TODO{Approach}
+
+% }}} sec:BoringFlops_approach
+
+\subsection{Background and Related Work} % {{{
+\label{sec:BoringFlops_background}
+\TODO{Background}
+
+% }}} sec:BoringFlops_background
+
+\subsection{Methodology} % {{{
+\label{sec:BoringFlops_methodology}
+\TODO{Methodology}
+
+% }}} sec:BoringFlops_methodology
+
+\subsection{Discussion} % {{{
+\label{sec:BoringFlops_discussion}
+\TODO{Discussion}
+
+\subsubsection{Worked Examples} % {{{
+\label{sec:BoringFlops_workedExamples}
+\TODO{Worked Examples}
+
+% }}} sec:BoringFlops_workedExample
+
+\subsubsection{Tool Support} % {{{
+\label{sec:BoringFlops_toolSupport}
 These selected \gls{FOSS} and commercial tools have been specifically tested,
 and examples of their usage is contained in \texttt{dmpvl/mk/lint.mk}.
 Full support is provided by all modern tools when the appropriate flags are
@@ -96,6 +345,9 @@ have been seen in newer versions.
 \item[Verilator (\gls{FOSS})]
   Fast, 2-state simulator.
   Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[svlint]
+  Linter.
+  \TODO{Naming convention checks are WIP.}
 \item[Yosys - (\gls{FOSS})]
   Generic synthesis tool primarily targeting Lattice and Xilinx \glspl{FPGA}.
 \item[HAL 20.03 (Cadence)]
@@ -117,21 +369,123 @@ have been seen in newer versions.
   Complete \gls{FPGA} flow including synthesis (Synplify Pro) and simulation.
 \end{description}
 
-% }}} sec:toolSupport
+% }}} sec:BoringFlops_toolSupport
 
-\subsection{Potential Problems} % {{{
-\label{sec:potentialProblems}
+\subsubsection{Potential Problems} % {{{
+\label{sec:BoringFlops_potentialProblems}
 \TODO{Potential Problems}
 
-% }}} sec:potentialProblems
+% }}} sec:BoringFlops_potentialProblems
 
-% }}} sec:discussion
+% }}} sec:BoringFlops_discussion
 
-\section{Conclusion} % {{{
-\label{sec:conclusion}
+\subsection{Conclusion} % {{{
+\label{sec:BoringFlops_conclusion}
 \TODO{Conclusion}
 
-% }}} sec:conclusion
+% }}} sec:BoringFlops_conclusion
+
+% }}} sec:BoringFlops
+
+\section{Synthesisable Properties} % {{{
+\label{sec:SynthesisableProperties}
+\TODO{Introduction}
+
+\paragraph{Problem Description} % {{{
+\label{sec:SynthesisableProperties_problem}
+\TODO{Problem Description}
+
+% }}} sec:SynthesisableProperties_problem
+
+\paragraph{Objective} % {{{
+\label{sec:SynthesisableProperties_objective}
+\TODO{Objective}
+
+% }}} sec:SynthesisableProperties_objective
+
+\paragraph{Approach} % {{{
+\label{sec:SynthesisableProperties_approach}
+\TODO{Approach}
+
+% }}} sec:SynthesisableProperties_approach
+
+\subsection{Background and Related Work} % {{{
+\label{sec:SynthesisableProperties_background}
+\TODO{Background}
+
+% }}} sec:SynthesisableProperties_background
+
+\subsection{Methodology} % {{{
+\label{sec:SynthesisableProperties_methodology}
+\TODO{Methodology}
+
+% }}} sec:SynthesisableProperties_methodology
+
+\subsection{Discussion} % {{{
+\label{sec:SynthesisableProperties_discussion}
+\TODO{Discussion}
+
+\subsubsection{Worked Examples} % {{{
+\label{sec:SynthesisableProperties_workedExamples}
+\TODO{Worked Examples}
+
+% }}} sec:SynthesisableProperties_workedExample
+
+\subsubsection{Tool Support} % {{{
+\label{sec:SynthesisableProperties_toolSupport}
+\TODO{Simulators with any assert support are good.}
+\TODO{Formal property checking, synth, PnR false path}
+\TODO{Simulators with any assert support are good.}
+
+% TODO: Tidy up description style.
+\begin{description}
+%\item[Icarus, AKA iverilog (\gls{FOSS})]
+%  Simulator.
+%  Specific flag (\texttt{-E}) allows enables use as a standalone pre-processor.
+\item[Verilator (\gls{FOSS})]
+  Fast, 2-state simulator.
+%\item[svlint]
+%  Linter.
+%  \TODO{Naming convention checks are WIP.}
+%\item[Yosys - (\gls{FOSS})]
+%  Generic synthesis tool primarily targeting Lattice and Xilinx \glspl{FPGA}.
+%\item[HAL 20.03 (Cadence)]
+%  Linter.
+%\item[JasperGold 2020.03 (Cadence)]
+%  Formal proof assistant.
+%\item[Xcelium 20.03 (Cadence)]
+%  Simulator.
+%\item[Formalpro v2020.1 (Siemens)]
+%  Equivalence checker.
+%\item[Design Compiler TODO (Synopsys)]
+%  Generic synthesis tool for \glspl{ASIC}.
+%  \TODO{Full support for \gls{DFF} macros.???}
+%\item[Spyglass 2020.12 (Synopsys)]
+%  Linter.
+%\item[VCS 2018.09 (Synopsys)]
+%  Simulator.
+%\item[Vivado 2018.02 (Xilinx)]
+%  Complete \gls{FPGA} flow including synthesis (Synplify Pro) and simulation.
+\end{description}
+
+% }}} sec:SynthesisableProperties_toolSupport
+
+\subsubsection{Potential Problems} % {{{
+\label{sec:SynthesisableProperties_potentialProblems}
+\TODO{Potential Problems}
+
+% }}} sec:SynthesisableProperties_potentialProblems
+
+% }}} sec:SynthesisableProperties_discussion
+
+\subsection{Conclusion} % {{{
+\label{sec:SynthesisableProperties_conclusion}
+\TODO{Conclusion}
+
+% }}} sec:SynthesisableProperties_conclusion
+
+% }}} sec:SynthesisableProperties
+
 
 % {{{ epilog
 
