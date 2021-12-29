@@ -50,39 +50,45 @@ and suffixes.
 \gls{RTL} development is similar to software development is in some ways but
 quite different in several important aspects.
 Where software development targets executing instructions on
-\glspl{CPU}, \gls{RTL} development aims towards physical implementation on a
-\gls{FPGA} or \gls{ASIC}.
+\glspl{CPU}, \gls{RTL} development targets the generation of a physical
+implementation on a \gls{FPGA} or \gls{ASIC}.
 
 In C code, a file can contain many variables, each of which is defined in a
 particular scope.
 Although global variables are certainly essential in specific contexts, their
-usage is discouraged because reasoning about the soundness of a program becomes
-difficult.
+usage is generally discouraged because of the additional difficulty in
+reasoning about a program with lots of global state.
 The state space of a program (every combination of all possible values on all
-variables) is typically so large that it is not worthwhile to worrying much
-about additional variables.
-For example, another integer is just said to cost a single word in stack memory
-and the instructions required to update it.
-In ``normal'' (single-threaded) C code, the designer can reason about the state
-of the program because only one thing happens at once and things happen in a
-defined order (serial execution).
-
+variables) is typically very large.
+Indeed, the largeness of state space means that when modifying a program, an
+engineer is unlikely to give much thought to adding more variables.
+For example, an additional \SI{32}{\b} integer is said to cost just
+\SI{4}{\byte} in stack memory -- a tiny expense by most engineer's standards.
 By comparison, it is common for all nets and variables of an \gls{RTL} design
 to be global.
 Even objects declared within SystemVerilog generate blocks are globally
 accessible through hierarchical paths.
-Every bit of state in an \gls{RTL} design implies an additional piece of
+Every bit of state in an \gls{RTL} design infers an additional piece of
 physical hardware with an associated real-world cost in terms of area and
-power;
-therefore, \gls{RTL} designers spend a great deal of time worrying about their
-state space and should understand the implications of things which software
-designers would dismiss as trivial.
-For example, adding another integer might consist of 32 additional \glspl{DFF},
-wires and gates to drive the inputs to each \gls{DFF}, and wires to route the
+power.
+For example, an additional \SI{32}{\b} integer might consist of 32 \glspl{DFF},
+logic cells to drive the inputs to each \gls{DFF}, and wires to route the
 outputs to other locations on the \gls{FPGA}/\gls{ASIC}.
-TODO exe parallel
+As such, \gls{RTL} designers spend a great deal of time worrying about their
+state space and trying to understand the implications of things which software
+designers would dismiss as trivial.
 
-TODO scopes are not so useful to manage process of comprehension in RTL vs sw.
+The process of execution is also markedly different between imperative software
+and \gls{RTL} for a \gls{FPGA}/\gls{ASIC} design.
+By reading single-threaded C code, the engineer can reason about the state of
+the program because only one action happens at once, and statements execute in
+a defined order.
+In contrast, an \gls{RTL} module might reasonably contain hundreds of processes
+which execute semantically in parallel.
+
+%Key differences between our mental models of imperative software and \gls{RTL}
+%mean than different approaches are required to understand code.
+
 TODO integration is lots of hookup, many lines, easy to lose track.
 
 % }}} sec:problem
