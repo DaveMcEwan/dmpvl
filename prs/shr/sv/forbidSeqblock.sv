@@ -22,12 +22,12 @@ module forbidSeqBlock ();
     else if (clkgate) ctrl_q <= foo_d; // Woops!
     else              foo_q <= foo_q;
 
-  // Enforce exclusive updates.
+  // Enforced exclusive updates.
   always_ff @(posedge clk)
     if (a) ping1_q <= data_q;
     else   pong1_q <= data_q;
 
-  // Enforce exclusive updates, with reset and clockgate.
+  // Enforced exclusive updates, with reset and clockgate.
   always_ff @(posedge clk)
     if (rst) {ping2_q, pong2_q} <= '0;
     else if (clkgate)
