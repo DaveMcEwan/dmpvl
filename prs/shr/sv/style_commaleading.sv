@@ -114,7 +114,7 @@ assign matrix3D_B =
 
 /* Module instance without parameter ports.
 */
-Mod_A u_Mod_A0
+Mod_A u_Mod_A
 ( .i_abc(foo) // comment
 , .b_def({bar, bar}) /* comment */
 , .o_ghi
