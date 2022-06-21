@@ -6,7 +6,7 @@ module M
   , int DEPTH = 10                  // Should be in [MIN_DEPTH, MAX_DEPTH].
   , localparam int MIN_DEPTH = 2    // Non-overridable.
   , localparam int MAX_DEPTH = 64   // Non-overridable.
-  ) (};
+  ) ();
 
 
   /* 1. Explicit conjunction of all constraints, saying what you *do* want.
@@ -120,7 +120,7 @@ module N
       |{(WIDTH >= 22)
       , (DEPTH > MAX_DEPTH)
       }
-  ) (};
+  ) ();
 
   if (!PARAMCHECK_ALLGOOD || PARAMCHECK_ANYBAD) begin: l_paramcheck
     $error("Parameter constraint violation.");
