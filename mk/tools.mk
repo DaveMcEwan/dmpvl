@@ -40,6 +40,7 @@ apt_prereqs:
 
 
 tools: iverilog
+#tools: svlint
 tools: verilator
 #tools: gtkwave
 tools: icestorm
@@ -60,6 +61,10 @@ iverilog:
 	cd $(BUILD_IVERILOG); make -j$(N_JOBS)
 	cd $(BUILD_IVERILOG); make check
 	cd $(BUILD_IVERILOG); make install
+
+#svlint:
+#	wget https://github.com/dalance/svlint/releases/download/v0.4.18/svlint-v0.4.18-x86_64-lnx.zip
+#	unzip svlint-*-x86_64-lnx.zip
 
 BUILD_VERILATOR := $(TOOLBUILD)/verilator
 URL_VERILATOR := https://github.com/verilator/verilator.git

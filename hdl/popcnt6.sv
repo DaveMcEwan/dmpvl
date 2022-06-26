@@ -15,9 +15,7 @@ generate if (ABSTRACT_MODEL) begin : abstractModel
   reg [2:0] count;
   always @* begin
     count = 3'd0;
-    for (i = 0; i < 6; i=i+1)
-      if (i_x[i])
-        count = count + 1;
+    for (i = 0; i < 6; i=i+1) if (i_x[i]) count = count + 1;
   end
 
   assign o_count = count;
