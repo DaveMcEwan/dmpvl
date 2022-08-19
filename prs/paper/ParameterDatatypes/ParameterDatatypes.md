@@ -15,16 +15,16 @@ other datatypes are commonly used in analog designs and in verification
 environments, e.g. `real`, `void`, `chandle`, `string`, and `event`.
 Integral datatypes are summarised in the following table.
 
-| Keyword  | 2/4-state | Value^1^ | Vector^2^ | Width   | Signedness^4^ |
-|:---------|:---------:|:--------:|:---------:|:-------:|:-------------:|
-| bit      |     2     |  `'0`    |    yes    |    1^3^ |   unsigned    |
-| byte     |     2     |  `'0`    |    no     |    8    |    signed     |
-| shortint |     2     |  `'0`    |    no     |    16   |    signed     |
-| int      |     2     |  `'0`    |    no     |    32   |    signed     |
-| longint  |     2     |  `'0`    |    no     |    63   |    signed     |
-| logic    |     4     |  `'X`    |    yes    |    1^3^ |   unsigned    |
-| integer  |     4     |  `'X`    |    no     |    32   |    signed     |
-| time     |     4     |  `'X`    |    no     |    64   |   unsigned    |
+| Keyword  | 2/4-state | Value$^1$ | Vector$^2$ | Width | Signedness$^4$ |
+|:---------|:---------:|:---------:|:----------:|:------:|:-------------:|
+| bit      |     2     |   `'0`    |     yes    | 1$^3$  |   unsigned    |
+| byte     |     2     |   `'0`    |     no     | 8      |    signed     |
+| shortint |     2     |   `'0`    |     no     | 16     |    signed     |
+| int      |     2     |   `'0`    |     no     | 32     |    signed     |
+| longint  |     2     |   `'0`    |     no     | 63     |    signed     |
+| logic    |     4     |   `'X`    |     yes    | 1$^3$  |   unsigned    |
+| integer  |     4     |   `'X`    |     no     | 32     |    signed     |
+| time     |     4     |   `'X`    |     no     | 64     |   unsigned    |
 
 1. Values of nets or variables can be overridden using one of the assignment
    constructs with (blocking, non-blocking, continuous, and procedural).
