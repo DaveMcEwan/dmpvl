@@ -82,6 +82,7 @@ localparam sM BAR_A = {1'b1, 32'd123};  // All bits are 0 or 1, but 4-state.
 localparam sM BAZ_B = constantBaz();    // Maybe hidden X/Z in here.
 ```
 
+\newpage
 Overriding Module Parameters
 ----------------------------
 
@@ -93,9 +94,9 @@ In the `CI` module (child, implicit types), the type of each parameter is
 inferred from its default value (`integer`), but will be changed to the type of
 any override value from a parent module.
 It is therefore sensible to somehow check within `CI` that the parameters are
-of the expected type (using `type`) and size (using `$size`).
+of the expected type (using `type`) and size (using `$size`), particularly.
 The default type of all parameters is `logic [MSB:0]` where `MSB` is at least
-31 but is implementation-dependent (see page 121).
+31 but is implementation-dependent (see IEEE1800-2017 page 121).
 The default value of `NOVALUE` is `'X`.
 ```systemverilog
 module CI
@@ -110,7 +111,7 @@ In the `CE2` module (child, explicit 2-state types), the type of each parameter
 is explicitly declared and cannot be overriden by a parent module.
 This is the approach advocated in this document.
 No further checks on the type or size of these parameters are required because
-any override values froma a parent module are converted to the explicitly
+any override values froma a parent module are implicitly cast to the explicitly
 declared type.
 The default values of `NOVALUE_INT` and `NOVALUE_BIT` are `32'd0` and `1'd0`
 respectively.
@@ -138,36 +139,147 @@ module CE4
 endmodule
 ```
 
-NOTE: WIP/UNFINISHED
+In a parent module, override values can be created via localparam constants.
+The use of intermediate `localparam`s is only to highlight their types, but any
+constant expressions specified in the same way will have equivalent types.
+
+Implicitly typed override values can have types which are "good", i.e.
+compatible with what the child module expects, or "bad", i.e. incompatible or
+unexpected types.
+The prefixes "IG_" and "IB_" are used to clarify implicit-good and implicit-bad
+types respectively.
+Neither `IG_FIVE` or `IG_VEC1D` have well-defined sizes because their implict
+types are `logic` vectors of *at least* 32 bits, but the exact size is
+implementation-dependent.
+`IB_FIVE` is clearly something of a different type, i.e. `string` with four 8b
+ASCII values (2-state, `32'h66_69_76_65`).
+The size of `IB_VEC1D` is 66 bits, and the value is the concatenation of 7, 8,
+and 9 left-shifted by specific amounts.
 ```systemverilog
-module PI ();
-
- // TODO: Implicit type localparams for overrides.
- // TODO: More instances with expected/unexpected types, especially for VEC1D.
-
-  CI
-  #(.FIVE     ()
-  , .VEC1D    ()
-  , .NOVALUE  ()
-  ) u_ci ();
-
-  CE2
-  #(.FIVE         ()
-  , .VEC1D        ()
-  , .NOVALUE_INT  ()
-  , .NOVALUE_BIT  ()
-  ) u_ce2 ();
-
-  CE4
-  #(.FIVE         ()
-  , .VEC1D        ()
-  , .NOVALUE_INT  ()
-  , .NOVALUE_BIT  ()
-  ) u_ce4 ();
-endmodule
+localparam IG_FIVE = 555;
+localparam IG_VEC1D = {111, 222, 333};
+localparam IB_FIVE = "five";
+localparam IB_VEC1D = {11'd7, 22'd8, 33'd9};
 ```
 
-- TODO: Examples with parents PI and PE
+Similarly, explicitly typed override values can have good or bad types.
+These examples use the prefixes "EG_" and "EB_" to clarify explicit good/bad
+types (from the child module's perspective).
+```systemverilog
+localparam int EG_FIVE = 555;
+localparam bit [2:0][31:0] EG_VEC1D = {111, 222, 333};
+localparam bit [3:0] EB_FIVE = 4'bXZ01;
+localparam bit [2:0][9:0] EB_VEC1D = {111, 222, 333}; // Note 9:0 vs 31:0.
+```
+
+To see how the parameter types propagate, let's consider the 12 combinations
+of explict/implicit and good/bad override values with the implict, explict
+2-state, and explicit 4-state child modules:
+```systemverilog
+CI #(.FIVE (IG_FIVE), .VEC1D (IG_VEC1D)) u_ci_ig ();
+CI #(.FIVE (EG_FIVE), .VEC1D (EG_VEC1D)) u_ci_eg ();
+CI #(.FIVE (IB_FIVE), .VEC1D (IB_VEC1D)) u_ci_ib ();
+CI #(.FIVE (EB_FIVE), .VEC1D (EB_VEC1D)) u_ci_eb ();
+
+CE2 #(.FIVE (IG_FIVE), .VEC1D (IG_VEC1D)) u_ce2_ig ();
+CE2 #(.FIVE (EG_FIVE), .VEC1D (EG_VEC1D)) u_ce2_eg ();
+CE2 #(.FIVE (IB_FIVE), .VEC1D (IB_VEC1D)) u_ce2_ib ();
+CE2 #(.FIVE (EB_FIVE), .VEC1D (EB_VEC1D)) u_ce2_eb ();
+
+CE4 #(.FIVE (IG_FIVE), .VEC1D (IG_VEC1D)) u_ce4_ig ();
+CE4 #(.FIVE (EG_FIVE), .VEC1D (EG_VEC1D)) u_ce4_eg ();
+CE4 #(.FIVE (IB_FIVE), .VEC1D (IB_VEC1D)) u_ce4_ib ();
+CE4 #(.FIVE (EB_FIVE), .VEC1D (EB_VEC1D)) u_ce4_eb ();
+```
+
+All instances of `CI` should elaborate successfully and each child module
+parameters is given the type of its corresponding override value.
+Logical constructions within `u_ci_ib` and `u_ci_eb` (bad/unexpected types)
+based on those parameters may have different semantics depending on the
+overriden types.
+All instances of the `CE2` and `CE4` modules (which have explicit types) can
+freely use their parameters in the knowledge that all override values are of
+the expected type.
+That is, `FIVE` is always signed, 2-state, 32b, and "the 3nd element of `FIVE`"
+is always taken to mean an unsigned, 2-state, 1b value.
+Any overrides where the value cannot be coerced to the child's type will cause
+an error in elaboration.
+
+The following table compares the type:value semantics of "the 3rd element of
+`FIVE`" and "the 2nd element of `VEC1D`" over the 12 instances.
+
+| Instance  | `FIVE[2]`               | `VEC1D[1]`               |
+|:----------|:------------------------|:-------------------------|
+| `CI`: | | |
+| `u_ci_ig` | `logic`:`1'b1`          | `logic [31:0]`:`32'd222` |
+| `u_ci_eg` | `bit`:`1'b1`            | `bit [31:0]`:`32'd222`   |
+| `u_ci_ib` | `bit [7:0]`:`8'd69` "i" | `logic [32:0]`:`33'd9`   |
+| `u_ci_eb` | `logic`:`1'bZ`          | `bit [9:0]`:`10'd222`    |
+| `CE2`: | | |
+| `u_ce2_ig` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`  |
+| `u_ce2_eg` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`  |
+| `u_ce2_ib` | `bit`:`1'b0` ("e" = `8'd65`)     | `bit [31:0]`:`32'd0`    |
+| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` -> `0001`)  | `bit [31:0]`:`32'd0`    |
+| `CE4`: | | |
+| `u_ce4_ig` | `logic`:`1'b1`                 | `logic [31:0]`:`32'd222`       |
+| `u_ce4_eg` | `logic`:`1'b1`                 | `logic [31:0]`:`32'd222`       |
+| `u_ce4_ib` | `logic`:`1'b0` ("e" = `8'd65`) | `logic [31:0]`:`32'd0`         |
+| `u_ce4_eb` | `logic`:`1'bZ`                 | `logic [31:0]`:`32'hXXXX_XXXX` |
+
+The potential for parameters to be overridden by values of types which the
+author did not expect is clearly demonstrated.
+The author of `CE2` has the easiest task, as all parameter values are of a
+fixed type (signedness, 2/4-state, size).
+The author of `CI` should take care to handle each supported variation
+carefully and present an elaboration error when an unsupported variation is
+detected.
+In particular, the size of each parameter element should be checked, and care
+should be taken with the use of operators (e.g. `==` vs `===`), as discussed in
+a later section.
+
+One argument for untyped module parameters is that the child (`CI`) has useful
+visibility of the type of an override value.
+This argument is based on the premise that a child module doesn't trust that
+parent modules will necessarily provide sensible override values.
+The expected type of each parameter is defined through a mixture of
+elaboration-time checks, run-time checks, and the exact semantics of *all*
+parameter uses.
+At first glance, this may appear sensible, but on further reflection, this
+presents further problems:
+
+- Any type convensions in intermediate parent modules remove the benefit of
+  checks in the child modules.
+  For example, in the hierarchy `grandparent.parent.child` where a parameter is
+  passed from `grandparent` to `child`, any conversions (explicit or implict)
+  in `parent` remove the usefulness of type checks in `child`.
+  The authors of all grandparent and parent modules must also fully understand
+  the child's expected parameter types and agree to work around the lack of
+  explicit type definitions.
+  That means that *every* intermediate parent should be checked to ensure it
+  does not contain any implicit or explicit type conversions - something not
+  possible to enforce via any SytemVerilog language feature.
+- Authors of parent modules are forced to infer types manually, which involves
+  the slow and error-prone process of understanding all uses of each untyped
+  child module parameter.
+- If the meaning or expected type of any parameter is changed in the child
+  module, the checks must be reworked (difficult, error-prone) and
+  corresponding changes are required in all parent modules.
+  Where a check is forgotten or updated incorrectly there is no way to detect
+  this.
+- This is an example of a directive issued from the bottom upwards, which goes
+  against the hierarchical model of idomatic SystemVerilog.
+  A parent module author expects to write whatever code they see fit, and
+  instance a child module however they deem appropriate.
+  A parent module author does not expect the child module to dictate the form
+  and rigor of override parameters by forbidding explicit types.
+
+The simpler option is for each child module to explicitly define the type of
+each parameter, giving parent modules a canonical and easily readible account
+of which types are valid.
+
+
+NOTE: WIP/UNFINISHED
+
 - TODO: Constant functions and default values.
 - TODO: Why does it matter?
 - TODO: Comparison operations and X-propagation.
