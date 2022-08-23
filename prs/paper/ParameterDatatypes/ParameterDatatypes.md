@@ -1,12 +1,17 @@
 
-The Rule
---------
+The Rules for Synthesisable SystemVerilog
+-----------------------------------------
 
-You should explicitly declare each module/package localparam/parameter with a
-2-state datatype.
+- Each module parameter should have an explicit datatype.
+- The datatype of each module parameter should be 2-state, not 4-state.
+- Each module parameter should have an explicit default assignment.
+- Do not use case (in)equality operation with overridable 4-state parameters.
+- Do not use wildcard (in)equality operation with overridable 4-state
+  parameters.
 
-Background on Datatypes
------------------------
+
+Background on Integral Datatypes
+--------------------------------
 
 To understand the reasoning behind this (seemingly simple) rule, it is
 important to understand some details around SystemVerilog integral datatypes.
@@ -58,12 +63,12 @@ typedef struct packed {
   int a;      // 2-state
 } s2;
 
-typedef struct packed
+typedef struct packed {
   logic b;    // 4-state
   integer a;  // 4-state
 } s4;
 
-typedef struct packed
+typedef struct packed {
   logic b;    // 4-state
   int a;      // 2-state
 } sM;
@@ -78,11 +83,10 @@ localparam s4 BAR_A = {1'bZ, 32'b01XZ}; // Used in a wildcard comparison?
 localparam s4 BAR_B = 'X;               // Legal, but probably nonsense!
 
 // Accidentally 4-state constants, intended to be 2-state.
-localparam sM BAR_A = {1'b1, 32'd123};  // All bits are 0 or 1, but 4-state.
+localparam sM BAZ_A = {1'b1, 32'd123};  // All bits are 0 or 1, but 4-state.
 localparam sM BAZ_B = constantBaz();    // Maybe hidden X/Z in here.
 ```
 
-\newpage
 Overriding Module Parameters
 ----------------------------
 
@@ -97,11 +101,12 @@ It is therefore sensible to somehow check within `CI` that the parameters are
 of the expected type (using `type`) and size (using `$size`), particularly.
 The default type of all parameters is `logic [MSB:0]` where `MSB` is at least
 31 but is implementation-dependent (see IEEE1800-2017 page 121).
-The default value of `NOVALUE` is `'X`.
+The default value of `NOVALUE` is `'X`, but must be overridden in all
+instances.
 ```systemverilog
 module CI
   #(parameter FIVE = 5
-  , parameter VEC1D = {1, 2, 3}
+  , parameter VEC1D = {32'd1, 32'd2, 32'd3}
   , parameter NOVALUE
   ) ();
 endmodule
@@ -114,11 +119,11 @@ No further checks on the type or size of these parameters are required because
 any override values froma a parent module are implicitly cast to the explicitly
 declared type.
 The default values of `NOVALUE_INT` and `NOVALUE_BIT` are `32'd0` and `1'd0`
-respectively.
+respectively, but must be overridden in all instances.
 ```systemverilog
 module CE2
   #(parameter int FIVE = 5
-  , parameter bit [2:0][31:0] VEC1D = {1, 2, 3}
+  , parameter bit [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
   , parameter int NOVALUE_INT
   , parameter bit NOVALUE_BIT
   ) ();
@@ -128,16 +133,19 @@ endmodule
 The `CE4` module (child, explicit 4-state types) is similar to `CE2` except
 that the explicitly declared types are 4-state instead of 2-state.
 The default values of `NOVALUE_INTEGER` and `NOVALUE_LOGIC` are `32'bX` and
-`1'bX` respectively.
+`1'bX` respectively, but must be overridden in all instances.
 ```systemverilog
 module CE4
   #(parameter integer FIVE = 5
-  , parameter logic [2:0][31:0] VEC1D = {1, 2, 3}
+  , parameter logic [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
   , parameter integer NOVALUE_INTEGER
   , parameter logic NOVALUE_LOGIC
   ) ();
 endmodule
 ```
+
+Note that for all 3 examples, the syntax `VEC1D = {1, 2, 3}` would be illegal,
+i.e. unsized literals are not allowed in concatenations or replications.
 
 In a parent module, override values can be created via localparam constants.
 The use of intermediate `localparam`s is only to highlight their types, but any
@@ -157,7 +165,7 @@ The size of `IB_VEC1D` is 66 bits, and the value is the concatenation of 7, 8,
 and 9 left-shifted by specific amounts.
 ```systemverilog
 localparam IG_FIVE = 555;
-localparam IG_VEC1D = {111, 222, 333};
+localparam IG_VEC1D = {32'd111, 32'd222, 32'd333};
 localparam IB_FIVE = "five";
 localparam IB_VEC1D = {11'd7, 22'd8, 33'd9};
 ```
@@ -167,9 +175,9 @@ These examples use the prefixes "EG_" and "EB_" to clarify explicit good/bad
 types (from the child module's perspective).
 ```systemverilog
 localparam int EG_FIVE = 555;
-localparam bit [2:0][31:0] EG_VEC1D = {111, 222, 333};
+localparam bit [2:0][31:0] EG_VEC1D = {32'd111, 32'd222, 32'd333};
 localparam bit [3:0] EB_FIVE = 4'bXZ01;
-localparam bit [2:0][9:0] EB_VEC1D = {111, 222, 333}; // Note 9:0 vs 31:0.
+localparam bit [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
 ```
 
 To see how the parameter types propagate, let's consider the 12 combinations
@@ -244,51 +252,234 @@ parent modules will necessarily provide sensible override values.
 The expected type of each parameter is defined through a mixture of
 elaboration-time checks, run-time checks, and the exact semantics of *all*
 parameter uses.
-At first glance, this may appear sensible, but on further reflection, this
+At first glance, this may appear desirable, but on further reflection, this
 presents further problems:
 
+- The authors of all parent and grandparent modules must fully understand
+  the child's expected parameter types, but are forced to infer types manually.
+  This involves the slow and error-prone process of reading all uses of each
+  untyped parameter port on the child module.
+- A parent module author expects to write whatever code they see fit, and
+  instance a child module however they deem appropriate.
+  A parent module author does not expect the child module to dictate the form
+  and rigor of override parameters by forbidding explicit types.
 - Any type convensions in intermediate parent modules remove the benefit of
   checks in the child modules.
   For example, in the hierarchy `grandparent.parent.child` where a parameter is
   passed from `grandparent` to `child`, any conversions (explicit or implict)
   in `parent` remove the usefulness of type checks in `child`.
-  The authors of all grandparent and parent modules must also fully understand
-  the child's expected parameter types and agree to work around the lack of
-  explicit type definitions.
   That means that *every* intermediate parent should be checked to ensure it
   does not contain any implicit or explicit type conversions - something not
   possible to enforce via any SytemVerilog language feature.
-- Authors of parent modules are forced to infer types manually, which involves
-  the slow and error-prone process of understanding all uses of each untyped
-  child module parameter.
 - If the meaning or expected type of any parameter is changed in the child
   module, the checks must be reworked (difficult, error-prone) and
   corresponding changes are required in all parent modules.
   Where a check is forgotten or updated incorrectly there is no way to detect
   this.
-- This is an example of a directive issued from the bottom upwards, which goes
-  against the hierarchical model of idomatic SystemVerilog.
-  A parent module author expects to write whatever code they see fit, and
-  instance a child module however they deem appropriate.
-  A parent module author does not expect the child module to dictate the form
-  and rigor of override parameters by forbidding explicit types.
 
 The simpler option is for each child module to explicitly define the type of
 each parameter, giving parent modules a canonical and easily readible account
 of which types are valid.
+The child module can, and should, still have elaboration-time checks on the
+values of each parameter.
 
 
-NOTE: WIP/UNFINISHED
+Default Values
+--------------
 
-- TODO: Constant functions and default values.
-- TODO: Why does it matter?
-- TODO: Comparison operations and X-propagation.
+Just as parameters, like all data objects, have default types defined in the
+language specification, they also have default values.
+Where a default type is implied by lack of an explicit type in a parameter's
+declaration, a default value is implied by lack of an assignment.
+Fortunately, the rules for integral data objects are simple:
+
+1. All unassigned bits of a 4-state parameter have the implicit value `'X`.
+2. All unassigned bits of a 2-state parameter have the implicit value `'0`.
+
+In the `CE2` and `CE4` examples, the parameters with names starting with
+"`NOVALUE_`" have explicit types, but no default assignment.
+Parameter ports without a default assignment must be overriden by parent
+modules, otherwise an error should be raised at elaboration time, see
+IEEE1800-2017 Annex A footnote 18.
+An author can clarify to readers that they have considered the default value of
+a module parameter by using an explict default assignment.
+
+One way for a parameter to accidentally contain default values is through
+use of a constant function which doesn't assign to every component.
+```systemverilog
+function automatic integer f_myConstant ();
+  for (int i=0; i < 32; i++) begin
+    case (i % 3)
+      0: f_myConstant[i] = 1'b0;
+      1: f_myConstant[i] = 1'b1;
+      // Woops! Missing arm for i=2?
+    endcase
+  end
+endfunction
+
+CE4 #(.FIVE (f_myConstant())) u_ce4_x ();
+```
+
+In the above example, the instance of `u_ce4_x` appears to override the value
+of `FIVE`, but only a full semantic analysis of `f_myConstant` can reveal that
+some bits are, perhaps unexpectedly, `1'bX`.
+In real-world usage, the definition of `f_myConstant` may be in a different
+file, or be selected from alternative definitions in a range of files, i.e.
+finding the correct definition may be non-trivial.
+Also in real-world usage, the construction of `f_myConstant` may be much more
+complex than the simple example above, perhaps through deep conditional logic
+and spread over many lines.
+This shows that with parameters declared using implicit or explicit 4-state
+types it difficult for a human reader to be confident that any override values
+do not contain Xs.
+
+
+Comparison Operations
+---------------------
+
+So far, we have seen that parameters have implicit or explicit types, and
+implicit or explict values based on those types.
+In particular, it has been shown that 4-state parameters may contain Xs, but
+nothing has been said about why this may cause problems.
+One source of potential problems with 4-state parameters lies in the use of
+SystemVerilog comparison operations.
+
+Comparison operation are those which take two operands and return a 1b value
+which says whether the comparison was successful, unsuccessful, or unknown.
+The comparison operations in SystemVerilog are:
+
+| Operator |   Type  | Name                     | Class            |
+|:--------:|:-------:|:-------------------------|:-----------------|
+|   `<`    | `logic` | less than                | partial ordering |
+|   `>`    | `logic` | greater than             | partial ordering |
+|   `<=`   | `logic` | less than or equal to    | partial ordering |
+|   `>=`   | `logic` | greater than or equal to | partial ordering |
+|   `==`   | `logic` | logical equality         | partial equality |
+|   `!=`   | `logic` | logical inequality       | partial equality |
+|   `===`  | `bit`   | case equality            | total equality   |
+|   `!==`  | `bit`   | case inequality          | total equality   |
+|   `==?`  | `logic` | wildcard equality        | partial equality |
+|   `!=?`  | `logic` | wildcard inequality      | partial equality |
+
+The difference between partial and total ordering/equality operations is that
+a total order/equality comparison must return either True (`1'b1`) or False
+(1'b0), but a partial order/equality comparison may additionally return a
+result of Unknown (`1'bX`).
+For all of the partial ordering/equality operations, if the LHS operand
+contains any Xs, then the result is `1'bX`.
+This also applies to Xs in RHS operands, except for wildcard (in)equality
+operations.
+
+Where a signal `c` is compared against a parameter-defined value, it is
+essential for synthesisable code to propagate any Xs in `c` to the result of
+the comparison.
+Without the ability to propagate Xs through the comparison, e.g.
+`d = (c === 5)`, a simulator will assign `d = 1'b0` when any bits of `c` are
+unknown.
+A synthesised circuit does not have the concept of "unknown" values, so use of
+the case (in)equality operators will cause a mismatch between simulation and
+synthesis.
+
+As suggested by the names "logical equality" and "case equality", the same
+semantics are applied to conditional if-else statements and case statements
+respectively.
+The subtle difference between case and logical equalities introduces a high
+potential for simulation/synthesis mismatches when used with parameters
+containing Xs.
+
+```systemverilog
+localparam logic [1:0] OKAY = 2'b00;
+localparam logic [1:0] WOOPS = 2'bX1;
+
+logic [1:0] a;
+integer b1, b2;
+
+always_comb
+  case (a)
+    OKAY:    b1 = 555;
+    WOOPS:   b1 = 666;
+    default: b1 = 777;
+  endcase
+
+always_comb
+  if (a == OKAY)
+    b2 = 555;
+  else if (a == WOOPS)
+    b2 = 666;
+  else
+    b2 = 777;
+```
+
+In the above example, two 4-state parameters are defined, but `WOOPS` has one
+bit accidentally set to `a`.
+Two synthesisable signals `b1` and `b2` are assigned to by *approximately*
+equivalent processes.
+The author is intends that whenever `a` contains bits of unknown value, `b1`
+and `b2` are also of unknown value, or perhaps `777`.
+Instead, `b1` has a case where an unknown value in `a` is not propagated
+the value of `WOOPS` is matched using case equality.
+Note that the `b2` is not exactly equivalent, and that any Xs in `a`, `OKAY`,
+or `WOOPS` will be propagated, as intended.
+While this contrived example is very simple, it should be clear that more
+complex constructions with 4-state parameters are at increased risk of
+introducing exact comparison matches to `1'bX`.
+The risk is particularly high when code is restructured and/or the code does
+not have a verification environment mandating 100% toggle, expression and
+condition coverage.
+
+Wildcard (in)equality operations are one usecase where Xs in a parameter is a
+useful, if not essential, ability.
+In a wildcard (in)equality operation, Xs and Zs may be used (only by the RHS
+operand) to mask out uninteresting bits from the LHS operand.
+Positive matches can be achieved using multiple LHS values, e.g.
+`4'b0100 ==? 4'b01XZ` -> `1'b1` and `4'b0111 ==? 4'b01XZ` -> `1'b1`.
+Negative matches can be also be achieved using multiple LHS values, e.g.
+`4'b1100 ==? 4'b01XZ` -> `1'b0` and `4'b1111 ==? 4'b01XZ` -> `1'b0`.
+However, care must be taken about which side operands are placed on;
+Although both `1'b0 ==? 1'bX` and `1'b1 ==? 1'bX` result in `1'b1`, changing
+sides changes the results as both `1'bX ==? 1'b0` and `1'bX ==? 1'b1` result in
+`1'bX`.
+Where wildcard (in)equality operations are used with module parameters, it is
+not possible for a child module's author to known if any Xs are intentional or
+accidental.
+It is recommended that instead of using a wildcard equality operation with Xs
+or Zs to mask out certain bits, authors should use the more conventional style
+of masking with bitwise negation, AND, OR, etc. operations.
+
+
+Conclusion
+----------
+
+The semantics and effects of module parameter port datatypes have been
+described through worked examples to demonstrate features of the SystemVerilog
+language.
+Parameters always have a datatype, whether it is implictly defined, explicitly
+declared, or given by the type of an override value.
+Similarly, parameters always have a value which can be set implictly, via a
+default assignment, or provided by a parent module.
+In typical design code, parameters should be 2-state, although this requires
+authors to pay due care to their declarations.
+The use of case statements is shown to be a potential source of
+simulation/synthesis mismatch problems when used with 4-state parameters, which
+must be de-risked through either rigourous manual review or application of the
+five rules first listed.
+
+TODO: Practical demonstrations of all described syntax and semantics can be seen
+by running the attached SystemVerilog file in a simulator via the attached
+Makefile.
+
+
+
+Appendix: Casting Operator
+--------------------------
+
 - TODO: Casting operator.
 
-Checking Parameter Values
--------------------------
-TODO: Elaboration System Tasks
 
+Appendix: Checking Parameter Values
+-----------------------------------
+
+TODO: Elaboration System Tasks
 
 
 Appendix: Key Quotes from the Language Reference Manual (IEEE1800-2017)
@@ -483,6 +674,45 @@ typedef struct packed { // default unsigned
   bit [2:0] filler;
 } s_atmcell;
 ```
+
+
+### Clause 11.4.12 Concatenation operators (page 271)
+
+Unsized constant numbers shall not be allowed in concatenations.
+This is because the size of each operand in the concatenation is needed to
+calculate the complete size of the concatenation.
+
+A concatenation is not the same as a structure literal (see 5.10) or an array
+literal (see 5.11).
+Concatenations are enclosed in just braces (`{ }`), whereas structure and array
+literals are enclosed in braces that begin with an apostrophe (`'{ }`).
+
+
+### Clause 12.5 Case statement (middle of page 305)
+
+Apart from syntax, the case statement differs from the multiway if–else–if
+construct in two important ways:
+
+1. The conditional expressions in the if–else–if construct are more general
+  than comparing one expression with several others, as in the case statement.
+2. The case statement provides a definitive result when there are `x` and `z`
+  values in an expression.
+
+In a *case_expression* comparison, the comparison only succeeds when each bit
+matches exactly with respect to the values `0`, `1`, `x`, and `z`.
+As a consequence, care is needed in specifying the expressions in the case
+statement.
+The bit length of all the expressions needs to be equal, so that exact bitwise
+matching can be performed.
+Therefore, the length of all the *case_item_expressions*, as well as the
+*case_expression*, shall be made equal to the length of the longest
+*case_expression* and *case_item_expressions*.
+If any of these expressions is unsigned, then all of them shall be treated as
+unsigned.
+If all of these expressions are signed, then they shall be treated as signed.
+The reason for providing a *case_expression* comparison that handles the `x`
+and `z` values is that it provides a mechanism for detecting such values and
+reducing the pessimism that can be generated by their presence.
 
 
 ### Clause 23.10 Overriding module parameters (between pages 731,732)
