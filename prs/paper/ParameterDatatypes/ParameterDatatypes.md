@@ -5,6 +5,7 @@ The Rules for Synthesisable SystemVerilog
 - Each module parameter should have an explicit datatype.
 - The datatype of each module parameter should be 2-state, not 4-state.
 - Each module parameter should have an explicit default assignment.
+- Do not mix 4-state and 2-state members in packed structures.
 - Do not use case (in)equality operation with overridable 4-state parameters.
 - Do not use wildcard (in)equality operation with overridable 4-state
   parameters.
@@ -87,6 +88,12 @@ localparam sM BAZ_A = {1'b1, 32'd123};  // All bits are 0 or 1, but 4-state.
 localparam sM BAZ_B = constantBaz();    // Maybe hidden X/Z in here.
 ```
 
+NOTE: IEEE1800-2017 is somewhat unclear on how `sM` should be treated within
+constant functions, so there may be implementation-specific differences.
+Compare the messages about `sM` in reports from different simulators for full
+details.
+
+
 Overriding Module Parameters
 ----------------------------
 
@@ -164,7 +171,7 @@ ASCII values (2-state, `32'h66_69_76_65`).
 The size of `IB_VEC1D` is 66 bits, and the value is the concatenation of 7, 8,
 and 9 left-shifted by specific amounts.
 ```systemverilog
-localparam IG_FIVE = 555;
+localparam IG_FIVE = 5;
 localparam IG_VEC1D = {32'd111, 32'd222, 32'd333};
 localparam IB_FIVE = "five";
 localparam IB_VEC1D = {11'd7, 22'd8, 33'd9};
@@ -174,9 +181,9 @@ Similarly, explicitly typed override values can have good or bad types.
 These examples use the prefixes "EG_" and "EB_" to clarify explicit good/bad
 types (from the child module's perspective).
 ```systemverilog
-localparam int EG_FIVE = 555;
+localparam int EG_FIVE = 5;
 localparam bit [2:0][31:0] EG_VEC1D = {32'd111, 32'd222, 32'd333};
-localparam bit [3:0] EB_FIVE = 4'bXZ01;
+localparam logic [3:0] EB_FIVE = 4'bXZ01;
 localparam bit [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
 ```
 
@@ -216,23 +223,23 @@ an error in elaboration.
 The following table compares the type:value semantics of "the 3rd element of
 `FIVE`" and "the 2nd element of `VEC1D`" over the 12 instances.
 
-| Instance  | `FIVE[2]`               | `VEC1D[1]`               |
-|:----------|:------------------------|:-------------------------|
+| Instance  | `FIVE[2]`                         | `VEC1D[1]`                      |
+|:----------|:----------------------------------|:--------------------------------|
 | `CI`: | | |
-| `u_ci_ig` | `logic`:`1'b1`          | `logic [31:0]`:`32'd222` |
-| `u_ci_eg` | `bit`:`1'b1`            | `bit [31:0]`:`32'd222`   |
-| `u_ci_ib` | `bit [7:0]`:`8'd69` "i" | `logic [32:0]`:`33'd9`   |
-| `u_ci_eb` | `logic`:`1'bZ`          | `bit [9:0]`:`10'd222`    |
+| `u_ci_ig`  | `logic`:`1'b1`                   | `logic`:`1'b0`                  |
+| `u_ci_eg`  | `bit`:`1'b1`                     | `bit`:`1'b0`                    |
+| `u_ci_ib`  | `logic`:`1'b1`                   | `logic`:`1'b0`                  |
+| `u_ci_eb`  | `logic`:`1'bZ`                   | `bit`:`1'b0`                    |
 | `CE2`: | | |
-| `u_ce2_ig` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`  |
-| `u_ce2_eg` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`  |
-| `u_ce2_ib` | `bit`:`1'b0` ("e" = `8'd65`)     | `bit [31:0]`:`32'd0`    |
-| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` -> `0001`)  | `bit [31:0]`:`32'd0`    |
+| `u_ce2_ig` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
+| `u_ce2_eg` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
+| `u_ce2_ib` | `bit`:`1'b1` ("e" = `8'h65`)     | `bit [31:0]`:`32'h0380_0010`    |
+| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` -> `0001`)  | `bit [31:0]`:`32'd0`            |
 | `CE4`: | | |
-| `u_ce4_ig` | `logic`:`1'b1`                 | `logic [31:0]`:`32'd222`       |
-| `u_ce4_eg` | `logic`:`1'b1`                 | `logic [31:0]`:`32'd222`       |
-| `u_ce4_ib` | `logic`:`1'b0` ("e" = `8'd65`) | `logic [31:0]`:`32'd0`         |
-| `u_ce4_eb` | `logic`:`1'bZ`                 | `logic [31:0]`:`32'hXXXX_XXXX` |
+| `u_ce4_ig` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
+| `u_ce4_eg` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
+| `u_ce4_ib` | `logic`:`1'b1` ("e" = `8'h65`)   | `logic [31:0]`:`32'h0380_0010`  |
+| `u_ce4_eb` | `logic`:`1'bZ`                   | `logic [31:0]`:`32'd0`          |
 
 The potential for parameters to be overridden by values of types which the
 author did not expect is clearly demonstrated.
@@ -333,6 +340,11 @@ This shows that with parameters declared using implicit or explicit 4-state
 types it difficult for a human reader to be confident that any override values
 do not contain Xs.
 
+NOTE: Again, due to the imprecise wording of IEEE1800-2017, the exact override
+value may be different between simulators.
+Compare the messages about `u_ce4_x.FIVE` in reports from different simulators
+for full details.
+
 
 Comparison Operations
 ---------------------
@@ -374,8 +386,8 @@ Where a signal `c` is compared against a parameter-defined value, it is
 essential for synthesisable code to propagate any Xs in `c` to the result of
 the comparison.
 Without the ability to propagate Xs through the comparison, e.g.
-`d = (c === 5)`, a simulator will assign `d = 1'b0` when any bits of `c` are
-unknown.
+`d = (c === 32'd5)`, a simulator will assign `d = 1'b0` when any bits of `c`
+are unknown.
 A synthesised circuit does not have the concept of "unknown" values, so use of
 the case (in)equality operators will cause a mismatch between simulation and
 synthesis.
@@ -464,14 +476,17 @@ simulation/synthesis mismatch problems when used with 4-state parameters, which
 must be de-risked through either rigourous manual review or application of the
 five rules first listed.
 
-TODO: Practical demonstrations of all described syntax and semantics can be seen
-by running the attached SystemVerilog file in a simulator via the attached
-Makefile.
+Practical demonstrations of all described syntax and semantics can be seen by
+running the attached SystemVerilog file in a variety of simulators via the
+attached Makefile.
+It is particularly interesting to compare the reports produced by different
+simulators, demonstrating that concerns about mismatches between tools are
+founded in well-founded.
 
 
 
-Appendix: Casting Operator
---------------------------
+Appendix: Concatenations, Array Literals, and the Casting Operator
+------------------------------------------------------------------
 
 - TODO: Casting operator.
 
@@ -479,7 +494,160 @@ Appendix: Casting Operator
 Appendix: Checking Parameter Values
 -----------------------------------
 
-TODO: Elaboration System Tasks
+Parameters are constants at elaboration time, therefore they can be sanity
+checked at elaboration time.
+SystemVerilog has a set of language features specifically included for this
+purpose and, as described in IEEE1800-2017 Clause 20.11 (Elaboration system
+tasks), is comprised of four tasks (`$fatal`, `$error`, `$warning`, and
+`$info`).
+Although these task names are also valid at run-time, it is much nicer from
+user/integrator's perspective if parameters checks are performed during
+elaboration (with a debug loop of maybe 5 seconds) versus during simulation
+(with a debug look of maybe 5 minutes).
+The following examples demonstrate a variety of ways to check that a parameter
+`FOO` is integral and less than `5`.
+
+### Poor Practice
+Firstly, the use of an `initial` block declares a process which executes
+exactly once, at the start of a simulation.
+This example also clarifies the concept of "positive form" (saying what you
+want) versus "negative form" (saying what you *don't* want.
+```systemverilog
+initial begin
+  if (FOO >= 5)         // Negative form.
+    $error("FOO is greater than 5.");
+
+  if (!(FOO < 5))       // Positive form.
+    $error("FOO is not less than 5.");
+
+  // Rephrased as an immediate assertion.
+  assert (!(FOO < 5));
+end
+```
+
+### Terrible Practice
+A related style is to schedule the check to be executed multiple times, e.g. on
+every rising edge of a clock, wasting valuable simulation time.
+This example also demonstrates another bad practice - using monadic
+functionality in non-testbench code.
+On a multi-threaded simulation, the simulator may execute `always` processes in
+parallel or in any order, so the user has no control over the ordering of
+`$display`'d characters on STDOUT, or which thread updates `errorCount` first.
+```systemverilog
+always @(posedge clk)
+  if (!(FOO < 5)) begin
+    $display("FOO is not less than 5.");  // IO function.
+    errorCounter++;                       // Global variable update.
+  end
+
+// Rephrased as a concurrent assertion.
+property prop_fooLt5;
+  @(posedge clk) !(FOO < 5)
+endproperty
+asrt_fooLt5: assert property (prop_fooLt5);
+```
+
+### Good Practice
+To check parameters at elaboration-time, as opposed to run-time, generate
+statements can be used with elaboration system tasks.
+Note that this example is almost identical in syntax to the examples in the
+`initial` block.
+Simply removing `initial begin` and `end` converts the run-time process into a
+generate statement which is evaluated in elaboration.
+```systemverilog
+if (!(FOO < 5))
+  $error("FOO is not less than 5.");
+```
+
+### A Neat Style (PARAMCHECK)
+Parameters can be checked to be one of a choice of values, be in a range of
+values, or to satisfy any other type of constraint which can be written as a
+boolean expression.
+When there are many parameters and many constraints, writing a separate generate
+statement for each constraint can produce an overwhelming volume of code.
+A useful style with a lower volume of code is to combine a set of constraints
+via conjunction.
+Note that in a conjunction, i.e. "all of these must be true", constraint must
+be written in positive form.
+To help readers understand your intent, and avoid confusion around indentation
+and punctuation, it is also useful to declare a boolean constant.
+The following example lists all constraints in the conjunction defining
+`PARAMCHECK_ALLGOOD`, then uses a single conditional generate statement to
+perform the check in elaboration.
+```systemverilog
+localparam bit PARAMCHECK_ALLGOOD =
+  &{(0 < WIDTH)
+  , (WIDTH < 22)
+  , (MIN_DEPTH <= DEPTH)
+  , (DEPTH <= MAX_DEPTH)
+  , (FOO < 5)
+  };
+if (!PARAMCHECK_ALLGOOD) begin
+  $error("Parameter constraint violation.");
+  $info("WIDTH=%0d%", WIDTH);
+  $info("DEPTH=%0d%", DEPTH);
+  $info("FOO=%b%", FOO);
+end
+```
+Elaboration system tasks are defined to output their file path, line number,
+and hierarchical scope, so the user can find the list of constraints in the
+source code.
+To help debug elaboration errors, the above example uses `$info` to show the
+values which the constraints are applied to.
+With the list of constraints (in source code) and the exact input to those
+constraints (via `$info`), the user is provided with everything they need to
+identify all of their parameter constraint violations.
+
+It is preferable to use `$error`, rather than `$info`, `$warning` or `$fatal`.
+Both `$info` and `$warning` will allow simulation to proceed and their messages
+may be overlooked in long simulation logs.
+Elaboration is stopped immediately upon hitting `$fatal`, which means that the
+user is shown only one problem at once.
+Using `$error` allows elaboration to complete, giving the user all messages in
+one shot, but prevents simulation from occurring.
+
+For parameters with complex requirements, intermediate constants and constant
+functions are useful extensions to this style of parameter checking.
+```systemverilog
+function automatic bit [N_ITEM-1:0] f_paramcheck_MYARRAY ();
+  for (int i=0; i < N_ITEM; i++)
+    f_paramcheck_MYARRAY[i] =
+      &{(0 <= MYARRAY[i])
+      , (MYARRAY[i] < 5)
+      , (MYARRAY[i] != 2)
+      };
+endfunction
+localparam bit [N_ITEM-1:0] PARAMCHECKGOOD_MYARRAY = f_paramcheck_MYARRAY();
+
+localparam bit PARAMCHECK_ALLGOOD =
+  &{(0 < WIDTH)
+  // ... snip ...
+  , &PARAMCHECKGOOD_MYARRAY
+  // ... snip ...
+  };
+if (!PARAMCHECK_ALLGOOD) begin
+  $error("Parameter constraint violation.");
+  // ... snip ...
+  $info("PARAMCHECKGOOD_MYARRAY=%b", PARAMCHECKGOOD_MYARRAY);
+  // ... snip ...
+  for (genvar i=0; i < N_ITEM; i++)
+    $info("MYARRAY[%0d]=%0d", i, MYARRAY[i]);
+end
+```
+The above example checks each item in an array against a complex set of
+constraints.
+The user is first presented with a bit-vector showing `1` for a passing items
+and `0` for items violating their constraints, then the exact value of each
+item in the array.
+
+It is useful to give intermediate constants and constant functions a prefix
+which is consistent and describes the intent, i.e. "PARAMCHECK".
+Without further context, a new reader will able to easily identify that all
+objects with "PARAMCHECK" (or similar) in their identifier are used for
+checking parameters.
+A consistent prefix enables code analysis tools to identify that these objects
+are used for checking parameter against constraints and may extract relevant
+expressions or values, e.g. for documentation.
 
 
 Appendix: Key Quotes from the Language Reference Manual (IEEE1800-2017)

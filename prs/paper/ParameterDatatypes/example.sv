@@ -68,14 +68,14 @@ module parent ();
   localparam sM BAZ_B = constantBaz();    // Maybe hidden X/Z in here.
 
 
-  localparam IG_FIVE = 555;
+  localparam IG_FIVE = 5;
   localparam IG_VEC1D = {32'd111, 32'd222, 32'd333};
   localparam IB_FIVE = "five";
   localparam IB_VEC1D = {11'd7, 22'd8, 33'd9};
 
-  localparam int EG_FIVE = 555;
+  localparam int EG_FIVE = 5;
   localparam bit [2:0][31:0] EG_VEC1D = {32'd111, 32'd222, 32'd333};
-  localparam bit [3:0] EB_FIVE = 4'bXZ01;
+  localparam logic [3:0] EB_FIVE = 4'bXZ01;
   localparam bit [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
 
   CI #(.FIVE (IG_FIVE), .VEC1D (IG_VEC1D)) u_ci_ig ();
@@ -130,6 +130,10 @@ module parent ();
     else
       b2 = 777;
 
+  integer c;
+  logic d;
+  assign d = (c === 32'd5);
+
 
   localparam logic WILDCARD_TRUE1  = 4'b0100 ==? 4'b01XZ;
   localparam logic WILDCARD_TRUE2  = 4'b0111 ==? 4'b01XZ;
@@ -172,27 +176,368 @@ module parent ();
 
 
   integer fd;
-  initial begin
+  initial begin: l_report
 `ifdef QUESTA
     fd = $fopen("QUESTA.rpt");
+    $fdisplay(fd, "QUESTA");
 `elsif XCELIUM
     fd = $fopen("XCELIUM.rpt");
+    $fdisplay(fd, "XCELIUM");
+`elsif VERILATOR
+    fd = $fopen("VERILATOR.rpt");
+    $fdisplay(fd, "VERILATOR");
 `else
     fd = $fopen("OTHER.rpt");
+    $fdisplay(fd, "OTHER");
 `endif
-    $fdisplay(fd, "$typename(s2)=%s $size(s2)=%0d", $typename(s2), $size(s2));
-    $fdisplay(fd, "$typename(s4)=%s $size(s4)=%0d", $typename(s4), $size(s4));
-    $fdisplay(fd, "$typename(sM)=%s $size(sM)=%0d", $typename(sM), $size(sM));
-    // TODO: $display values of FOO_*, BAR_*, BAZ_*
-    // TODO: $display types of (IG|IB|EG|EB)_(FIVE|VEC1D)
-    // TODO: $display values of (IG|IB|EG|EB)_(FIVE|VEC1D)
-    // TODO: $display types of child module parameters.
-    // TODO: $display values of child module parameters.
-    // TODO: $display value of `u_ce4_x.FIVE`.
-    // TODO: Iterate through values of `a`, $display values of `b1`, `b2`.
-    // TODO: $display values of WILDCARD_*.
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Packed Structures With Mixed 2/4-state Members"); // {{{
+    $fdisplay(fd, "s2");
+    $fdisplay(fd, "  $typename(s2)=%s", $typename(s2));
+    $fdisplay(fd, "  $size(s2)=%0d", $size(s2));
+    $fdisplay(fd, "s4");
+    $fdisplay(fd, "  $typename(s4)=%s", $typename(s4));
+    $fdisplay(fd, "  $size(s4)=%0d", $size(s4));
+    $fdisplay(fd, "sM");
+    $fdisplay(fd, "  $typename(sM)=%s", $typename(sM));
+    $fdisplay(fd, "  $size(sM)=%0d", $size(sM));
+    $fdisplay(fd, "FOO_A");
+    $fdisplay(fd, "  $typename(FOO_A)=%s", $typename(FOO_A));
+    $fdisplay(fd, "  $size(FOO_A)=%0d", $size(FOO_A));
+    $fdisplay(fd, "  FOO_A=%b", FOO_A);
+    $fdisplay(fd, "FOO_B");
+    $fdisplay(fd, "  $typename(FOO_B)=%s", $typename(FOO_B));
+    $fdisplay(fd, "  $size(FOO_B)=%0d", $size(FOO_B));
+    $fdisplay(fd, "  FOO_B=%b", FOO_B);
+    $fdisplay(fd, "FOO_C");
+    $fdisplay(fd, "  $typename(FOO_C)=%s", $typename(FOO_C));
+    $fdisplay(fd, "  $size(FOO_C)=%0d", $size(FOO_C));
+    $fdisplay(fd, "  FOO_C=%b", FOO_C);
+    $fdisplay(fd, "BAR_A");
+    $fdisplay(fd, "  $typename(BAR_A)=%s", $typename(BAR_A));
+    $fdisplay(fd, "  $size(BAR_A)=%0d", $size(BAR_A));
+    $fdisplay(fd, "  BAR_A=%b", BAR_A);
+    $fdisplay(fd, "BAR_B");
+    $fdisplay(fd, "  $typename(BAR_B)=%s", $typename(BAR_B));
+    $fdisplay(fd, "  $size(BAR_B)=%0d", $size(BAR_B));
+    $fdisplay(fd, "  BAR_B=%b", BAR_B);
+    $fdisplay(fd, "BAZ_A");
+    $fdisplay(fd, "  $typename(BAZ_A)=%s", $typename(BAZ_A));
+    $fdisplay(fd, "  $size(BAZ_A)=%0d", $size(BAZ_A));
+    $fdisplay(fd, "  BAZ_A=%b", BAZ_A);
+    $fdisplay(fd, "BAZ_B");
+    $fdisplay(fd, "  $typename(BAZ_B)=%s", $typename(BAZ_B));
+    $fdisplay(fd, "  $size(BAZ_B)=%0d", $size(BAZ_B));
+    $fdisplay(fd, "  BAZ_B=%b", BAZ_B);
+    // }}} Packed Structures With Mixed 2/4-state Members
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Implicit/Explicit Good/Bad Override Values"); // {{{
+    $fdisplay(fd, "IG_FIVE");
+    $fdisplay(fd, "  $typename(IG_FIVE)=%s", $typename(IG_FIVE));
+    $fdisplay(fd, "  $size(IG_FIVE)=%0d", $size(IG_FIVE));
+    $fdisplay(fd, "  IG_FIVE=%b", IG_FIVE);
+    $fdisplay(fd, "IG_VEC1D");
+    $fdisplay(fd, "  $typename(IG_VEC1D)=%s", $typename(IG_VEC1D));
+    $fdisplay(fd, "  $size(IG_VEC1D)=%0d", $size(IG_VEC1D));
+    $fdisplay(fd, "  IG_VEC1D=%b", IG_VEC1D);
+    $fdisplay(fd, "IB_FIVE");
+    $fdisplay(fd, "  $typename(IB_FIVE)=%s", $typename(IB_FIVE));
+    $fdisplay(fd, "  $size(IB_FIVE)=%0d", $size(IB_FIVE));
+    $fdisplay(fd, "  IB_FIVE=%b", IB_FIVE);
+    $fdisplay(fd, "IB_VEC1D");
+    $fdisplay(fd, "  $typename(IB_VEC1D)=%s", $typename(IB_VEC1D));
+    $fdisplay(fd, "  $size(IB_VEC1D)=%0d", $size(IB_VEC1D));
+    $fdisplay(fd, "  IB_VEC1D=%b", IB_VEC1D);
+    $fdisplay(fd, "EG_FIVE");
+    $fdisplay(fd, "  $typename(EG_FIVE)=%s", $typename(EG_FIVE));
+    $fdisplay(fd, "  $size(EG_FIVE)=%0d", $size(EG_FIVE));
+    $fdisplay(fd, "  EG_FIVE=%b", EG_FIVE);
+    $fdisplay(fd, "EG_VEC1D");
+    $fdisplay(fd, "  $typename(EG_VEC1D)=%s", $typename(EG_VEC1D));
+    $fdisplay(fd, "  $size(EG_VEC1D)=%0d", $size(EG_VEC1D));
+    $fdisplay(fd, "  EG_VEC1D=%b", EG_VEC1D);
+    $fdisplay(fd, "EB_FIVE");
+    $fdisplay(fd, "  $typename(EB_FIVE)=%s", $typename(EB_FIVE));
+    $fdisplay(fd, "  $size(EB_FIVE)=%0d", $size(EB_FIVE));
+    $fdisplay(fd, "  EB_FIVE=%b", EB_FIVE);
+    $fdisplay(fd, "EB_VEC1D");
+    $fdisplay(fd, "  $typename(EB_VEC1D)=%s", $typename(EB_VEC1D));
+    $fdisplay(fd, "  $size(EB_VEC1D)=%0d", $size(EB_VEC1D));
+    $fdisplay(fd, "  EB_VEC1D=%b", EB_VEC1D);
+    // }}} Implicit/Explicit Good/Bad Override Values
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Overridden Child Module Parameters");
+    $fdisplay(fd, "CI"); // {{{
+    $fdisplay(fd, "  u_ci_ig");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ci_ig.FIVE)=%s", $typename(u_ci_ig.FIVE));
+    $fdisplay(fd, "      $size(u_ci_ig.FIVE)=%0d", $size(u_ci_ig.FIVE));
+    $fdisplay(fd, "      u_ci_ig.FIVE=%b", u_ci_ig.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ci_ig.FIVE[2])=%s", $typename(u_ci_ig.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ci_ig.FIVE[2])=%0d", $size(u_ci_ig.FIVE[2]));
+    $fdisplay(fd, "      u_ci_ig.FIVE[2]=%b", u_ci_ig.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ci_ig.VEC1D)=%s", $typename(u_ci_ig.VEC1D));
+    $fdisplay(fd, "      $size(u_ci_ig.VEC1D)=%0d", $size(u_ci_ig.VEC1D));
+    $fdisplay(fd, "      u_ci_ig.VEC1D=%b", u_ci_ig.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ci_ig.VEC1D[1])=%s", $typename(u_ci_ig.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ci_ig.VEC1D[1])=%0d", $size(u_ci_ig.VEC1D[1]));
+    $fdisplay(fd, "      u_ci_ig.VEC1D[1]=%b", u_ci_ig.VEC1D[1]);
+    $fdisplay(fd, "  u_ci_eg");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ci_eg.FIVE)=%s", $typename(u_ci_eg.FIVE));
+    $fdisplay(fd, "      $size(u_ci_eg.FIVE)=%0d", $size(u_ci_eg.FIVE));
+    $fdisplay(fd, "      u_ci_eg.FIVE=%b", u_ci_eg.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ci_eg.FIVE[2])=%s", $typename(u_ci_eg.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ci_eg.FIVE[2])=%0d", $size(u_ci_eg.FIVE[2]));
+    $fdisplay(fd, "      u_ci_eg.FIVE[2]=%b", u_ci_eg.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ci_eg.VEC1D)=%s", $typename(u_ci_eg.VEC1D));
+    $fdisplay(fd, "      $size(u_ci_eg.VEC1D)=%0d", $size(u_ci_eg.VEC1D));
+    $fdisplay(fd, "      u_ci_eg.VEC1D=%b", u_ci_eg.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ci_eg.VEC1D[1])=%s", $typename(u_ci_eg.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ci_eg.VEC1D[1])=%0d", $size(u_ci_eg.VEC1D[1]));
+    $fdisplay(fd, "      u_ci_eg.VEC1D[1]=%b", u_ci_eg.VEC1D[1]);
+    $fdisplay(fd, "  u_ci_ib");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ci_ib.FIVE)=%s", $typename(u_ci_ib.FIVE));
+    $fdisplay(fd, "      $size(u_ci_ib.FIVE)=%0d", $size(u_ci_ib.FIVE));
+    $fdisplay(fd, "      u_ci_ib.FIVE=%b", u_ci_ib.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ci_ib.FIVE[2])=%s", $typename(u_ci_ib.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ci_ib.FIVE[2])=%0d", $size(u_ci_ib.FIVE[2]));
+    $fdisplay(fd, "      u_ci_ib.FIVE[2]=%b", u_ci_ib.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ci_ib.VEC1D)=%s", $typename(u_ci_ib.VEC1D));
+    $fdisplay(fd, "      $size(u_ci_ib.VEC1D)=%0d", $size(u_ci_ib.VEC1D));
+    $fdisplay(fd, "      u_ci_ib.VEC1D=%b", u_ci_ib.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ci_ib.VEC1D[1])=%s", $typename(u_ci_ib.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ci_ib.VEC1D[1])=%0d", $size(u_ci_ib.VEC1D[1]));
+    $fdisplay(fd, "      u_ci_ib.VEC1D[1]=%b", u_ci_ib.VEC1D[1]);
+    $fdisplay(fd, "  u_ci_eb");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ci_eb.FIVE)=%s", $typename(u_ci_eb.FIVE));
+    $fdisplay(fd, "      $size(u_ci_eb.FIVE)=%0d", $size(u_ci_eb.FIVE));
+    $fdisplay(fd, "      u_ci_eb.FIVE=%b", u_ci_eb.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ci_eb.FIVE[2])=%s", $typename(u_ci_eb.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ci_eb.FIVE[2])=%0d", $size(u_ci_eb.FIVE[2]));
+    $fdisplay(fd, "      u_ci_eb.FIVE[2]=%b", u_ci_eb.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ci_eb.VEC1D)=%s", $typename(u_ci_eb.VEC1D));
+    $fdisplay(fd, "      $size(u_ci_eb.VEC1D)=%0d", $size(u_ci_eb.VEC1D));
+    $fdisplay(fd, "      u_ci_eb.VEC1D=%b", u_ci_eb.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ci_eb.VEC1D[1])=%s", $typename(u_ci_eb.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ci_eb.VEC1D[1])=%0d", $size(u_ci_eb.VEC1D[1]));
+    $fdisplay(fd, "      u_ci_eb.VEC1D[1]=%b", u_ci_eb.VEC1D[1]);
+    // }}} CI
+    $fdisplay(fd, "CE2"); // {{{
+    $fdisplay(fd, "  u_ce2_ig");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce2_ig.FIVE)=%s", $typename(u_ce2_ig.FIVE));
+    $fdisplay(fd, "      $size(u_ce2_ig.FIVE)=%0d", $size(u_ce2_ig.FIVE));
+    $fdisplay(fd, "      u_ce2_ig.FIVE=%b", u_ce2_ig.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce2_ig.FIVE[2])=%s", $typename(u_ce2_ig.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce2_ig.FIVE[2])=%0d", $size(u_ce2_ig.FIVE[2]));
+    $fdisplay(fd, "      u_ce2_ig.FIVE[2]=%b", u_ce2_ig.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce2_ig.VEC1D)=%s", $typename(u_ce2_ig.VEC1D));
+    $fdisplay(fd, "      $size(u_ce2_ig.VEC1D)=%0d", $size(u_ce2_ig.VEC1D));
+    $fdisplay(fd, "      u_ce2_ig.VEC1D=%b", u_ce2_ig.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce2_ig.VEC1D[1])=%s", $typename(u_ce2_ig.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce2_ig.VEC1D[1])=%0d", $size(u_ce2_ig.VEC1D[1]));
+    $fdisplay(fd, "      u_ce2_ig.VEC1D[1]=%0d", u_ce2_ig.VEC1D[1]);
+    $fdisplay(fd, "  u_ce2_eg");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce2_eg.FIVE)=%s", $typename(u_ce2_eg.FIVE));
+    $fdisplay(fd, "      $size(u_ce2_eg.FIVE)=%0d", $size(u_ce2_eg.FIVE));
+    $fdisplay(fd, "      u_ce2_eg.FIVE=%b", u_ce2_eg.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce2_eg.FIVE[2])=%s", $typename(u_ce2_eg.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce2_eg.FIVE[2])=%0d", $size(u_ce2_eg.FIVE[2]));
+    $fdisplay(fd, "      u_ce2_eg.FIVE[2]=%b", u_ce2_eg.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce2_eg.VEC1D)=%s", $typename(u_ce2_eg.VEC1D));
+    $fdisplay(fd, "      $size(u_ce2_eg.VEC1D)=%0d", $size(u_ce2_eg.VEC1D));
+    $fdisplay(fd, "      u_ce2_eg.VEC1D=%b", u_ce2_eg.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce2_eg.VEC1D[1])=%s", $typename(u_ce2_eg.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce2_eg.VEC1D[1])=%0d", $size(u_ce2_eg.VEC1D[1]));
+    $fdisplay(fd, "      u_ce2_eg.VEC1D[1]=%0d", u_ce2_eg.VEC1D[1]);
+    $fdisplay(fd, "  u_ce2_ib");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce2_ib.FIVE)=%s", $typename(u_ce2_ib.FIVE));
+    $fdisplay(fd, "      $size(u_ce2_ib.FIVE)=%0d", $size(u_ce2_ib.FIVE));
+    $fdisplay(fd, "      u_ce2_ib.FIVE=%b", u_ce2_ib.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce2_ib.FIVE[2])=%s", $typename(u_ce2_ib.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce2_ib.FIVE[2])=%0d", $size(u_ce2_ib.FIVE[2]));
+    $fdisplay(fd, "      u_ce2_ib.FIVE[2]=%b", u_ce2_ib.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce2_ib.VEC1D)=%s", $typename(u_ce2_ib.VEC1D));
+    $fdisplay(fd, "      $size(u_ce2_ib.VEC1D)=%0d", $size(u_ce2_ib.VEC1D));
+    $fdisplay(fd, "      u_ce2_ib.VEC1D=%b", u_ce2_ib.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce2_ib.VEC1D[1])=%s", $typename(u_ce2_ib.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce2_ib.VEC1D[1])=%0d", $size(u_ce2_ib.VEC1D[1]));
+    $fdisplay(fd, "      u_ce2_ib.VEC1D[1]=%h", u_ce2_ib.VEC1D[1]);
+    $fdisplay(fd, "  u_ce2_eb");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce2_eb.FIVE)=%s", $typename(u_ce2_eb.FIVE));
+    $fdisplay(fd, "      $size(u_ce2_eb.FIVE)=%0d", $size(u_ce2_eb.FIVE));
+    $fdisplay(fd, "      u_ce2_eb.FIVE=%b", u_ce2_eb.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce2_eb.FIVE[2])=%s", $typename(u_ce2_eb.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce2_eb.FIVE[2])=%0d", $size(u_ce2_eb.FIVE[2]));
+    $fdisplay(fd, "      u_ce2_eb.FIVE[2]=%b", u_ce2_eb.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce2_eb.VEC1D)=%s", $typename(u_ce2_eb.VEC1D));
+    $fdisplay(fd, "      $size(u_ce2_eb.VEC1D)=%0d", $size(u_ce2_eb.VEC1D));
+    $fdisplay(fd, "      u_ce2_eb.VEC1D=%b", u_ce2_eb.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce2_eb.VEC1D[1])=%s", $typename(u_ce2_eb.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce2_eb.VEC1D[1])=%0d", $size(u_ce2_eb.VEC1D[1]));
+    $fdisplay(fd, "      u_ce2_eb.VEC1D[1]=%0d", u_ce2_eb.VEC1D[1]);
+    // }}} CE2
+    $fdisplay(fd, "CE4"); // {{{
+    $fdisplay(fd, "  u_ce4_ig");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce4_ig.FIVE)=%s", $typename(u_ce4_ig.FIVE));
+    $fdisplay(fd, "      $size(u_ce4_ig.FIVE)=%0d", $size(u_ce4_ig.FIVE));
+    $fdisplay(fd, "      u_ce4_ig.FIVE=%b", u_ce4_ig.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce4_ig.FIVE[2])=%s", $typename(u_ce4_ig.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce4_ig.FIVE[2])=%0d", $size(u_ce4_ig.FIVE[2]));
+    $fdisplay(fd, "      u_ce4_ig.FIVE[2]=%b", u_ce4_ig.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce4_ig.VEC1D)=%s", $typename(u_ce4_ig.VEC1D));
+    $fdisplay(fd, "      $size(u_ce4_ig.VEC1D)=%0d", $size(u_ce4_ig.VEC1D));
+    $fdisplay(fd, "      u_ce4_ig.VEC1D=%b", u_ce4_ig.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce4_ig.VEC1D[1])=%s", $typename(u_ce4_ig.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce4_ig.VEC1D[1])=%0d", $size(u_ce4_ig.VEC1D[1]));
+    $fdisplay(fd, "      u_ce4_ig.VEC1D[1]=%0d", u_ce4_ig.VEC1D[1]);
+    $fdisplay(fd, "  u_ce4_eg");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce4_eg.FIVE)=%s", $typename(u_ce4_eg.FIVE));
+    $fdisplay(fd, "      $size(u_ce4_eg.FIVE)=%0d", $size(u_ce4_eg.FIVE));
+    $fdisplay(fd, "      u_ce4_eg.FIVE=%b", u_ce4_eg.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce4_eg.FIVE[2])=%s", $typename(u_ce4_eg.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce4_eg.FIVE[2])=%0d", $size(u_ce4_eg.FIVE[2]));
+    $fdisplay(fd, "      u_ce4_eg.FIVE[2]=%b", u_ce4_eg.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce4_eg.VEC1D)=%s", $typename(u_ce4_eg.VEC1D));
+    $fdisplay(fd, "      $size(u_ce4_eg.VEC1D)=%0d", $size(u_ce4_eg.VEC1D));
+    $fdisplay(fd, "      u_ce4_eg.VEC1D=%b", u_ce4_eg.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce4_eg.VEC1D[1])=%s", $typename(u_ce4_eg.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce4_eg.VEC1D[1])=%0d", $size(u_ce4_eg.VEC1D[1]));
+    $fdisplay(fd, "      u_ce4_eg.VEC1D[1]=%0d", u_ce4_eg.VEC1D[1]);
+    $fdisplay(fd, "  u_ce4_ib");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce4_ib.FIVE)=%s", $typename(u_ce4_ib.FIVE));
+    $fdisplay(fd, "      $size(u_ce4_ib.FIVE)=%0d", $size(u_ce4_ib.FIVE));
+    $fdisplay(fd, "      u_ce4_ib.FIVE=%b", u_ce4_ib.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce4_ib.FIVE[2])=%s", $typename(u_ce4_ib.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce4_ib.FIVE[2])=%0d", $size(u_ce4_ib.FIVE[2]));
+    $fdisplay(fd, "      u_ce4_ib.FIVE[2]=%b", u_ce4_ib.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce4_ib.VEC1D)=%s", $typename(u_ce4_ib.VEC1D));
+    $fdisplay(fd, "      $size(u_ce4_ib.VEC1D)=%0d", $size(u_ce4_ib.VEC1D));
+    $fdisplay(fd, "      u_ce4_ib.VEC1D=%b", u_ce4_ib.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce4_ib.VEC1D[1])=%s", $typename(u_ce4_ib.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce4_ib.VEC1D[1])=%0d", $size(u_ce4_ib.VEC1D[1]));
+    $fdisplay(fd, "      u_ce4_ib.VEC1D[1]=%0d", u_ce4_ib.VEC1D[1]);
+    $fdisplay(fd, "  u_ce4_eb");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce4_eb.FIVE)=%s", $typename(u_ce4_eb.FIVE));
+    $fdisplay(fd, "      $size(u_ce4_eb.FIVE)=%0d", $size(u_ce4_eb.FIVE));
+    $fdisplay(fd, "      u_ce4_eb.FIVE=%b", u_ce4_eb.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce4_eb.FIVE[2])=%s", $typename(u_ce4_eb.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce4_eb.FIVE[2])=%0d", $size(u_ce4_eb.FIVE[2]));
+    $fdisplay(fd, "      u_ce4_eb.FIVE[2]=%b", u_ce4_eb.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce4_eb.VEC1D)=%s", $typename(u_ce4_eb.VEC1D));
+    $fdisplay(fd, "      $size(u_ce4_eb.VEC1D)=%0d", $size(u_ce4_eb.VEC1D));
+    $fdisplay(fd, "      u_ce4_eb.VEC1D=%b", u_ce4_eb.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce4_eb.VEC1D[1])=%s", $typename(u_ce4_eb.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce4_eb.VEC1D[1])=%0d", $size(u_ce4_eb.VEC1D[1]));
+    $fdisplay(fd, "      u_ce4_eb.VEC1D[1]=%b", u_ce4_eb.VEC1D[1]);
+    $fdisplay(fd, "  u_ce4_x");
+    $fdisplay(fd, "    FIVE");
+    $fdisplay(fd, "      $typename(u_ce4_x.FIVE)=%s", $typename(u_ce4_x.FIVE));
+    $fdisplay(fd, "      $size(u_ce4_x.FIVE)=%0d", $size(u_ce4_x.FIVE));
+    $fdisplay(fd, "      u_ce4_x.FIVE=%b", u_ce4_x.FIVE);
+    $fdisplay(fd, "    FIVE[2]");
+    $fdisplay(fd, "      $typename(u_ce4_x.FIVE[2])=%s", $typename(u_ce4_x.FIVE[2]));
+    $fdisplay(fd, "      $size(u_ce4_x.FIVE[2])=%0d", $size(u_ce4_x.FIVE[2]));
+    $fdisplay(fd, "      u_ce4_x.FIVE[2]=%b", u_ce4_x.FIVE[2]);
+    $fdisplay(fd, "    VEC1D");
+    $fdisplay(fd, "      $typename(u_ce4_x.VEC1D)=%s", $typename(u_ce4_x.VEC1D));
+    $fdisplay(fd, "      $size(u_ce4_x.VEC1D)=%0d", $size(u_ce4_x.VEC1D));
+    $fdisplay(fd, "      u_ce4_x.VEC1D=%b", u_ce4_x.VEC1D);
+    $fdisplay(fd, "    VEC1D[1]");
+    $fdisplay(fd, "      $typename(u_ce4_x.VEC1D[1])=%s", $typename(u_ce4_x.VEC1D[1]));
+    $fdisplay(fd, "      $size(u_ce4_x.VEC1D[1])=%0d", $size(u_ce4_x.VEC1D[1]));
+    $fdisplay(fd, "      u_ce4_x.VEC1D[1]=%b", u_ce4_x.VEC1D[1]);
+    // }}} // CE4
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Case Equality Synthesis/Simulation Mismatch");
+                                                /* verilator lint_off STMTDLY */
+    c = 32'b0101; #1;
+    $fdisplay(fd, "c=%b d=%b", c, d);
+    c = 32'b0xxx; #1;
+    $fdisplay(fd, "c=%b d=%b", c, d);
+    c = 32'bx101; #1;
+    $fdisplay(fd, "c=%b d=%b", c, d);
+                                                /* verilator lint_on STMTDLY */
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Condition Equalities In If/Else vs Case");
+                                                /* verilator lint_off STMTDLY */
+    a = 2'bXX; #1;
+    $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
+    a = 2'b00; #1;
+    $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
+    a = 2'b01; #1;
+    $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
+    a = 2'bX1; #1;
+    $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
+    a = 2'b11; #1;
+    $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
+                                                /* verilator lint_on STMTDLY */
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Wildcard Equality"); // {{{
+    $fdisplay(fd, "WILDCARD_TRUE1=(4'b0100 ==? 4'b01XZ)=%b", (4'b0100 ==? 4'b01XZ));
+    $fdisplay(fd, "WILDCARD_TRUE2=(4'b0111 ==? 4'b01XZ)=%b", (4'b0111 ==? 4'b01XZ));
+    $fdisplay(fd, "WILDCARD_FALSE1=(4'b1100 ==? 4'b01XZ)=%b", (4'b1100 ==? 4'b01XZ));
+    $fdisplay(fd, "WILDCARD_FALSE2=(4'b1111 ==? 4'b01XZ)=%b", (4'b1111 ==? 4'b01XZ));
+    $fdisplay(fd, "WILDCARD_XRHS1=(1'b0 ==? 1'bX)=%b", (1'b0 ==? 1'bX));
+    $fdisplay(fd, "WILDCARD_XRHS2=(1'b1 ==? 1'bX)=%b", (1'b1 ==? 1'bX));
+    $fdisplay(fd, "WILDCARD_XLHS1=(1'bX ==? 1'b0)=%b", (1'bX ==? 1'b0));
+    $fdisplay(fd, "WILDCARD_XLHS2=(1'bX ==? 1'b1)=%b", (1'bX ==? 1'b1));
+    // }}} Wildcard Equality
+
     $fclose(fd);
     $finish();
-  end
+  end: l_report
 
 endmodule
