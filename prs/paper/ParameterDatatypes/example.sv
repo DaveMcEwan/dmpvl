@@ -76,7 +76,7 @@ module parent ();
   localparam int EG_FIVE = 5;
   localparam bit [2:0][31:0] EG_VEC1D = {32'd111, 32'd222, 32'd333};
   localparam logic [3:0] EB_FIVE = 4'bXZ01;
-  localparam bit [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
+  localparam logic [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
 
   CI #(.FIVE (IG_FIVE), .VEC1D (IG_VEC1D)) u_ci_ig ();
   CI #(.FIVE (EG_FIVE), .VEC1D (EG_VEC1D)) u_ci_eg ();

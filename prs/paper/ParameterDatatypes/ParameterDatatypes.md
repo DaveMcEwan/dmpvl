@@ -184,7 +184,7 @@ types (from the child module's perspective).
 localparam int EG_FIVE = 5;
 localparam bit [2:0][31:0] EG_VEC1D = {32'd111, 32'd222, 32'd333};
 localparam logic [3:0] EB_FIVE = 4'bXZ01;
-localparam bit [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
+localparam logic [2:0][9:0] EB_VEC1D = {10'd111, 10'd222, 10'd333};
 ```
 
 To see how the parameter types propagate, let's consider the 12 combinations
