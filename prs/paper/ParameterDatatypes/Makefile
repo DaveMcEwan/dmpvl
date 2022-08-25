@@ -1,4 +1,4 @@
-#
+
 # Prerequisites:
 #   https://github.com/dalance/svlint
 #   https://github.com/DaveMcEwan/svlint-rulesets
@@ -6,33 +6,33 @@
 #   module load mentor/questasim/2022.3
 #   module load cadence/xcelium/22.03.004
 
-DOC := ParameterDatatypes
-TOP := example.sv
+DOC := ParameterDatatypes.pdf
+TOP := $(basename ${DOC}).sv
 
-default: ${DOC}.pdf
+.PHONY: default
+default: ${DOC}
 default: svlint-parseonly
 default: verilator-lint
-default: questa-sim
-default: xcelium-sim
+default: QUESTA.rpt
+default: XCELIUM.rpt
 
 %.pdf: %.md
 	@pandoc --version
 	pandoc -i $*.md -o $@
 
 .PHONY: svlint-parseonly
-svlint-parseonly:
+svlint-parseonly: ${TOP}
 	@svlint --version
 	svlint-parseonly ${TOP}
 
 .PHONY: verilator-lint
-verilator-lint:
+verilator-lint: ${TOP}
 	@verilator --version
 	verilator -lint-only ${TOP}
 
-# NOTE: Warning 2605 is for modules without signal ports, and is suppressed
+# NOTE: Warning 2605 is for modules without signal ports, and it's suppressed
 # because signal ports are not applicable to this paper.
-.PHONY: questa-sim
-questa-sim:
+QUESTA.rpt: ${TOP}
 	@vlog -version
 	vlog -sv17compat -lint \
 		-suppress 2605 \
@@ -43,8 +43,7 @@ questa-sim:
 		-appendlog -l qverilog.log \
 		-vopt
 
-.PHONY: xcelium-sim
-xcelium-sim:
+XCELIUM.rpt: ${TOP}
 	@xrun -version
 	xrun -sv \
 		-disable_sem2009 \
