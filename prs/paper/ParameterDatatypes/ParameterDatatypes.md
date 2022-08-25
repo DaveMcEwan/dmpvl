@@ -1,6 +1,24 @@
+---
+title: SystemVerilog Parameters and Their Datatypes
+author: Dave McEwan
+date: 2022-08-25
+toc: true
+toc-depth: 2
+...
 
-The Rules for Synthesisable SystemVerilog
------------------------------------------
+This tutorial paper covers some of the more subtle details around SystemVerilog
+datatypes, in particular how their specifications apply to overridable
+parameters in synthesisable designs.
+Firstly, the main arguments are summarised as a set of 6 guidelines.
+The middle sections explain the necessary details and provide reasoning for the
+set of guidelines.
+Finally, some appendices cover relevant material including a clarification of
+related syntax, a recommended method of sanity-checking parameters, and
+important extracts from the SystemVerilog Language Reference Manual.
+An accompanying SystemVerilog file contains examples of all points which is
+additionally useful to demonstrate differences between simulators.
+
+### Guidelines for Synthesisable SystemVerilog
 
 - Each module parameter should have an explicit datatype.
 - The datatype of each module parameter should be 2-state, not 4-state.
@@ -14,7 +32,7 @@ The Rules for Synthesisable SystemVerilog
 Background on Integral Datatypes
 --------------------------------
 
-To understand the reasoning behind this (seemingly simple) rule, it is
+To understand the reasoning behind the first (seemingly simple) guideline, it's
 important to understand some details around SystemVerilog integral datatypes.
 Integral datatypes are the "usual" types used in digital design code, though
 other datatypes are commonly used in analog designs and in verification
@@ -99,8 +117,6 @@ Overriding Module Parameters
 
 Let's use a couple of example modules to demonstrate exactly what datatypes
 are inferred by different styles of declaration.
-Firstly, child modules are defined with almost the same set of parameters.
-
 In the `CI` module (child, implicit types), the type of each parameter is
 inferred from its default value (`integer`), but will be changed to the type of
 any override value from a parent module.
@@ -294,7 +310,7 @@ values of each parameter.
 Default Values
 --------------
 
-Just as parameters, like all data objects, have default types defined in the
+Just as parameters, like all data objects, have default types defined by the
 language specification, they also have default values.
 Where a default type is implied by lack of an explicit type in a parameter's
 declaration, a default value is implied by lack of an assignment.
@@ -389,8 +405,7 @@ Without the ability to propagate Xs through the comparison, e.g.
 `d = (c === 32'd5)`, a simulator will assign `d = 1'b0` when any bits of `c`
 are unknown.
 A synthesised circuit does not have the concept of "unknown" values, so use of
-the case (in)equality operators will cause a mismatch between simulation and
-synthesis.
+the case (in)equality operators will cause a simulation/synthesis mismatch.
 
 As suggested by the names "logical equality" and "case equality", the same
 semantics are applied to conditional if-else statements and case statements
@@ -474,7 +489,7 @@ authors to pay due care to their declarations.
 The use of case statements is shown to be a potential source of
 simulation/synthesis mismatch problems when used with 4-state parameters, which
 must be de-risked through either rigourous manual review or application of the
-five rules first listed.
+6 guidelines.
 
 Practical demonstrations of all described syntax and semantics can be seen by
 running the attached SystemVerilog file in a variety of simulators via the
@@ -482,7 +497,6 @@ attached Makefile.
 It is particularly interesting to compare the reports produced by different
 simulators, demonstrating that concerns about mismatches between tools are
 founded in well-founded.
-
 
 
 Appendix: Concatenations vs Array Literals
@@ -500,7 +514,7 @@ Braces (`{` and `}`) are used in SystemVerilog for several purposes:
 - Array literals, e.g. `bit [2:0][31:0] foo = '{1, 2, 3}`
 - Structure literals, e.g. `'{fieldA:1, fieldB:2, default:3}`
 
-Although logical reductions like conjunction, disjunction, etc. often
+NOTE: Although logical reductions like conjunction, disjunction, etc. often
 use a unary operator (like `&`) together with a concatention, e.g.
 `&{FOO < 5, 32'd123}` → `1'b0`, the braces still define a concatenation.
 
@@ -511,10 +525,8 @@ The apostrophe character (`'`) is also used for several purposes:
 - Casting to a width, e.g. `(12)'(foo)`.
 - Assignment patterns, e.g. `a = '{1, 2, default:3}`.
 
-In an array assignment pattern, AXA an array literal, the expressions must
-match element for element and have the correct dimensions.
-These examples show a variety of valid syntax assigning the numbers 1, 2, and 3
-to constant arrays.
+These examples show a variety of valid syntax assigning the numbers 1, 2, and
+333 to constant arrays.
 ```systemverilog
 localparam bit [3:0][31:0] concatenationA = {32'd1, 32'd2, 32'd333};
 localparam bit [127:0] concatenationB = {32'd1, 32'd2, 32'd333};
@@ -526,8 +538,8 @@ localparam int literalUnpackedA [3] = '{1, 2, 333};
 localparam int literalUnpackedB [0:2] = '{1, 2, 333};
 localparam int literalUnpackedC [2:0] = '{1, 2, 333};
 ```
-The type of the assignment target, including the order dimensions, is important
-to understand, as demonstrated by the row's differences in the following table.
+The following table demonstrates the importance of the type of the assignment
+target, including the order dimensions.
 
 | Name             | `[0]` | `[1]` | `[2]` |
 |:-----------------|:-----:|:-----:|:-----:|
@@ -583,11 +595,10 @@ On a multi-threaded simulation, the simulator may execute `always` processes in
 parallel or in any order, so the user has no control over the ordering of
 `$display`'d characters on STDOUT, or which thread updates `errorCount` first.
 ```systemverilog
-always @(posedge clk)
-  if (!(FOO < 5)) begin
-    $display("FOO is not less than 5.");  // IO function.
-    errorCounter++;                       // Global variable update.
-  end
+always @(posedge clk) if (!(FOO < 5)) begin
+  $display("FOO is not less than 5.");  // IO function.
+  errorCounter++;                       // Global variable update.
+end
 
 // Rephrased as a concurrent assertion.
 property prop_fooLt5;

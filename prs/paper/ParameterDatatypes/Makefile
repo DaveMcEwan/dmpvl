@@ -16,9 +16,9 @@ default: verilator-lint
 default: QUESTA.rpt
 default: XCELIUM.rpt
 
-%.pdf: %.md
+%.pdf: %.md template.latex
 	@pandoc --version
-	pandoc -i $*.md -o $@
+	pandoc --template=template.latex -i $*.md -o $@
 
 .PHONY: svlint-parseonly
 svlint-parseonly: ${TOP}
