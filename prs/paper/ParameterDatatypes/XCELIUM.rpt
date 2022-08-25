@@ -1,0 +1,344 @@
+XCELIUM
+
+Packed Structures With Mixed 2/4-state Members
+s2
+  $typename(s2)=struct packed{bit b;int a;}
+  $size(s2)=33
+s4
+  $typename(s4)=struct packed{logic b;integer a;}
+  $size(s4)=33
+sM
+  $typename(sM)=struct packed{logic b;int a;}
+  $size(sM)=33
+FOO_A
+  $typename(FOO_A)=struct packed{bit b;int a;}parent.s2
+  $size(FOO_A)=33
+  FOO_A=100000000000000000000000001111011
+FOO_B
+  $typename(FOO_B)=struct packed{bit b;int a;}parent.s2
+  $size(FOO_B)=33
+  FOO_B=111111111111111111111111111111111
+FOO_C
+  $typename(FOO_C)=struct packed{bit b;int a;}parent.s2
+  $size(FOO_C)=33
+  FOO_C=100000000000000000000000000000000
+BAR_A
+  $typename(BAR_A)=struct packed{logic b;integer a;}parent.s4
+  $size(BAR_A)=33
+  BAR_A=z000000000000000000000000000001xz
+BAR_B
+  $typename(BAR_B)=struct packed{logic b;integer a;}parent.s4
+  $size(BAR_B)=33
+  BAR_B=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BAZ_A
+  $typename(BAZ_A)=struct packed{logic b;int a;}parent.sM
+  $size(BAZ_A)=33
+  BAZ_A=100000000000000000000000001111011
+BAZ_B
+  $typename(BAZ_B)=struct packed{logic b;int a;}parent.sM
+  $size(BAZ_B)=33
+  BAZ_B=100000000000000000000000000000000
+
+Implicit/Explicit Good/Bad Override Values
+IG_FIVE
+  $typename(IG_FIVE)=logic signed[31:0]
+  $size(IG_FIVE)=32
+  IG_FIVE=00000000000000000000000000000101
+IG_VEC1D
+  $typename(IG_VEC1D)=logic[95:0]
+  $size(IG_VEC1D)=96
+  IG_VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+IB_FIVE
+  $typename(IB_FIVE)=logic[31:0]
+  $size(IB_FIVE)=32
+  IB_FIVE=01100110011010010111011001100101
+IB_VEC1D
+  $typename(IB_VEC1D)=logic[65:0]
+  $size(IB_VEC1D)=66
+  IB_VEC1D=000000001110000000000000000001000000000000000000000000000000001001
+EG_FIVE
+  $typename(EG_FIVE)=int
+  $size(EG_FIVE)=32
+  EG_FIVE=00000000000000000000000000000101
+EG_VEC1D
+  $typename(EG_VEC1D)=bit[2:0][31:0]
+  $size(EG_VEC1D)=3
+  EG_VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+EB_FIVE
+  $typename(EB_FIVE)=logic[3:0]
+  $size(EB_FIVE)=4
+  EB_FIVE=xz01
+EB_VEC1D
+  $typename(EB_VEC1D)=logic[2:0][9:0]
+  $size(EB_VEC1D)=3
+  EB_VEC1D=000110111100110111100101001101
+
+Overridden Child Module Parameters
+CI
+  u_ci_ig
+    FIVE
+      $typename(u_ci_ig.FIVE)=logic signed[31:0]
+      $size(u_ci_ig.FIVE)=32
+      u_ci_ig.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ci_ig.FIVE[2])=logic
+      $size(u_ci_ig.FIVE[2])=x
+      u_ci_ig.FIVE[2]=1
+    VEC1D
+      $typename(u_ci_ig.VEC1D)=logic[95:0]
+      $size(u_ci_ig.VEC1D)=96
+      u_ci_ig.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ci_ig.VEC1D[1])=logic
+      $size(u_ci_ig.VEC1D[1])=x
+      u_ci_ig.VEC1D[1]=0
+  u_ci_eg
+    FIVE
+      $typename(u_ci_eg.FIVE)=bit signed[31:0]
+      $size(u_ci_eg.FIVE)=32
+      u_ci_eg.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ci_eg.FIVE[2])=bit
+      $size(u_ci_eg.FIVE[2])=x
+      u_ci_eg.FIVE[2]=1
+    VEC1D
+      $typename(u_ci_eg.VEC1D)=bit[95:0]
+      $size(u_ci_eg.VEC1D)=96
+      u_ci_eg.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ci_eg.VEC1D[1])=bit
+      $size(u_ci_eg.VEC1D[1])=x
+      u_ci_eg.VEC1D[1]=0
+  u_ci_ib
+    FIVE
+      $typename(u_ci_ib.FIVE)=logic[31:0]
+      $size(u_ci_ib.FIVE)=32
+      u_ci_ib.FIVE=01100110011010010111011001100101
+    FIVE[2]
+      $typename(u_ci_ib.FIVE[2])=logic
+      $size(u_ci_ib.FIVE[2])=x
+      u_ci_ib.FIVE[2]=1
+    VEC1D
+      $typename(u_ci_ib.VEC1D)=logic[65:0]
+      $size(u_ci_ib.VEC1D)=66
+      u_ci_ib.VEC1D=000000001110000000000000000001000000000000000000000000000000001001
+    VEC1D[1]
+      $typename(u_ci_ib.VEC1D[1])=logic
+      $size(u_ci_ib.VEC1D[1])=x
+      u_ci_ib.VEC1D[1]=0
+  u_ci_eb
+    FIVE
+      $typename(u_ci_eb.FIVE)=logic[3:0]
+      $size(u_ci_eb.FIVE)=4
+      u_ci_eb.FIVE=xz01
+    FIVE[2]
+      $typename(u_ci_eb.FIVE[2])=logic
+      $size(u_ci_eb.FIVE[2])=x
+      u_ci_eb.FIVE[2]=z
+    VEC1D
+      $typename(u_ci_eb.VEC1D)=logic[29:0]
+      $size(u_ci_eb.VEC1D)=30
+      u_ci_eb.VEC1D=000110111100110111100101001101
+    VEC1D[1]
+      $typename(u_ci_eb.VEC1D[1])=logic
+      $size(u_ci_eb.VEC1D[1])=x
+      u_ci_eb.VEC1D[1]=0
+CE2
+  u_ce2_ig
+    FIVE
+      $typename(u_ce2_ig.FIVE)=int
+      $size(u_ce2_ig.FIVE)=32
+      u_ce2_ig.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ce2_ig.FIVE[2])=bit
+      $size(u_ce2_ig.FIVE[2])=x
+      u_ce2_ig.FIVE[2]=1
+    VEC1D
+      $typename(u_ce2_ig.VEC1D)=bit[2:0][31:0]
+      $size(u_ce2_ig.VEC1D)=3
+      u_ce2_ig.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ce2_ig.VEC1D[1])=bit[31:0]
+      $size(u_ce2_ig.VEC1D[1])=32
+      u_ce2_ig.VEC1D[1]=222
+  u_ce2_eg
+    FIVE
+      $typename(u_ce2_eg.FIVE)=int
+      $size(u_ce2_eg.FIVE)=32
+      u_ce2_eg.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ce2_eg.FIVE[2])=bit
+      $size(u_ce2_eg.FIVE[2])=x
+      u_ce2_eg.FIVE[2]=1
+    VEC1D
+      $typename(u_ce2_eg.VEC1D)=bit[2:0][31:0]
+      $size(u_ce2_eg.VEC1D)=3
+      u_ce2_eg.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ce2_eg.VEC1D[1])=bit[31:0]
+      $size(u_ce2_eg.VEC1D[1])=32
+      u_ce2_eg.VEC1D[1]=222
+  u_ce2_ib
+    FIVE
+      $typename(u_ce2_ib.FIVE)=int
+      $size(u_ce2_ib.FIVE)=32
+      u_ce2_ib.FIVE=01100110011010010111011001100101
+    FIVE[2]
+      $typename(u_ce2_ib.FIVE[2])=bit
+      $size(u_ce2_ib.FIVE[2])=x
+      u_ce2_ib.FIVE[2]=1
+    VEC1D
+      $typename(u_ce2_ib.VEC1D)=bit[2:0][31:0]
+      $size(u_ce2_ib.VEC1D)=3
+      u_ce2_ib.VEC1D=000000000000000000000000000000000000001110000000000000000001000000000000000000000000000000001001
+    VEC1D[1]
+      $typename(u_ce2_ib.VEC1D[1])=bit[31:0]
+      $size(u_ce2_ib.VEC1D[1])=32
+      u_ce2_ib.VEC1D[1]=0x03800010
+  u_ce2_eb
+    FIVE
+      $typename(u_ce2_eb.FIVE)=int
+      $size(u_ce2_eb.FIVE)=32
+      u_ce2_eb.FIVE=00000000000000000000000000000001
+    FIVE[2]
+      $typename(u_ce2_eb.FIVE[2])=bit
+      $size(u_ce2_eb.FIVE[2])=x
+      u_ce2_eb.FIVE[2]=0
+    VEC1D
+      $typename(u_ce2_eb.VEC1D)=bit[2:0][31:0]
+      $size(u_ce2_eb.VEC1D)=3
+      u_ce2_eb.VEC1D=000000000000000000000000000000000000000000000000000000000000000000000110111100110111100101001101
+    VEC1D[1]
+      $typename(u_ce2_eb.VEC1D[1])=bit[31:0]
+      $size(u_ce2_eb.VEC1D[1])=32
+      u_ce2_eb.VEC1D[1]=0
+CE4
+  u_ce4_ig
+    FIVE
+      $typename(u_ce4_ig.FIVE)=integer
+      $size(u_ce4_ig.FIVE)=32
+      u_ce4_ig.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ce4_ig.FIVE[2])=logic
+      $size(u_ce4_ig.FIVE[2])=x
+      u_ce4_ig.FIVE[2]=1
+    VEC1D
+      $typename(u_ce4_ig.VEC1D)=logic[2:0][31:0]
+      $size(u_ce4_ig.VEC1D)=3
+      u_ce4_ig.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ce4_ig.VEC1D[1])=logic[31:0]
+      $size(u_ce4_ig.VEC1D[1])=32
+      u_ce4_ig.VEC1D[1]=222
+  u_ce4_eg
+    FIVE
+      $typename(u_ce4_eg.FIVE)=integer
+      $size(u_ce4_eg.FIVE)=32
+      u_ce4_eg.FIVE=00000000000000000000000000000101
+    FIVE[2]
+      $typename(u_ce4_eg.FIVE[2])=logic
+      $size(u_ce4_eg.FIVE[2])=x
+      u_ce4_eg.FIVE[2]=1
+    VEC1D
+      $typename(u_ce4_eg.VEC1D)=logic[2:0][31:0]
+      $size(u_ce4_eg.VEC1D)=3
+      u_ce4_eg.VEC1D=000000000000000000000000011011110000000000000000000000001101111000000000000000000000000101001101
+    VEC1D[1]
+      $typename(u_ce4_eg.VEC1D[1])=logic[31:0]
+      $size(u_ce4_eg.VEC1D[1])=32
+      u_ce4_eg.VEC1D[1]=222
+  u_ce4_ib
+    FIVE
+      $typename(u_ce4_ib.FIVE)=integer
+      $size(u_ce4_ib.FIVE)=32
+      u_ce4_ib.FIVE=01100110011010010111011001100101
+    FIVE[2]
+      $typename(u_ce4_ib.FIVE[2])=logic
+      $size(u_ce4_ib.FIVE[2])=x
+      u_ce4_ib.FIVE[2]=1
+    VEC1D
+      $typename(u_ce4_ib.VEC1D)=logic[2:0][31:0]
+      $size(u_ce4_ib.VEC1D)=3
+      u_ce4_ib.VEC1D=000000000000000000000000000000000000001110000000000000000001000000000000000000000000000000001001
+    VEC1D[1]
+      $typename(u_ce4_ib.VEC1D[1])=logic[31:0]
+      $size(u_ce4_ib.VEC1D[1])=32
+      u_ce4_ib.VEC1D[1]=58720272
+  u_ce4_eb
+    FIVE
+      $typename(u_ce4_eb.FIVE)=integer
+      $size(u_ce4_eb.FIVE)=32
+      u_ce4_eb.FIVE=0000000000000000000000000000xz01
+    FIVE[2]
+      $typename(u_ce4_eb.FIVE[2])=logic
+      $size(u_ce4_eb.FIVE[2])=x
+      u_ce4_eb.FIVE[2]=z
+    VEC1D
+      $typename(u_ce4_eb.VEC1D)=logic[2:0][31:0]
+      $size(u_ce4_eb.VEC1D)=3
+      u_ce4_eb.VEC1D=000000000000000000000000000000000000000000000000000000000000000000000110111100110111100101001101
+    VEC1D[1]
+      $typename(u_ce4_eb.VEC1D[1])=logic[31:0]
+      $size(u_ce4_eb.VEC1D[1])=32
+      u_ce4_eb.VEC1D[1]=00000000000000000000000000000000
+  u_ce4_x
+    FIVE
+      $typename(u_ce4_x.FIVE)=integer
+      $size(u_ce4_x.FIVE)=32
+      u_ce4_x.FIVE=10010010010010010010010010010010
+    FIVE[2]
+      $typename(u_ce4_x.FIVE[2])=logic
+      $size(u_ce4_x.FIVE[2])=x
+      u_ce4_x.FIVE[2]=0
+    VEC1D
+      $typename(u_ce4_x.VEC1D)=logic[2:0][31:0]
+      $size(u_ce4_x.VEC1D)=3
+      u_ce4_x.VEC1D=000000000000000000000000000000010000000000000000000000000000001000000000000000000000000000000011
+    VEC1D[1]
+      $typename(u_ce4_x.VEC1D[1])=logic[31:0]
+      $size(u_ce4_x.VEC1D[1])=32
+      u_ce4_x.VEC1D[1]=00000000000000000000000000000010
+
+Case Equality Synthesis/Simulation Mismatch
+c=00000000000000000000000000000101 d=1
+c=00000000000000000000000000000xxx d=0
+c=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx101 d=0
+
+Condition Equalities In If/Else vs Case
+a=xx b1=777 b2=777
+a=00 b1=555 b2=555
+a=01 b1=777 b2=777
+a=x1 b1=666 b2=777
+a=11 b1=777 b2=777
+
+Wildcard Equality
+WILDCARD_TRUE1=(4'b0100 ==? 4'b01XZ)=1
+WILDCARD_TRUE2=(4'b0111 ==? 4'b01XZ)=1
+WILDCARD_FALSE1=(4'b1100 ==? 4'b01XZ)=0
+WILDCARD_FALSE2=(4'b1111 ==? 4'b01XZ)=0
+WILDCARD_XRHS1=(1'b0 ==? 1'bX)=1
+WILDCARD_XRHS2=(1'b1 ==? 1'bX)=1
+WILDCARD_XLHS1=(1'bX ==? 1'b0)=x
+WILDCARD_XLHS2=(1'bX ==? 1'b1)=x
+
+Different Use of Braces
+Concatenation: {4'hA, 4'h5}=0xa5
+Streaming concatenation: {<< 4 {16'hABCD}}=0xdcba
+Replication: {3{4'hA}}=0xaaa
+Set membership: (3 inside {1, 2, 3})=1
+
+Concatenation vs Array Assignment Patterns
+concatenationA $size(concatenationA)=4
+  [0]=333 [1]=2 [2]=1 [3]=0
+concatenationB $size(concatenationB)=128
+  =0x0000000000000001000000020000014d
+literalPackedA $size(literalPackedA)=3
+  [0]=333 [1]=2 [2]=1
+literalPackedB $size(literalPackedB)=3
+  [0]=1 [1]=2 [2]=333
+literalUnpackedA $size(literalUnpackedA)=3
+  [0]=1 [1]=2 [2]=333
+literalUnpackedB $size(literalUnpackedB)=3
+  [0]=1 [1]=2 [2]=333
+literalUnpackedC $size(literalUnpackedC)=3
+  [0]=333 [1]=2 [2]=1
