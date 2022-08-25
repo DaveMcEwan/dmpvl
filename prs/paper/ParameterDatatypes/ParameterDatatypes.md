@@ -234,7 +234,7 @@ The following table compares the type:value semantics of "the 3rd element of
 | `u_ce2_ig` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
 | `u_ce2_eg` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
 | `u_ce2_ib` | `bit`:`1'b1` ("e" = `8'h65`)     | `bit [31:0]`:`32'h0380_0010`    |
-| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` -> `0001`)  | `bit [31:0]`:`32'd0`            |
+| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` → `0001`)  | `bit [31:0]`:`32'd0`            |
 | `CE4`: | | |
 | `u_ce4_ig` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
 | `u_ce4_eg` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
@@ -444,9 +444,9 @@ useful, if not essential, ability.
 In a wildcard (in)equality operation, Xs and Zs may be used (only by the RHS
 operand) to mask out uninteresting bits from the LHS operand.
 Positive matches can be achieved using multiple LHS values, e.g.
-`4'b0100 ==? 4'b01XZ` -> `1'b1` and `4'b0111 ==? 4'b01XZ` -> `1'b1`.
+`4'b0100 ==? 4'b01XZ` → `1'b1` and `4'b0111 ==? 4'b01XZ` → `1'b1`.
 Negative matches can be also be achieved using multiple LHS values, e.g.
-`4'b1100 ==? 4'b01XZ` -> `1'b0` and `4'b1111 ==? 4'b01XZ` -> `1'b0`.
+`4'b1100 ==? 4'b01XZ` → `1'b0` and `4'b1111 ==? 4'b01XZ` → `1'b0`.
 However, care must be taken about which side operands are placed on;
 Although both `1'b0 ==? 1'bX` and `1'b1 ==? 1'bX` result in `1'b1`, changing
 sides changes the results as both `1'bX ==? 1'b0` and `1'bX ==? 1'b1` result in
@@ -485,10 +485,59 @@ founded in well-founded.
 
 
 
-Appendix: Concatenations, Array Literals, and the Casting Operator
-------------------------------------------------------------------
+Appendix: Concatenations vs Array Literals
+------------------------------------------
 
-- TODO: Casting operator.
+A frequent point of confusion in SystemVerilog literal arrays is the syntax
+`'{a, b}` vs `{a, b}` (note the apostrophe), packed vs unpacked, and implicit
+vs explicit types.
+Braces (`{` and `}`) are used in SystemVerilog for several purposes:
+
+- Concatenation, e.g. `{4'hA, 4'h5}` → `8'hA5`.
+- Streaming concatenation, e.g. `{<< 4 {16'hABCD}}` → `16'hDCBA`
+- Replication, e.g. `{3{4'hA}}` → `12'hAAA`
+- Set membership, e.g. `3 inside {1, 2, 3}` → `1'b1`
+- Array literals, e.g. `bit [2:0][31:0] foo = '{1, 2, 3}`
+- Structure literals, e.g. `'{fieldA:1, fieldB:2, default:3}`
+
+Although logical reductions like conjunction, disjunction, etc. often
+use a unary operator (like `&`) together with a concatention, e.g.
+`&{FOO < 5, 32'd123}` → `1'b0`, the braces still define a concatenation.
+
+The apostrophe character (`'`) is also used for several purposes:
+
+- Width delimiter in literals, e.g. `5'd123`.
+- Casting to a type, e.g. `int'(foo)`.
+- Casting to a width, e.g. `(12)'(foo)`.
+- Assignment patterns, e.g. `a = '{1, 2, default:3}`.
+
+In an array assignment pattern, AXA an array literal, the expressions must
+match element for element and have the correct dimensions.
+These examples show a variety of valid syntax assigning the numbers 1, 2, and 3
+to constant arrays.
+```systemverilog
+localparam bit [3:0][31:0] concatenationA = {32'd1, 32'd2, 32'd333};
+localparam bit [127:0] concatenationB = {32'd1, 32'd2, 32'd333};
+
+localparam bit [2:0][31:0] literalPackedA = '{1, 2, 333};
+localparam bit [0:2][31:0] literalPackedB = '{1, 2, 333};
+
+localparam int literalUnpackedA [3] = '{1, 2, 333};
+localparam int literalUnpackedB [0:2] = '{1, 2, 333};
+localparam int literalUnpackedC [2:0] = '{1, 2, 333};
+```
+The type of the assignment target, including the order dimensions, is important
+to understand, as demonstrated by the row's differences in the following table.
+
+| Name             | `[0]` | `[1]` | `[2]` |
+|:-----------------|:-----:|:-----:|:-----:|
+| concatenationA   |  333  |   2   |   1   |
+| concatenationB   |`1'b1` |`1'b0` |`1'b1` |
+| literalPackedA   |  333  |   2   |   1   |
+| literalPackedB   |   1   |   2   |  333  |
+| literalUnpackedA |   1   |   2   |  333  |
+| literalUnpackedB |   1   |   2   |  333  |
+| literalUnpackedC |  333  |   2   |   1   |
 
 
 Appendix: Checking Parameter Values

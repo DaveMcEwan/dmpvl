@@ -4,7 +4,7 @@ A single initial process is used to display the relevant information in the
 style of a report.
 */
 
-                                                  /* verilator lint_off WIDTH */
+/* verilator lint_off WIDTH */
 module CI
   #(parameter FIVE = 5
   , parameter VEC1D = {32'd1, 32'd2, 32'd3}
@@ -27,7 +27,7 @@ module CE4
 //, parameter logic NOVALUE_LOGIC         Commented to avoid need to override.
   ) ();
 endmodule
-                                                  /* verilator lint_on WIDTH */
+/* verilator lint_on WIDTH */
 
 module parent ();
 
@@ -113,14 +113,14 @@ module parent ();
   logic [1:0] a;
   integer b1, b2;
 
-                                              /* verilator lint_off CASEWITHX */
+/* verilator lint_off CASEWITHX */
   always_comb
     case (a)
       OKAY:    b1 = 555;
       WOOPS:   b1 = 666;
       default: b1 = 777;
     endcase
-                                              /* verilator lint_on CASEWITHX */
+/* verilator lint_on CASEWITHX */
 
   always_comb
     if (a == OKAY)
@@ -143,6 +143,7 @@ module parent ();
   localparam logic WILDCARD_XRHS2 = 1'b1 ==? 1'bX;
   localparam logic WILDCARD_XLHS1 = 1'bX ==? 1'b0;
   localparam logic WILDCARD_XLHS2 = 1'bX ==? 1'b1;
+
 
   localparam bit PARAMCHECK_ALLGOOD_WILDCARD =
     &{(WILDCARD_TRUE1 === 1'b1)
@@ -173,6 +174,20 @@ module parent ();
     $info("WILDCARD_XLHS1=%b",  WILDCARD_XLHS1);
     $info("WILDCARD_XLHS2=%b",  WILDCARD_XLHS2);
   end: l_paramcheck_allgood_wildcard
+
+
+/* verilator lint_off WIDTH */
+// Width is mismatched to demonstrate coercion of 96b concatenation to 128b.
+localparam bit [3:0][31:0] concatenationA = {32'd1, 32'd2, 32'd333};
+localparam bit [127:0] concatenationB = {32'd1, 32'd2, 32'd333};
+/* verilator lint_on WIDTH */
+localparam bit [2:0][31:0] literalPackedA = '{1, 2, 333};
+/* verilator lint_off LITENDIAN */
+localparam bit [0:2][31:0] literalPackedB = '{1, 2, 333};
+/* verilator lint_on LITENDIAN */
+localparam int literalUnpackedA [3] = '{1, 2, 333};
+localparam int literalUnpackedB [0:2] = '{1, 2, 333};
+localparam int literalUnpackedC [2:0] = '{1, 2, 333};
 
 
   integer fd;
@@ -391,7 +406,7 @@ module parent ();
     $fdisplay(fd, "    VEC1D[1]");
     $fdisplay(fd, "      $typename(u_ce2_ib.VEC1D[1])=%s", $typename(u_ce2_ib.VEC1D[1]));
     $fdisplay(fd, "      $size(u_ce2_ib.VEC1D[1])=%0d", $size(u_ce2_ib.VEC1D[1]));
-    $fdisplay(fd, "      u_ce2_ib.VEC1D[1]=%h", u_ce2_ib.VEC1D[1]);
+    $fdisplay(fd, "      u_ce2_ib.VEC1D[1]=0x%h", u_ce2_ib.VEC1D[1]);
     $fdisplay(fd, "  u_ce2_eb");
     $fdisplay(fd, "    FIVE");
     $fdisplay(fd, "      $typename(u_ce2_eb.FIVE)=%s", $typename(u_ce2_eb.FIVE));
@@ -500,18 +515,18 @@ module parent ();
 
     $fdisplay(fd, "");
     $fdisplay(fd, "Case Equality Synthesis/Simulation Mismatch");
-                                                /* verilator lint_off STMTDLY */
+/* verilator lint_off STMTDLY */
     c = 32'b0101; #1;
     $fdisplay(fd, "c=%b d=%b", c, d);
     c = 32'b0xxx; #1;
     $fdisplay(fd, "c=%b d=%b", c, d);
     c = 32'bx101; #1;
     $fdisplay(fd, "c=%b d=%b", c, d);
-                                                /* verilator lint_on STMTDLY */
+/* verilator lint_on STMTDLY */
 
     $fdisplay(fd, "");
     $fdisplay(fd, "Condition Equalities In If/Else vs Case");
-                                                /* verilator lint_off STMTDLY */
+/* verilator lint_off STMTDLY */
     a = 2'bXX; #1;
     $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
     a = 2'b00; #1;
@@ -522,7 +537,7 @@ module parent ();
     $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
     a = 2'b11; #1;
     $fdisplay(fd, "a=%b b1=%0d b2=%0d", a, b1, b2);
-                                                /* verilator lint_on STMTDLY */
+/* verilator lint_on STMTDLY */
 
     $fdisplay(fd, "");
     $fdisplay(fd, "Wildcard Equality"); // {{{
@@ -535,6 +550,38 @@ module parent ();
     $fdisplay(fd, "WILDCARD_XLHS1=(1'bX ==? 1'b0)=%b", (1'bX ==? 1'b0));
     $fdisplay(fd, "WILDCARD_XLHS2=(1'bX ==? 1'b1)=%b", (1'bX ==? 1'b1));
     // }}} Wildcard Equality
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Different Use of Braces");
+    $fdisplay(fd, "Concatenation: {4'hA, 4'h5}=0x%h",
+      {4'hA, 4'h5}
+    );
+    $fdisplay(fd, "Streaming concatenation: {<< 4 {16'hABCD}}=0x%h",
+      shortint'({<< 4 {16'hABCD}})
+    );
+    $fdisplay(fd, "Replication: {3{4'hA}}=0x%h",
+      {3{4'hA}}
+    );
+    $fdisplay(fd, "Set membership: (3 inside {1, 2, 3})=%b",
+      (3 inside {1, 2, 3})
+    );
+
+    $fdisplay(fd, "");
+    $fdisplay(fd, "Concatenation vs Array Assignment Patterns");
+    $fdisplay(fd, "concatenationA $size(concatenationA)=%0d", $size(concatenationA));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d [3]=%0d", concatenationA[0], concatenationA[1], concatenationA[2], concatenationA[3]);
+    $fdisplay(fd, "concatenationB $size(concatenationB)=%0d", $size(concatenationB));
+    $fdisplay(fd, "  =0x%h", concatenationB);
+    $fdisplay(fd, "literalPackedA $size(literalPackedA)=%0d", $size(literalPackedA));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d", literalPackedA[0], literalPackedA[1], literalPackedA[2]);
+    $fdisplay(fd, "literalPackedB $size(literalPackedB)=%0d", $size(literalPackedB));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d", literalPackedB[0], literalPackedB[1], literalPackedB[2]);
+    $fdisplay(fd, "literalUnpackedA $size(literalUnpackedA)=%0d", $size(literalUnpackedA));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d", literalUnpackedA[0], literalUnpackedA[1], literalUnpackedA[2]);
+    $fdisplay(fd, "literalUnpackedB $size(literalUnpackedB)=%0d", $size(literalUnpackedB));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d", literalUnpackedB[0], literalUnpackedB[1], literalUnpackedB[2]);
+    $fdisplay(fd, "literalUnpackedC $size(literalUnpackedC)=%0d", $size(literalUnpackedC));
+    $fdisplay(fd, "  [0]=%0d [1]=%0d [2]=%0d", literalUnpackedC[0], literalUnpackedC[1], literalUnpackedC[2]);
 
     $fclose(fd);
     $finish();
