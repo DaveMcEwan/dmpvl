@@ -4,7 +4,7 @@ author: Dave McEwan
 date: 2022-08-25
 toc: true
 toc-depth: 2
-...
+---
 
 This tutorial paper covers some of the more subtle details around SystemVerilog
 datatypes, in particular how their specifications apply to overridable
