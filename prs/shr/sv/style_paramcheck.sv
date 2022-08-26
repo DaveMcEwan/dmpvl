@@ -22,7 +22,7 @@ module M
     violated by checking value of the specially named localparam.
     The set of constraint expressions can be extracted from the conjoined
     comma-separated list.
-  - verdict: Preferred style, but see also style 6.
+  - verdict: Preferred style, but see also style 7.
   */
   localparam bit PARAMCHECK_ALLGOOD =
     &{(0 < WIDTH)
@@ -98,13 +98,31 @@ module M
   if (!(WIDTH < 22)) $error("WIDTH=%0d is too large.", WIDTH); // positive form
   if (WIDTH >= 22) $error("WIDTH=%0d is too large.", WIDTH); // negative form
 
+
+  /* 6. Check performed via illegal index instead of $error.
+  - pro: Compatible with every version of Verilog and SystemVerilog.
+  - con: Looks hackish.
+  - con: Error messages are implementation dependent.
+  - con: Error messages may not contain useful values.
+  - con: Multiple undriven wires.
+  - verdict: Use only where backward compatibility is important.
+  */
+  wire [1:1] dummy1; // Only index 1/true is valid.
+  wire paramcheck_allgood = dummy1[ // compact form
+    &{(0 < WIDTH)
+    , (WIDTH < 22)
+    , (MIN_DEPTH <= DEPTH)
+    , (DEPTH <= MAX_DEPTH)
+    }];
+  wire paramcheck_INTMIN_WIDTH = dummy1[0 < WIDTH]; // verbose form.
+
 endmodule
 
 
-/* 6. Place intermediate localparams in the module's parameter port list.
+/* 7. Place intermediate localparams in the module's parameter port list.
 - pro: Constraint set sits beside the parameter it constrains.
 - pro: Simple to use both positive and negative forms at once.
-- verdict: Preferred style.
+- verdict: Use only for simple modules without complicated array parameters.
 */
 module N
   #(int WIDTH = 5                   // Should be in (0, 23].
