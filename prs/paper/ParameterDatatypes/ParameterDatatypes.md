@@ -124,13 +124,10 @@ It is therefore sensible to somehow check within `CI` that the parameters are
 of the expected type (using `type`) and size (using `$size`), particularly.
 The default type of all parameters is `logic [MSB:0]` where `MSB` is at least
 31 but is implementation-dependent (see IEEE1800-2017 page 121).
-The default value of `NOVALUE` is `'X`, but must be overridden in all
-instances.
 ```systemverilog
 module CI
   #(parameter FIVE = 5
   , parameter VEC1D = {32'd1, 32'd2, 32'd3}
-  , parameter NOVALUE
   ) ();
 endmodule
 ```
@@ -141,28 +138,20 @@ This is the approach advocated in this document.
 No further checks on the type or size of these parameters are required because
 any override values froma a parent module are implicitly cast to the explicitly
 declared type.
-The default values of `NOVALUE_INT` and `NOVALUE_BIT` are `32'd0` and `1'd0`
-respectively, but must be overridden in all instances.
 ```systemverilog
 module CE2
   #(parameter int FIVE = 5
   , parameter bit [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
-  , parameter int NOVALUE_INT
-  , parameter bit NOVALUE_BIT
   ) ();
 endmodule
 ```
 
 The `CE4` module (child, explicit 4-state types) is similar to `CE2` except
 that the explicitly declared types are 4-state instead of 2-state.
-The default values of `NOVALUE_INTEGER` and `NOVALUE_LOGIC` are `32'bX` and
-`1'bX` respectively, but must be overridden in all instances.
 ```systemverilog
 module CE4
   #(parameter integer FIVE = 5
   , parameter logic [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
-  , parameter integer NOVALUE_INTEGER
-  , parameter logic NOVALUE_LOGIC
   ) ();
 endmodule
 ```
@@ -224,7 +213,7 @@ CE4 #(.FIVE (EB_FIVE), .VEC1D (EB_VEC1D)) u_ce4_eb ();
 ```
 
 All instances of `CI` should elaborate successfully and each child module
-parameters is given the type of its corresponding override value.
+parameter is given the type of its corresponding override value.
 Logical constructions within `u_ci_ib` and `u_ci_eb` (bad/unexpected types)
 based on those parameters may have different semantics depending on the
 overriden types.
@@ -250,7 +239,7 @@ The following table compares the type:value semantics of "the 3rd element of
 | `u_ce2_ig` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
 | `u_ce2_eg` | `bit`:`1'b1`                     | `bit [31:0]`:`32'd222`          |
 | `u_ce2_ib` | `bit`:`1'b1` ("e" = `8'h65`)     | `bit [31:0]`:`32'h0380_0010`    |
-| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` → `0001`)  | `bit [31:0]`:`32'd0`            |
+| `u_ce2_eb` | `bit`:`1'b0` (`XZ01` → `0001`)   | `bit [31:0]`:`32'd0`            |
 | `CE4`: | | |
 | `u_ce4_ig` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
 | `u_ce4_eg` | `logic`:`1'b1`                   | `logic [31:0]`:`32'd222`        |
@@ -266,7 +255,10 @@ carefully and present an elaboration error when an unsupported variation is
 detected.
 In particular, the size of each parameter element should be checked, and care
 should be taken with the use of operators (e.g. `==` vs `===`), as discussed in
-a later section.
+the later section on Comparison Operations.
+
+
+### Bottom-Up Type Definitions
 
 One argument for untyped module parameters is that the child (`CI`) has useful
 visibility of the type of an override value.
@@ -319,14 +311,6 @@ Fortunately, the rules for integral data objects are simple:
 1. All unassigned bits of a 4-state parameter have the implicit value `'X`.
 2. All unassigned bits of a 2-state parameter have the implicit value `'0`.
 
-In the `CE2` and `CE4` examples, the parameters with names starting with
-"`NOVALUE_`" have explicit types, but no default assignment.
-Parameter ports without a default assignment must be overriden by parent
-modules, otherwise an error should be raised at elaboration time, see
-IEEE1800-2017 Annex A footnote 18.
-An author can clarify to readers that they have considered the default value of
-a module parameter by using an explict default assignment.
-
 One way for a parameter to accidentally contain default values is through
 use of a constant function which doesn't assign to every component.
 ```systemverilog
@@ -360,6 +344,43 @@ NOTE: Again, due to the imprecise wording of IEEE1800-2017, the exact override
 value may be different between simulators.
 Compare the messages about `u_ce4_x.FIVE` in reports from different simulators
 for full details.
+
+
+Default Assignments
+-------------------
+
+An author can clarify to readers that they have considered the default value of
+a module parameter by using an explict default assignment.
+This allows an integrator to avoid providing an override value, perhaps because
+default value is sensible, or perhaps because they forgot.
+To force an integrator to consider a specific parameter and provide an override
+value, an author can declare a parameter without a default assignment.
+In the following example, the parameters have explicit types, but no default
+assignment.
+
+```systemverilog
+module REQ
+  #(parameter ANY
+  , parameter bit BIT
+  , parameter logic LOGIC
+  , parameter int INT
+  , parameter integer INTEGER
+  ) ();
+endmodule
+```
+
+Parameter ports without a default assignment must be overriden by parent
+modules, otherwise an error should be raised at elaboration time, see
+IEEE1800-2017 Annex A footnote 18.
+Override parameters provided by a parent module must be of a compatible type
+because the override value will be coerced to the type declared in the child
+module.
+In the above example, the override values (except for `ANY`) will be coerced
+to the corresponding type, but the child module must accept a value of any
+type for `ANY`.
+
+NOTE: Omitting default assignments may not be supported by all tools, see the
+attached `ParameterDatatypes.sv` for further details.
 
 
 Comparison Operations
@@ -456,8 +477,8 @@ condition coverage.
 
 Wildcard (in)equality operations are one usecase where Xs in a parameter is a
 useful, if not essential, ability.
-In a wildcard (in)equality operation, Xs and Zs may be used (only by the RHS
-operand) to mask out uninteresting bits from the LHS operand.
+In a wildcard (in)equality operation, Xs and Zs may be used to mask out bits
+from the LHS operand.
 Positive matches can be achieved using multiple LHS values, e.g.
 `4'b0100 ==? 4'b01XZ` → `1'b1` and `4'b0111 ==? 4'b01XZ` → `1'b1`.
 Negative matches can be also be achieved using multiple LHS values, e.g.
@@ -467,11 +488,11 @@ Although both `1'b0 ==? 1'bX` and `1'b1 ==? 1'bX` result in `1'b1`, changing
 sides changes the results as both `1'bX ==? 1'b0` and `1'bX ==? 1'b1` result in
 `1'bX`.
 Where wildcard (in)equality operations are used with module parameters, it is
-not possible for a child module's author to known if any Xs are intentional or
+not possible for a child module's author to know if any Xs are intentional or
 accidental.
-It is recommended that instead of using a wildcard equality operation with Xs
-or Zs to mask out certain bits, authors should use the more conventional style
-of masking with bitwise negation, AND, OR, etc. operations.
+Instead of using a wildcard equality operation with Xs
+or Zs to mask out certain bits, it is recommended that more general masking is
+used, i.e. bitwise negation, AND, OR, etc. operations.
 
 
 Conclusion
@@ -708,6 +729,39 @@ checking parameters.
 A consistent prefix enables code analysis tools to identify that these objects
 are used for checking parameter against constraints and may extract relevant
 expressions or values, e.g. for documentation.
+
+The above examples are compatible with modern versions of SystemVerilog
+(IEEE1800-2009,2012,2017).
+
+
+### A Backwards-Compatible Approach
+Some projects require compatibility with older versions of (System)Verilog.
+Elaboration system tasks (`$error`, `$info`, etc.) were only added in the 2009
+version of SystemVerilog, so another approach was/is required for designs based
+on earlier versions.
+One way to perform elaboration-time checks is by coercing a boolean (from a
+check) to an integer index of a vector.
+The following examples are compatible with every version of Verilog
+(IEEE1364-1995,2001,2005) and SystemVerilog (IEEE1800-2005,2009,2012,2017).
+```systemverilog
+wire [1:1] dummy1; // Only index 1/true is valid.
+wire paramcheck_allgood = dummy1[ // Compact form.
+  &{(0 < WIDTH)
+  , (WIDTH < 22)
+  , (MIN_DEPTH <= DEPTH)
+  , (DEPTH <= MAX_DEPTH)
+  , (FOO < 5)
+  }];
+wire paramcheck_FOO = dummy1[FOO < 5]; // Verbose form.
+
+wire dummy0;
+wire paramcheck_BAR = dummy0[!(BAR < 5)]; // Negative form.
+```
+When a tool encounters a violation, the index of a dummy signal is set to an
+invalid index.
+The exact error message is implementation dependent, so some users may prefer
+a compact style, while others may prefer the verbose form, based on how much
+information their tools report.
 
 
 Appendix: Key Quotes from the Language Reference Manual (IEEE1800-2017)

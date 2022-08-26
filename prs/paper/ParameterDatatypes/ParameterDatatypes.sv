@@ -8,25 +8,34 @@ style of a report.
 module CI
   #(parameter FIVE = 5
   , parameter VEC1D = {32'd1, 32'd2, 32'd3}
-//, parameter NOVALUE                     Commented to avoid need to override.
   ) ();
 endmodule
 
 module CE2
   #(parameter int FIVE = 5
   , parameter bit [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
-//, parameter int NOVALUE_INT             Commented to avoid need to override.
-//, parameter bit NOVALUE_BIT             Commented to avoid need to override.
   ) ();
 endmodule
 
 module CE4
   #(parameter integer FIVE = 5
   , parameter logic [2:0][31:0] VEC1D = {32'd1, 32'd2, 32'd3}
-//, parameter integer NOVALUE_INTEGER     Commented to avoid need to override.
-//, parameter logic NOVALUE_LOGIC         Commented to avoid need to override.
   ) ();
 endmodule
+
+`ifndef XCELIUM
+// xmvlog: *E,SVVMAP (ParameterDatatypes.sv,*|*): Omitting the assignment to
+// constant_param_expression in a param_assignment in a parameter_port_list
+// currently is not supported.
+module REQ
+  #(parameter ANY
+  , parameter bit BIT
+  , parameter logic LOGIC
+  , parameter int INT
+  , parameter integer INTEGER
+  ) ();
+endmodule
+`endif
 /* verilator lint_on WIDTH */
 
 module parent ();
@@ -105,6 +114,17 @@ module parent ();
   endfunction
 
   CE4 #(.FIVE (f_myConstant())) u_ce4_x ();
+
+
+`ifndef XCELIUM
+  REQ
+    #(.ANY     (12'd45)
+    , .BIT     (1'b0)
+    , .LOGIC   (1'bX)
+    , .INT     (12'd45)
+    , .INTEGER (12'bzx10)
+    ) u_req ();
+`endif
 
 
   localparam logic [1:0] OKAY = 2'b00;
@@ -512,6 +532,31 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      $size(u_ce4_x.VEC1D[1])=%0d", $size(u_ce4_x.VEC1D[1]));
     $fdisplay(fd, "      u_ce4_x.VEC1D[1]=%b", u_ce4_x.VEC1D[1]);
     // }}} // CE4
+`ifndef XCELIUM
+    $fdisplay(fd, "REQ"); // {{{
+    $fdisplay(fd, "  u_req");
+    $fdisplay(fd, "    ANY");
+    $fdisplay(fd, "      $typename(u_req.ANY)=%s", $typename(u_req.ANY));
+    $fdisplay(fd, "      $size(u_req.ANY)=%0d", $size(u_req.ANY));
+    $fdisplay(fd, "      u_req.ANY=%b", u_req.ANY);
+    $fdisplay(fd, "    BIT");
+    $fdisplay(fd, "      $typename(u_req.BIT)=%s", $typename(u_req.BIT));
+    $fdisplay(fd, "      $size(u_req.BIT)=%0d", $size(u_req.BIT));
+    $fdisplay(fd, "      u_req.BIT=%b", u_req.BIT);
+    $fdisplay(fd, "    LOGIC");
+    $fdisplay(fd, "      $typename(u_req.LOGIC)=%s", $typename(u_req.LOGIC));
+    $fdisplay(fd, "      $size(u_req.LOGIC)=%0d", $size(u_req.LOGIC));
+    $fdisplay(fd, "      u_req.LOGIC=%b", u_req.LOGIC);
+    $fdisplay(fd, "    INT");
+    $fdisplay(fd, "      $typename(u_req.INT)=%s", $typename(u_req.INT));
+    $fdisplay(fd, "      $size(u_req.INT)=%0d", $size(u_req.INT));
+    $fdisplay(fd, "      u_req.INT=%b", u_req.INT);
+    $fdisplay(fd, "    INTEGER");
+    $fdisplay(fd, "      $typename(u_req.INTEGER)=%s", $typename(u_req.INTEGER));
+    $fdisplay(fd, "      $size(u_req.INTEGER)=%0d", $size(u_req.INTEGER));
+    $fdisplay(fd, "      u_req.INTEGER=%b", u_req.INTEGER);
+    // }}} // REQ
+`endif
 
     $fdisplay(fd, "");
     $fdisplay(fd, "Case Equality Synthesis/Simulation Mismatch");

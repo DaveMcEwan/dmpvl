@@ -298,6 +298,28 @@ CE4
       $typename(u_ce4_x.VEC1D[1])=reg[31:0]
       $size(u_ce4_x.VEC1D[1])=32
       u_ce4_x.VEC1D[1]=00000000000000000000000000000010
+REQ
+  u_req
+    ANY
+      $typename(u_req.ANY)=reg[11:0]
+      $size(u_req.ANY)=12
+      u_req.ANY=000000101101
+    BIT
+      $typename(u_req.BIT)=bit
+      $size(u_req.BIT)=x
+      u_req.BIT=0
+    LOGIC
+      $typename(u_req.LOGIC)=reg
+      $size(u_req.LOGIC)=x
+      u_req.LOGIC=x
+    INT
+      $typename(u_req.INT)=int
+      $size(u_req.INT)=32
+      u_req.INT=00000000000000000000000000101101
+    INTEGER
+      $typename(u_req.INTEGER)=integer
+      $size(u_req.INTEGER)=32
+      u_req.INTEGER=00000000000000000000zzzzzzzzzx10
 
 Case Equality Synthesis/Simulation Mismatch
 c=00000000000000000000000000000101 d=1
