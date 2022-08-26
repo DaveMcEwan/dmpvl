@@ -437,9 +437,6 @@ $if(logo)$
 $endif$
 $endif$
 
-\let\oldsubsection\subsection
-\renewcommand{\subsection}[1]{\newpage\oldsubsection{#1}}
-
 \begin{document}
 $if(has-frontmatter)$
 \frontmatter
@@ -494,6 +491,10 @@ $endif$
 $if(has-frontmatter)$
 \mainmatter
 $endif$
+
+\let\oldsubsection\subsection
+\renewcommand{\subsection}[1]{\newpage\oldsubsection{#1}}
+
 $body$
 
 $if(has-frontmatter)$
