@@ -147,3 +147,53 @@ module N
   end: l_paramcheck
 
 endmodule
+
+
+/* 8. An extension of style 1 for complicated array parameters.
+*/
+module C
+  #(int WIDTH = 5                   // Should be in (0, 23].
+  , int DEPTH = 10                  // Should be in [MIN_DEPTH, MAX_DEPTH].
+  , localparam int MIN_DEPTH = 2    // Non-overridable.
+  , localparam int MAX_DEPTH = 64   // Non-overridable.
+  // Parameters above are the same as M.
+  // Parameters below are for the complicated parameter MYARRAY.
+  , localparam int N_ITEM = 5
+  , localparam bit [N_ITEM-1:0] IS_ODD = (N_ITEM)'b01011
+  , bit [N_ITEM-1:0][31:0] MYARRAY = '0
+  ) ();
+
+  // Constant function performs lots of checks on each element.
+  function automatic bit [N_ITEM-1:0] f_paramcheck_MYARRAY ();
+    for (int i=0; i < N_ITEM; i++)
+      f_paramcheck_MYARRAY[i] =
+        &{(0 <= MYARRAY[i])
+        , (MYARRAY[i] < MAX_DEPTH)
+        , (MYARRAY[i] != 2)
+        , IS_ODD[i] ? (MYARRAY[i] % 2) : 1'b1
+        };
+  endfunction
+
+  // Same basic structure as style 1.
+  localparam bit PARAMCHECK_ALLGOOD =
+    &{(0 < WIDTH)
+    , (WIDTH < 22)
+    , (MIN_DEPTH <= DEPTH)
+    , (DEPTH <= MAX_DEPTH)
+    , f_paramcheck_MYARRAY() // Function contains all "complicated" checks.
+    };
+  if (!PARAMCHECK_ALLGOOD) begin: l_paramcheck_allgood
+    $error("Parameter constraint violation.");
+    $info("WIDTH=%0d%", WIDTH);
+    $info("DEPTH=%0d%", DEPTH);
+
+    // Report the violating items via a bit-vector.
+    $info("f_paramcheck_MYARRAY()=%b", f_paramcheck_MYARRAY());
+
+    // Report the exact value of any violating items.
+    for (genvar i=0; i < N_ITEM; i++)
+      if (f_paramcheck_MYARRAY()[i])
+        $info("MYARRAY[%0d]=%0d", i, MYARRAY[i]);
+  end: l_paramcheck_allgood
+
+endmodule
