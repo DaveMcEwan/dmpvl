@@ -5,6 +5,7 @@
 #   https://github.com/verilator/verilator
 #   module load mentor/questasim/2022.3
 #   module load cadence/xcelium/22.03.004
+#   module load synopsys/vcs/2021.09-sp2-2
 
 DOC := ParameterDatatypes.pdf
 TOP := $(basename ${DOC}).sv
@@ -48,6 +49,13 @@ XCELIUM.rpt: ${TOP}
 	xrun -sv \
 		-disable_sem2009 \
 		-define XCELIUM \
+		${TOP}
+
+# NOTE: Untested.
+VCS.rpt: ${TOP}
+	vcs -V \
+		-sverilog +lint=all \
+		+define+VCS \
 		${TOP}
 
 .PHONY: clean
