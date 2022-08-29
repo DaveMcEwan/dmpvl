@@ -10,7 +10,8 @@
 #   module load linttools/recommended_iverilog
 
 DOC := ParameterDatatypes.pdf
-TOP := $(basename ${DOC}).sv
+BASENAME := $(basename ${DOC})
+TOP := ${BASENAME}.sv
 
 .PHONY: default
 default: ${DOC}
@@ -18,6 +19,7 @@ default: svlint-parseonly
 default: verilator-lint
 default: QUESTA.rpt
 default: XCELIUM.rpt
+default: VERILATOR.rpt
 
 %.pdf: %.md template.latex
 	@pandoc --version
@@ -61,12 +63,12 @@ XCELIUM.rpt: ${TOP}
 # - $typename on a type identifier, rather than a data identifier
 # - Streaming concatenation operater
 # - Set membership (`inside` keyword)
-$(basename ${DOC}).vvp: ${TOP}
+${BASENAME}.vvp: ${TOP}
 	iverilog -v \
 		-g2012 \
 		-DIVERILOG \
 		${TOP}
-IVERILOG.rpt: $(basename ${DOC}).vvp
+IVERILOG.rpt: ${BASENAME}.vvp
 	time vvp $^
 
 # NOTE: Untested.
@@ -76,12 +78,28 @@ VCS.rpt: ${TOP}
 		+define+VCS \
 		${TOP}
 
+VERILATOR_MAKEFILE := obj_dir/V${BASENAME}.mk
+VERILATOR_EXECUTABLE := obj_dir/V${BASENAME}
+${VERILATOR_MAKEFILE}: ${TOP}
+	@verilator --version
+	verilator \
+		--language 1800-2017 \
+		--trace --cc --exe \
+		-CFLAGS -I../../../../verif/ \
+		verilator_main.cc \
+		${TOP}
+${VERILATOR_EXECUTABLE}: ${VERILATOR_MAKEFILE}
+	make -j -C obj_dir -f V${BASENAME}.mk V${BASENAME}
+VERILATOR.rpt: ${VERILATOR_EXECUTABLE}
+	time ${VERILATOR_EXECUTABLE}
+
 .PHONY: clean
 clean:
-	rm -f $(DOC).pdf
+	rm -f $(DOC)
 	rm -f *.rpt
 	rm -f *.log
 	rm -rf work/
 	rm -rf xcelium.d/
 	rm -f xrun.*
 	rm -f xm*.*
+	rm -rf obj_dir/

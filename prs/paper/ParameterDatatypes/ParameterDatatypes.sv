@@ -38,7 +38,11 @@ endmodule
 `endif
 /* verilator lint_on WIDTH */
 
-module parent ();
+module parent (
+`ifdef VERILATOR
+  input var logic i_clk, i_rst
+`endif
+);
 
   typedef struct packed {
     bit b;      // 2-state
