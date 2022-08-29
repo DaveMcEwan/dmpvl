@@ -6,6 +6,8 @@
 #   module load mentor/questasim/2022.3
 #   module load cadence/xcelium/22.03.004
 #   module load synopsys/vcs/2021.09-sp2-2
+#   module use --append /pro/sig_research/dddTools/work/aade/linttools/Modules/modulefiles
+#   module load linttools/recommended_iverilog
 
 DOC := ParameterDatatypes.pdf
 TOP := $(basename ${DOC}).sv
@@ -50,6 +52,22 @@ XCELIUM.rpt: ${TOP}
 		-disable_sem2009 \
 		-define XCELIUM \
 		${TOP}
+
+# NOTE: Icarus Verilog doesn't support IEEE1800-2017.
+# As of 2022-08-29, Icarus/Iverilog is lacking support for too many things to
+# be worth using for comparison.
+# - Structure assignment patterns
+# - Unpacked array literals (related to assignment patterns)
+# - $typename on a type identifier, rather than a data identifier
+# - Streaming concatenation operater
+# - Set membership (`inside` keyword)
+$(basename ${DOC}).vvp: ${TOP}
+	iverilog -v \
+		-g2012 \
+		-DIVERILOG \
+		${TOP}
+IVERILOG.rpt: $(basename ${DOC}).vvp
+	time vvp $^
 
 # NOTE: Untested.
 VCS.rpt: ${TOP}

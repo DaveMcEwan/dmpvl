@@ -224,6 +224,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
 `elsif VCS
     fd = $fopen("VCS.rpt");
     $fdisplay(fd, "VCS");
+`elsif IVERILOG
+    fd = $fopen("IVERILOG.rpt");
+    $fdisplay(fd, "IVERILOG");
 `else
     fd = $fopen("OTHER.rpt");
     $fdisplay(fd, "OTHER");
