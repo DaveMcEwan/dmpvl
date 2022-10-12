@@ -1,0 +1,7 @@
+
+*.rpt
+*.pdf
+*.history
+*.help
+obj_dir/
+*.vcd
