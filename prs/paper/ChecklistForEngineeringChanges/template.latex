@@ -437,6 +437,10 @@ $if(logo)$
 $endif$
 $endif$
 
+\usepackage{enumitem}
+\let\olddescriptionlabel\descriptionlabel
+\renewcommand{\descriptionlabel}[1]{\hspace{-2em} \fbox{\phantom{n}} \olddescriptionlabel{#1}}
+
 \begin{document}
 $if(has-frontmatter)$
 \frontmatter
