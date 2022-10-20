@@ -1,5 +1,6 @@
 
 DOC := ChecklistForEngineeringChanges.pdf
+DOC += CondensedChecklistForEngineeringChanges.pdf
 
 .PHONY: default
 default: ${DOC}
