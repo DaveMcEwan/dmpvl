@@ -7,7 +7,7 @@ default: ${DOC}
 
 %.pdf: %.md template.latex
 	@pandoc --version
-	pandoc --template=template.latex -i $*.md -o $@
+	pandoc --template=template.latex -M pagestyle=empty -i $*.md -o $@
 
 .PHONY: clean
 clean:
