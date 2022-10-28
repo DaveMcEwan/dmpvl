@@ -136,7 +136,7 @@ In the `CE2` module (child, explicit 2-state types), the type of each parameter
 is explicitly declared and cannot be overriden by a parent module.
 This is the approach advocated in this document.
 No further checks on the type or size of these parameters are required because
-any override values froma a parent module are implicitly cast to the explicitly
+any override values from a parent module are implicitly cast to the explicitly
 declared type.
 ```systemverilog
 module CE2
