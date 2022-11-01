@@ -97,7 +97,7 @@ on: *Is there anything I could improve upon thus far?*
   discussions in step 1, interested colleagues, and often yourself in a few
   months time.
 
-Material from steps further from step 5 is less formal, i.e. meeting minutes
+Materials from steps further from step 5 is less formal, i.e. meeting minutes
 (step 1) and pull request descriptions (step 9).
 Material from the middle steps are increasingly formal, with source code being
 completely formal.

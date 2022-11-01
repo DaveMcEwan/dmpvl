@@ -25,16 +25,15 @@ on: *Is there anything I could improve upon thus far?*
 6
 : **Provide a history** of how the work progressed.
 
-Material from the middle steps are increasingly formal, with source code being
+Materials from the middle steps are increasingly formal, with source code being
 completely formal.
-The formallity is related to how much effort your colleagues want to see from
-you, i.e. "make the changes" is a small item in the middle.
-From your colleagues' perspective, the most important thing is to see that you
-have put care and effort into understanding the problem and producing a
-well-considered solution.
+The formallity is related to how much effort you should demonstrate, i.e.
+"make the changes" is only a small item in the middle.
+From your colleagues' perspective, the most important thing is the visibility
+of the care and effort that you have put into understanding the problem and
+producing a well-considered solution.
 
-You can, and should, ask your colleagues for assistance at any point that you
-don't understand something.
-However, make sure you take notes, and that they see you taking notes - they
-will likely be annoyed if they think you aren't learning from the assistance
-you requested.
+You can, and should, reach out to your colleagues for assistance at any point
+that you don't understand something.
+It is important to keep notes which you can refer back to, both when you're
+doing your own work, and when receiving guidance/assistance from others.
