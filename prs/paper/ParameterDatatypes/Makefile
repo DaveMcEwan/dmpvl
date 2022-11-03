@@ -18,6 +18,8 @@ default: ${DOC}
 default: svlint-parseonly
 default: verilator-lint
 default: QUESTA.rpt
+#default: RIVIERA.rpt
+#default: VCS.rpt
 default: XCELIUM.rpt
 default: VERILATOR.rpt
 
@@ -48,6 +50,20 @@ QUESTA.rpt: ${TOP}
 		-appendlog -l qverilog.log \
 		-vopt
 
+RIVIERA.rpt: ${TOP}
+	@ -version
+	vlib work
+	vlib -sv \
+		+define+RIVIERA \
+		${TOP}
+	vsim -c -do "vsim +access+r; run -all; exit"
+
+VCS.rpt: ${TOP}
+	vcs -V \
+		-sverilog +lint=all -assert svaext \
+		+define+VCS \
+		${TOP}
+
 XCELIUM.rpt: ${TOP}
 	@xrun -version
 	xrun -sv \
@@ -70,13 +86,6 @@ ${BASENAME}.vvp: ${TOP}
 		${TOP}
 IVERILOG.rpt: ${BASENAME}.vvp
 	time vvp $^
-
-# NOTE: Untested.
-VCS.rpt: ${TOP}
-	vcs -V \
-		-sverilog +lint=all \
-		+define+VCS \
-		${TOP}
 
 VERILATOR_MAKEFILE := obj_dir/V${BASENAME}.mk
 VERILATOR_EXECUTABLE := obj_dir/V${BASENAME}

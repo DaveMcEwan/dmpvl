@@ -67,7 +67,7 @@ module parent (
     constantBaz.b = 1'b1;
   endfunction
 
-  // 2-state constants, good practice.
+  // 2-state constants, good practice (except for implicit type).
   localparam s2 FOO_A = {1'b1, 32'd123};
   localparam s2 FOO_B = '1;
   localparam s2 FOO_C = constantFoo();
@@ -219,15 +219,18 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
 `ifdef QUESTA
     fd = $fopen("QUESTA.rpt");
     $fdisplay(fd, "QUESTA");
+`elsif RIVIERA
+    fd = $fopen("RIVIERA.rpt");
+    $fdisplay(fd, "RIVIERA");
+`elsif VCS
+    fd = $fopen("VCS.rpt");
+    $fdisplay(fd, "VCS");
 `elsif XCELIUM
     fd = $fopen("XCELIUM.rpt");
     $fdisplay(fd, "XCELIUM");
 `elsif VERILATOR
     fd = $fopen("VERILATOR.rpt");
     $fdisplay(fd, "VERILATOR");
-`elsif VCS
-    fd = $fopen("VCS.rpt");
-    $fdisplay(fd, "VCS");
 `elsif IVERILOG
     fd = $fopen("IVERILOG.rpt");
     $fdisplay(fd, "IVERILOG");
@@ -249,31 +252,45 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "  $size(sM)=%0d", $size(sM));
     $fdisplay(fd, "FOO_A");
     $fdisplay(fd, "  $typename(FOO_A)=%s", $typename(FOO_A));
+`ifndef VCS
     $fdisplay(fd, "  $size(FOO_A)=%0d", $size(FOO_A));
+`endif
     $fdisplay(fd, "  FOO_A=%b", FOO_A);
     $fdisplay(fd, "FOO_B");
     $fdisplay(fd, "  $typename(FOO_B)=%s", $typename(FOO_B));
+`ifndef VCS
     $fdisplay(fd, "  $size(FOO_B)=%0d", $size(FOO_B));
+`endif
     $fdisplay(fd, "  FOO_B=%b", FOO_B);
     $fdisplay(fd, "FOO_C");
     $fdisplay(fd, "  $typename(FOO_C)=%s", $typename(FOO_C));
+`ifndef VCS
     $fdisplay(fd, "  $size(FOO_C)=%0d", $size(FOO_C));
+`endif
     $fdisplay(fd, "  FOO_C=%b", FOO_C);
     $fdisplay(fd, "BAR_A");
     $fdisplay(fd, "  $typename(BAR_A)=%s", $typename(BAR_A));
+`ifndef VCS
     $fdisplay(fd, "  $size(BAR_A)=%0d", $size(BAR_A));
+`endif
     $fdisplay(fd, "  BAR_A=%b", BAR_A);
     $fdisplay(fd, "BAR_B");
     $fdisplay(fd, "  $typename(BAR_B)=%s", $typename(BAR_B));
+`ifndef VCS
     $fdisplay(fd, "  $size(BAR_B)=%0d", $size(BAR_B));
+`endif
     $fdisplay(fd, "  BAR_B=%b", BAR_B);
     $fdisplay(fd, "BAZ_A");
     $fdisplay(fd, "  $typename(BAZ_A)=%s", $typename(BAZ_A));
+`ifndef VCS
     $fdisplay(fd, "  $size(BAZ_A)=%0d", $size(BAZ_A));
+`endif
     $fdisplay(fd, "  BAZ_A=%b", BAZ_A);
     $fdisplay(fd, "BAZ_B");
     $fdisplay(fd, "  $typename(BAZ_B)=%s", $typename(BAZ_B));
+`ifndef VCS
     $fdisplay(fd, "  $size(BAZ_B)=%0d", $size(BAZ_B));
+`endif
     $fdisplay(fd, "  BAZ_B=%b", BAZ_B);
     // }}} Packed Structures With Mixed 2/4-state Members
 
@@ -289,7 +306,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "  IG_VEC1D=%b", IG_VEC1D);
     $fdisplay(fd, "IB_FIVE");
     $fdisplay(fd, "  $typename(IB_FIVE)=%s", $typename(IB_FIVE));
+`ifndef VCS
     $fdisplay(fd, "  $size(IB_FIVE)=%0d", $size(IB_FIVE));
+`endif
     $fdisplay(fd, "  IB_FIVE=%b", IB_FIVE);
     $fdisplay(fd, "IB_VEC1D");
     $fdisplay(fd, "  $typename(IB_VEC1D)=%s", $typename(IB_VEC1D));
@@ -323,7 +342,11 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_ig.FIVE=%b", u_ci_ig.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ci_ig.FIVE[2])=%s", $typename(u_ci_ig.FIVE[2]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_ig.FIVE[2])=%0d", $size(u_ci_ig.FIVE[2]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_ig.FIVE[2]=%b", u_ci_ig.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ci_ig.VEC1D)=%s", $typename(u_ci_ig.VEC1D));
@@ -331,7 +354,11 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_ig.VEC1D=%b", u_ci_ig.VEC1D);
     $fdisplay(fd, "    VEC1D[1]");
     $fdisplay(fd, "      $typename(u_ci_ig.VEC1D[1])=%s", $typename(u_ci_ig.VEC1D[1]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_ig.VEC1D[1])=%0d", $size(u_ci_ig.VEC1D[1]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_ig.VEC1D[1]=%b", u_ci_ig.VEC1D[1]);
     $fdisplay(fd, "  u_ci_eg");
     $fdisplay(fd, "    FIVE");
@@ -340,7 +367,11 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_eg.FIVE=%b", u_ci_eg.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ci_eg.FIVE[2])=%s", $typename(u_ci_eg.FIVE[2]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_eg.FIVE[2])=%0d", $size(u_ci_eg.FIVE[2]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_eg.FIVE[2]=%b", u_ci_eg.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ci_eg.VEC1D)=%s", $typename(u_ci_eg.VEC1D));
@@ -348,24 +379,42 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_eg.VEC1D=%b", u_ci_eg.VEC1D);
     $fdisplay(fd, "    VEC1D[1]");
     $fdisplay(fd, "      $typename(u_ci_eg.VEC1D[1])=%s", $typename(u_ci_eg.VEC1D[1]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_eg.VEC1D[1])=%0d", $size(u_ci_eg.VEC1D[1]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_eg.VEC1D[1]=%b", u_ci_eg.VEC1D[1]);
     $fdisplay(fd, "  u_ci_ib");
     $fdisplay(fd, "    FIVE");
     $fdisplay(fd, "      $typename(u_ci_ib.FIVE)=%s", $typename(u_ci_ib.FIVE));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_ib.FIVE)=%0d", $size(u_ci_ib.FIVE));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_ib.FIVE=%b", u_ci_ib.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ci_ib.FIVE[2])=%s", $typename(u_ci_ib.FIVE[2]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_ib.FIVE[2])=%0d", $size(u_ci_ib.FIVE[2]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_ib.FIVE[2]=%b", u_ci_ib.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ci_ib.VEC1D)=%s", $typename(u_ci_ib.VEC1D));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ci_ib.VEC1D)=%0d", $size(u_ci_ib.VEC1D));
+`endif
     $fdisplay(fd, "      u_ci_ib.VEC1D=%b", u_ci_ib.VEC1D);
     $fdisplay(fd, "    VEC1D[1]");
     $fdisplay(fd, "      $typename(u_ci_ib.VEC1D[1])=%s", $typename(u_ci_ib.VEC1D[1]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_ib.VEC1D[1])=%0d", $size(u_ci_ib.VEC1D[1]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_ib.VEC1D[1]=%b", u_ci_ib.VEC1D[1]);
     $fdisplay(fd, "  u_ci_eb");
     $fdisplay(fd, "    FIVE");
@@ -374,7 +423,11 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_eb.FIVE=%b", u_ci_eb.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ci_eb.FIVE[2])=%s", $typename(u_ci_eb.FIVE[2]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_eb.FIVE[2])=%0d", $size(u_ci_eb.FIVE[2]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_eb.FIVE[2]=%b", u_ci_eb.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ci_eb.VEC1D)=%s", $typename(u_ci_eb.VEC1D));
@@ -382,7 +435,11 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ci_eb.VEC1D=%b", u_ci_eb.VEC1D);
     $fdisplay(fd, "    VEC1D[1]");
     $fdisplay(fd, "      $typename(u_ci_eb.VEC1D[1])=%s", $typename(u_ci_eb.VEC1D[1]));
+`ifndef VCS
+`ifndef RIVIERA
     $fdisplay(fd, "      $size(u_ci_eb.VEC1D[1])=%0d", $size(u_ci_eb.VEC1D[1]));
+`endif
+`endif
     $fdisplay(fd, "      u_ci_eb.VEC1D[1]=%b", u_ci_eb.VEC1D[1]);
     // }}} CI
     $fdisplay(fd, "CE2"); // {{{
@@ -393,7 +450,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce2_ig.FIVE=%b", u_ce2_ig.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce2_ig.FIVE[2])=%s", $typename(u_ce2_ig.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce2_ig.FIVE[2])=%0d", $size(u_ce2_ig.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce2_ig.FIVE[2]=%b", u_ce2_ig.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce2_ig.VEC1D)=%s", $typename(u_ce2_ig.VEC1D));
@@ -410,7 +469,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce2_eg.FIVE=%b", u_ce2_eg.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce2_eg.FIVE[2])=%s", $typename(u_ce2_eg.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce2_eg.FIVE[2])=%0d", $size(u_ce2_eg.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce2_eg.FIVE[2]=%b", u_ce2_eg.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce2_eg.VEC1D)=%s", $typename(u_ce2_eg.VEC1D));
@@ -427,7 +488,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce2_ib.FIVE=%b", u_ce2_ib.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce2_ib.FIVE[2])=%s", $typename(u_ce2_ib.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce2_ib.FIVE[2])=%0d", $size(u_ce2_ib.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce2_ib.FIVE[2]=%b", u_ce2_ib.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce2_ib.VEC1D)=%s", $typename(u_ce2_ib.VEC1D));
@@ -444,7 +507,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce2_eb.FIVE=%b", u_ce2_eb.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce2_eb.FIVE[2])=%s", $typename(u_ce2_eb.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce2_eb.FIVE[2])=%0d", $size(u_ce2_eb.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce2_eb.FIVE[2]=%b", u_ce2_eb.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce2_eb.VEC1D)=%s", $typename(u_ce2_eb.VEC1D));
@@ -463,7 +528,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce4_ig.FIVE=%b", u_ce4_ig.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce4_ig.FIVE[2])=%s", $typename(u_ce4_ig.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce4_ig.FIVE[2])=%0d", $size(u_ce4_ig.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce4_ig.FIVE[2]=%b", u_ce4_ig.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce4_ig.VEC1D)=%s", $typename(u_ce4_ig.VEC1D));
@@ -480,7 +547,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce4_eg.FIVE=%b", u_ce4_eg.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce4_eg.FIVE[2])=%s", $typename(u_ce4_eg.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce4_eg.FIVE[2])=%0d", $size(u_ce4_eg.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce4_eg.FIVE[2]=%b", u_ce4_eg.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce4_eg.VEC1D)=%s", $typename(u_ce4_eg.VEC1D));
@@ -497,7 +566,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce4_ib.FIVE=%b", u_ce4_ib.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce4_ib.FIVE[2])=%s", $typename(u_ce4_ib.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce4_ib.FIVE[2])=%0d", $size(u_ce4_ib.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce4_ib.FIVE[2]=%b", u_ce4_ib.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce4_ib.VEC1D)=%s", $typename(u_ce4_ib.VEC1D));
@@ -514,7 +585,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce4_eb.FIVE=%b", u_ce4_eb.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce4_eb.FIVE[2])=%s", $typename(u_ce4_eb.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce4_eb.FIVE[2])=%0d", $size(u_ce4_eb.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce4_eb.FIVE[2]=%b", u_ce4_eb.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce4_eb.VEC1D)=%s", $typename(u_ce4_eb.VEC1D));
@@ -531,7 +604,9 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_ce4_x.FIVE=%b", u_ce4_x.FIVE);
     $fdisplay(fd, "    FIVE[2]");
     $fdisplay(fd, "      $typename(u_ce4_x.FIVE[2])=%s", $typename(u_ce4_x.FIVE[2]));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_ce4_x.FIVE[2])=%0d", $size(u_ce4_x.FIVE[2]));
+`endif
     $fdisplay(fd, "      u_ce4_x.FIVE[2]=%b", u_ce4_x.FIVE[2]);
     $fdisplay(fd, "    VEC1D");
     $fdisplay(fd, "      $typename(u_ce4_x.VEC1D)=%s", $typename(u_ce4_x.VEC1D));
@@ -551,11 +626,15 @@ localparam int literalUnpackedC [2:0] = '{1, 2, 333};
     $fdisplay(fd, "      u_req.ANY=%b", u_req.ANY);
     $fdisplay(fd, "    BIT");
     $fdisplay(fd, "      $typename(u_req.BIT)=%s", $typename(u_req.BIT));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_req.BIT)=%0d", $size(u_req.BIT));
+`endif
     $fdisplay(fd, "      u_req.BIT=%b", u_req.BIT);
     $fdisplay(fd, "    LOGIC");
     $fdisplay(fd, "      $typename(u_req.LOGIC)=%s", $typename(u_req.LOGIC));
+`ifndef VCS
     $fdisplay(fd, "      $size(u_req.LOGIC)=%0d", $size(u_req.LOGIC));
+`endif
     $fdisplay(fd, "      u_req.LOGIC=%b", u_req.LOGIC);
     $fdisplay(fd, "    INT");
     $fdisplay(fd, "      $typename(u_req.INT)=%s", $typename(u_req.INT));
