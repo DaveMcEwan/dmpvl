@@ -10,6 +10,7 @@ Properties Beyond Assertions in SystemVerilog
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 TODO: Write abstract last.
+TODO: Rename to AISH (Assertions In Synthesizable Hardware)
 
 Aim
 ---
@@ -108,8 +109,7 @@ assign a_NAME =           // Disjunctive form.
   , maybeTrue1            // In interesting cases, at least one of these
   , maybeTrueN            // maybeTrue* expressions must be true.
   };
-property p_NAME; @(posedge i_clk) a_NAME endproperty
-assert property (p_NAME)
+assert property (@(posedge i_clk) a_NAME)
   else $error("DESCIPTION");
 ```
 
@@ -134,6 +134,7 @@ implication := (antecedent -> consequent)
              = !(antecedent && !consequent) // Conjunctive form
 ```
 
+TODO: Combine into `a_allgood`.
 The conjunctive form is a natural alternative, written with a list all of the
 ways in which the check should fail.
 In practice this is less intuitive, more verbose, and thus more error-prone.
@@ -145,9 +146,10 @@ assign a_altform =        // Conjunctive form.
       , shouldBeFalseN    // shouldBeFalse* expressions must be false.
       } );
 ```
+TODO: Second conjunctive form, combined into `a_anybad`.
 
 ```systemverilog
-assert property (p_EXTRAHELPFUL)
+assert property (@(posedge i_clk) a_EXTRAHELPFUL)
   else begin
     $error("DESCIPTION");
     $info("counter=%0d", counter); // Extra helpful debug information.
@@ -156,21 +158,18 @@ assert property (p_EXTRAHELPFUL)
 
 ```systemverilog
 assign a_ANNOYING =
-  |{i_rst
-  , !isInterestingCase
+  |{!isInterestingCase
   , x && y // Single consequent in CNF should be split into 1 assertion per
            // consequent term.
   };
 
-assign a_PLEASING_x =
-  |{i_rst
-  , !isInterestingCase
+assign a_EASIER_x =
+  |{!isInterestingCase
   , x
   };
 
-assign a_PLEASING_y =
-  |{i_rst
-  , !isInterestingCase
+assign a_EASIER_y =
+  |{!isInterestingCase
   , y
   };
 ```
@@ -180,13 +179,24 @@ Discussion
 ----------
 - Synthesisable Properties for FPGA Targets
   - One pin out per property.
-    `#pins = #assertions`
+    - `#pins = #assertions`
+    - Use a downcounter FSM when glitches are so short that they're smoothed by
+      pin capacitance (line of flops is the naive equivalent).
+      - "all good this cycle" -> "all good for all of the previous N cycles"
+      - "any bad this cycle" -> "all bad in any of the previous N cycles"
   - One pin for conjunction of all properties.
-    `#pins = 1`
+    - `#pins = 1`
+    - Also use downcounter FSM to unsmooth glitches here.
+    - Use double-flop resyncs when assertions come from different clock
+      domains.
   - Popcnt for num fails, OnehotIdx for precise identification.
-    `#pins = 2 * clog2(#assertions)`
+    - `#pins = 2 * clog2(#assertions)`
+    - Also use double-flop resyncs here.
   - Replace popcnt with pair of anyViolation, exactlyOneViolation, OnehotIdx.
-    `#pins = 2 + clog2(#assertions)`
+    - `#pins = 2 + clog2(#assertions)`
+    - Use a single downcounter FSM for anyViolation and exactlyOneViolation.
+    - OnehotIdx is tricker, but should allow to change faster than pins
+      really allow.
 
 
 Conclusion
