@@ -1,5 +1,5 @@
-Properties Beyond Assertions in SystemVerilog
-=============================================
+Assertions In Synthesizable Hardware
+====================================
 
 - Synthesisable Properties for Designers
   - Properties vs wires on waveforms.
@@ -10,7 +10,6 @@ Properties Beyond Assertions in SystemVerilog
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 TODO: Write abstract last.
-TODO: Rename to AISH (Assertions In Synthesizable Hardware)
 
 Aim
 ---
@@ -25,14 +24,14 @@ The main benefits of following this style include:
   translation between HDLs, e.g. SystemVerilog [cite IEEE1800],
   VHDL [cite IEEE1076].
 - Designers do not need to use specialised sub-languages such as
-  SystemVerilog Assertions (SVA), i.e. they can use the exact subset of
+  SystemVerilog Assertions (SVA), i.e. they can use the exact same subset of
   language features that they use for digital design.
-- Simulation and emulation results of each assertion component can be viewed on
+- Simulation and emulation output of each assertion component can be viewed on
   a conventional waveform viewer, e.g. GTKWave [cite GTKWave], and stored in a
   conventional waveform format, e.g. Value Change Dump (VCD) [cite IEEE1364],
   thus enabling straightforward debugging.
-- On FPGA/ASIC platforms, assertion results can be output on pins for real-time
-  checking.
+- On FPGA/ASIC platforms, assertion outputs can be routed to pins for real-time
+  checking via specialised equipment like an oscilloscope.
 
 First, the Background section explains the motivations with descriptions of
 existing styles and their limitations.
@@ -100,14 +99,13 @@ Method
 - Split out terms of CNF for easier debugging.
   - Multiple smaller assertions reduce need for chasing waves.
 
-The style is first presented via an illustrative example.
+The style is first presented via an illustrative example:
 ```systemverilog
 logic a_NAME;
-assign a_NAME =           // Disjunctive form.
+always_comb a_NAME =      // Disjunction over a concatenation.
   |{i_rst                 // Don't check in reset.
-  , !isInterestingCase    // Don't check in this uninteresting case.
-  , maybeTrue1            // In interesting cases, at least one of these
-  , maybeTrueN            // maybeTrue* expressions must be true.
+  , !isInterestingCase    // Don't check in uninteresting case.
+  , mustBeTrue            // Expression which must be true.
   };
 assert property (@(posedge i_clk) a_NAME)
   else $error("DESCIPTION");
@@ -116,37 +114,119 @@ assert property (@(posedge i_clk) a_NAME)
 To begin, a variable is declared with the intention that it should be
 continually assigned the value `1'b1`.
 While in SystemVerilog one line may be saved by declaring a `wire` instead of
-`logic`, i.e. `wire a_tristate = ... `, this declares a tri-state net instead
-of variable.
-TODO: invites typos because assign not alwayscomb.
+`logic`, i.e. `wire a_tristate = ... `, this would declare a continuous
+assignment to a tri-state net instead of a procedural assignment to a variable.
+A continuous assignment (which could also be specified like
+`assign a_NAME = ...`), would mean that the value must be recalculated every
+time the simulator needs to read the value.
+In contrast, a procedural assignment (specified with the `always_comb`
+keyword), means that the simulator must only calculate the value of `a_NAME`
+when the `always_comb` procedure is triggered.
+This distinction, as discussed in clauses 10.3 (page 234) and 10.4 (page 236)
+of the LRM, can have significant performance consequences in simulation, so the
+recommendation is to use `always_comb`.
 
-TODO: Why assign not alwayscomb? Maybe change this.
+A further benefit of preferring `always_comb` over `assign` is that the
+`always_comb` keyword is specified to require that the left-hand side, i.e. the
+`a_NAME` variable, is not driven by any other process.
+This is useful as a self-checking mechanism against typographical errors, as
+illustrated:
+```systemverilog
+wire y, z;
+assign y = 1'b1;
+assign y = 1'b0; // No compile error.
+always_comb z = 1'b1;
+always_comb z = 1'b0; // Compile error protects against typos.
+```
+
+A common prefix, `a_` is recommended for the assertion signals, simply to aid
+identification and review.
+For example, all assertions in a waveform viewer can be found using a regular
+expression, and reviewers can be somewhat assured that these signals shouldn't
+affect synthesis.
+Additionally, upon examination of synthesis reports and netlists, engineers can
+check that these auxiliary signals are, or aren't, present as desired.
 
 The assertion is written with a list of all the ways in which the check is
 allowed to pass.
 It can be seen than this is logically equivalent to a material conditional
 operation, where `a_NAME` is the implication, `mustBeTrue` is the consequent,
 and the antcedent is `(!i_rst || isInterestingCase)`.
-
 ```
-implication := (antecedent -> consequent)
-             = (!antecedent || consequent)  // Disjunctive form
-             = !(antecedent && !consequent) // Conjunctive form
+implication := (antecedent → consequent)
+             = (¬antecedent ∨ consequent)  // Disjunctive form
+             = ¬(antecedent ∧ ¬consequent) // Conjunctive form
 ```
 
-TODO: Combine into `a_allgood`.
-The conjunctive form is a natural alternative, written with a list all of the
-ways in which the check should fail.
-In practice this is less intuitive, more verbose, and thus more error-prone.
+As the disjunctive form is used, the illustrative example can be expanded for
+assertions where any one from a range of terms can satisfy the assertion:
 ```systemverilog
-assign a_altform =        // Conjunctive form.
+always_comb a_disjunctiveForm =
+  |{i_rst
+  , !isInterestingCase
+  , maybeTrue1            // In interesting cases, at least one of these
+  , maybeTrueN            // maybeTrue* expressions must be true.
+  };
+```
+
+The conjunctive form is a natural alternative to explore, written with a list
+all of the ways in which the check should fail.
+In practice this is less intuitive, more verbose, and thus more error-prone.
+It may feel slightly easier to think of cases where you want to see the check
+applied, but it is easy to forget important cases.
+In other words, the conjunctive form is paraphrased like
+"Only check in these specific cases.", whereas the disjunctive form is
+paraphrased like "Always check, except for these specific cases." which is
+more conservative from a verification point of view.
+```systemverilog
+always_comb a_conjunctiveForm =
   !( &{ !i_rst            // Don't check in reset.
       , isInterestingCase // Don't check in this uninteresting case.
       , shouldBeFalse1    // In in interesting cases, all of these
       , shouldBeFalseN    // shouldBeFalse* expressions must be false.
       } );
 ```
-TODO: Second conjunctive form, combined into `a_anybad`.
+
+Assertions in either form can be combined into "super-assertions" and, again,
+the difference between disjunctive-form and conjunctive-form assertions is
+notable.
+Combining disjunctive-form assertions where `1'b1` means "good" requires a
+*con*junction, and conjunctive-form assertions require a *dis*junction to
+combine them:
+```systemverilog
+always_comb a_allGood =   // Combine disjunctive-form assertions with a
+  &{a_good                // conjunction over a concatenation.
+  , a_green
+  , a_shouldBeHigh
+  };
+
+always_comb a_anyBad =    // Combine conjunctive-form assertions with a
+  |{a_bad                 // disjunction over a concatenation.
+  , a_red
+  , a_shouldBeLow
+  };
+```
+
+A further point about using conjunctive-form assertions concerns those with
+only expression to check (after discounting the uninteresting cases):
+TODO
+```systemverilog
+always_comb a_ANNOYING =
+  |{!isInterestingCase
+  , x && y // Single consequent in CNF should be split into 1 assertion per
+           // consequent term.
+  };
+
+always_comb a_EASIER_x =
+  |{!isInterestingCase
+  , x
+  };
+
+always_comb a_EASIER_y =
+  |{!isInterestingCase
+  , y
+  };
+```
 
 ```systemverilog
 assert property (@(posedge i_clk) a_EXTRAHELPFUL)
@@ -154,24 +234,6 @@ assert property (@(posedge i_clk) a_EXTRAHELPFUL)
     $error("DESCIPTION");
     $info("counter=%0d", counter); // Extra helpful debug information.
   end
-```
-
-```systemverilog
-assign a_ANNOYING =
-  |{!isInterestingCase
-  , x && y // Single consequent in CNF should be split into 1 assertion per
-           // consequent term.
-  };
-
-assign a_EASIER_x =
-  |{!isInterestingCase
-  , x
-  };
-
-assign a_EASIER_y =
-  |{!isInterestingCase
-  , y
-  };
 ```
 
 
