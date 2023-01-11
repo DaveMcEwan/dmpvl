@@ -35,11 +35,11 @@ The main benefits of following this style include:
 
 First, the Background section explains the motivations with descriptions of
 existing styles and their limitations.
-Second, the Method section explains the style's theory and gives robust
+Second, the Coding Method section explains the style's theory and gives robust
 examples, before addressing the salient details.
-Third, the Discussion section covers the most pertinent aspects of implementing
-the method in the different environments of simulation/emulation,
-formal analysis, and physical platform, i.e. FPGA or ASIC.
+Third, the Implementation section covers the most pertinent aspects of
+implementing the method in the different environments of simulation,
+formal analysis, and physical platform, i.e. FPGA, emulator, or ASIC.
 
 
 Background
@@ -92,14 +92,22 @@ of a clock signal.
   - Special strings like "Error" are not required with $error.
 
 
-Method
-------
-- Create auxiliary logic, enabled only for test designs, but removed for
-  production designs.
-- Split out terms of CNF for easier debugging.
-  - Multiple smaller assertions reduce need for chasing waves.
+Coding Method
+-------------
 
-The style is first presented via an illustrative example:
+Synthesisable assertions are created by writing auxiliary RTL, which can be
+easily included or excluded in a design as a feature to assist the initial
+bringup and debugging process.
+After bringup has been completed on an FPGA or emulator, and initial issues
+have been resolved, auxiliary code can be removed to leave the rest of the
+production-worthy design.
+The exact mechanism of including or excluding synthesisable auxiliary RTL is
+not specified, though a simple approach is to keep debug and production code in
+separate modules.
+In this paper, the method is focused on how to write synthesisable assertions
+in auxiliary code to ease the debug and FGPA (or emulation) bringup process.
+
+The method's code style is first presented via an illustrative example:
 ```systemverilog
 logic a_NAME;
 always_comb a_NAME =      // Disjunction over a concatenation.
@@ -171,28 +179,32 @@ always_comb a_disjunctiveForm =
 
 The conjunctive form is a natural alternative to explore, written with a list
 all of the ways in which the check should fail.
-In practice this is less intuitive, more verbose, and thus more error-prone.
-It may feel slightly easier to think of cases where you want to see the check
-applied, but it is easy to forget important cases.
+At first, it may feel slightly easier to think of cases where you want to see
+the check applied, but it is easy to forget important cases.
+In practice, this is less intuitive because and more error-prone because you
+need to remember *all* of the cases in which the check should apply.
 In other words, the conjunctive form is paraphrased like
 "Only check in these specific cases.", whereas the disjunctive form is
 paraphrased like "Always check, except for these specific cases." which is
 more conservative from a verification point of view.
+The logical output is also inverted, i.e. where the disjunctive-form presents
+`1'b1` iff the check passes, conjunctive-form presents `1'b1` iff the
+check fails.
 ```systemverilog
 always_comb a_conjunctiveForm =
-  !( &{ !i_rst            // Don't check in reset.
-      , isInterestingCase // Don't check in this uninteresting case.
-      , shouldBeFalse1    // In in interesting cases, all of these
-      , shouldBeFalseN    // shouldBeFalse* expressions must be false.
-      } );
+  &{!i_rst                // Don't check in reset.
+  , isInterestingCase     // Only check in this uninteresting case.
+  , shouldBeFalse1        // In in interesting cases, all of these
+  , shouldBeFalseN        // shouldBeFalse* expressions must be false.
+  };
 ```
 
 Assertions in either form can be combined into "super-assertions" and, again,
 the difference between disjunctive-form and conjunctive-form assertions is
 notable.
-Combining disjunctive-form assertions where `1'b1` means "good" requires a
-*con*junction, and conjunctive-form assertions require a *dis*junction to
-combine them:
+Combining disjunctive-form assertions (where `1'b1` means "good") requires a
+*con*junction, and combining conjunctive-form assertions require a
+*dis*junction:
 ```systemverilog
 always_comb a_allGood =   // Combine disjunctive-form assertions with a
   &{a_good                // conjunction over a concatenation.
@@ -207,29 +219,30 @@ always_comb a_anyBad =    // Combine conjunctive-form assertions with a
   };
 ```
 
-A further point about using conjunctive-form assertions concerns those with
-only expression to check (after discounting the uninteresting cases):
-TODO
+A further point about using disjunctive-form assertions concerns those with
+only one expression to check after discounting the uninteresting cases, like
+`mustBeTrue` in the illustrative example.
+In `a_cnfInconvenient`, the main check is that all of `x`, `y` and `z` are
+always asserted, i.e. the term `x && y && z` is in conjunctive normal form:
 ```systemverilog
-always_comb a_ANNOYING =
+always_comb a_cnfInconvenient =
   |{!isInterestingCase
-  , x && y // Single consequent in CNF should be split into 1 assertion per
-           // consequent term.
-  };
-
-always_comb a_EASIER_x =
-  |{!isInterestingCase
-  , x
-  };
-
-always_comb a_EASIER_y =
-  |{!isInterestingCase
-  , y
+  , x && y && z// Single consequent in CNF.
   };
 ```
+When a user sees the `a_cnfInconvenient` check fail, some investigative work
+is required to determine if the cause of the failure was `x`, `y`, or `z`.
+In simulation or emulation waveforms, this is a (perhaps annoying) extra amount
+of work, but if the failure is found on an FPGA, then significant work is
+required, i.e. rebuilding the bitstream to route those signals to pins.
+The assertion's author can avoid this inconvenience by simply splitting it
+into three separate checks - one for each term of the CNF expression.
 
+Further convenience can be added for simulations.
+Where it is helpful, additional context can be reported via the usual `$info()`
+system function.
 ```systemverilog
-assert property (@(posedge i_clk) a_EXTRAHELPFUL)
+assert property (@(posedge i_clk) a_extraHelpful)
   else begin
     $error("DESCIPTION");
     $info("counter=%0d", counter); // Extra helpful debug information.
@@ -237,8 +250,8 @@ assert property (@(posedge i_clk) a_EXTRAHELPFUL)
 ```
 
 
-Discussion
-----------
+Implementation Method
+---------------------
 - Synthesisable Properties for FPGA Targets
   - One pin out per property.
     - `#pins = #assertions`
