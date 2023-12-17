@@ -10,7 +10,7 @@ collaboratively engineering such code via a process of incremental changes.
 Pull Request Processes
 ----------------------
 
-As with any form of engineering, it is standard practise (and indeed essential)
+As with any form of engineering, it is standard practice (and indeed essential)
 for all produced works go through a review process before being accepted by
 the wider team, business group, and company.
 A pull request is simply the term for asking one or more people to check that
