@@ -1,0 +1,149 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% https://ctan.org/tex-archive/fonts/opensans
+% mirror.ox.ac.uk/sites/ctan.org/fonts/opensans/doc/fonts/opensans/opensans.pdf
+%\usepackage[defaultsans]{opensans}
+
+\usepackage{grffile} % Allow dots in filenames.
+\usepackage{graphicx}
+\graphicspath{{../img/}} % Images either in current or sibling img directory.
+
+% {{{ math
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+%\usepackage{relsize} % mathlarger
+\DeclareMathOperator{\NaN}{NaN}
+\newcommand{\indep}{\perp\!\!\!\perp} % Define the independent symbol
+\newcommand{\nindep}{\centernot{\indep}} % Define the not-independent symbol
+\newcommand{\nimplies}{\centernot{\implies}} % Define the not-implies symbol
+\newcommand{\niff}{\centernot{\iff}} % Define the not-iff symbol
+\newcommand{\Gr}{\mathcal{G}} % Graph
+\newcommand{\Ed}{\mathcal{E}} % Edges
+\newcommand{\Ve}{\mathcal{V}} % Nodes (vertices)
+\DeclareMathOperator{\Ex}{E} % Expectation
+\DeclareMathOperator{\Var}{Var} % Variance
+\DeclareMathOperator{\Cov}{Cov} % Covariance
+\DeclareMathOperator{\Dep}{Dep} % Dependence
+\DeclareMathOperator{\Mean}{Mean} % Arithmetic Median
+\DeclareMathOperator{\WMean}{WeightedMean} % Weighted Arithmetic Median
+\DeclareMathOperator{\Median}{Median} % Median
+\DeclareMathOperator{\WMedian}{WeightedMedian} % Weighted Median
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\rationals}{\mathbb{Q}}
+\newcommand{\integers}{\mathbb{Z}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\complex}{\mathbb{C}}
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+\renewcommand{\vec}[1]{\mathbf{#1}} % Vector as bold, not the overhead arrow.
+\newcommand{\transpose}[1]{{#1}^\mathrm{T}}
+\newcommand\restrict[1]{\raisebox{-.7ex}{$|$}_{#1}} % Function restriction
+\renewcommand{\leq}{\leqslant} % Non-US convention
+\renewcommand{\geq}{\geqslant} % Non-US convention
+\renewcommand{\nleq}{\nleqslant} % Non-US convention
+\renewcommand{\ngeq}{\ngeqslant} % Non-US convention
+
+% }}} math
+
+% Default has no text, but this is overriden in the template `beamer.tex` when
+% the variable `classification` is given on the pandoc command line.
+\newcommand{\classification}{}
+\newcommand{\ClassificationCorner}[1]{\path[fill=ColorLightBlue]}
+
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+
+% Top banner.
+\setbeamerfont{headline}{family=\sffamily}
+\setbeamertemplate{headline}{
+    \begin{beamercolorbox}[wd=\textwidth]{ColorsetHeaderBar}
+        \raggedright
+        \hspace*{5mm}
+        {
+        \begin{tikzpicture}
+          \node[] at (1.5,0) {\tiny \sffamily \insertinstitute};
+        \end{tikzpicture}
+        \hfill
+        \begin{tikzpicture}
+          \ClassificationCorner{\classification}
+          (0,0.3) -- (0.5,0) -- (4,0) -- (4,0.3) -- cycle;
+          \node[] at (2,0.15) {\classification};
+        \end{tikzpicture}
+        }%
+    \end{beamercolorbox}
+
+}
+
+\setbeamertemplate{title page}{
+  \begin{centering}
+    \begin{beamercolorbox}[sep=12pt,center]{ColorsetHeaderBar}
+      \usebeamerfont{title}\inserttitle\par
+    \end{beamercolorbox}
+    \vskip1em\par
+    \begin{beamercolorbox}[sep=8pt,center]{author}
+      \usebeamerfont{author}\insertauthor\par
+      \usebeamerfont{date}\insertdate
+    \end{beamercolorbox}
+  \end{centering}
+}
+
+\setbeamertemplate{section page}{
+  \begin{centering}
+    \begin{beamercolorbox}[sep=12pt,center]{ColorsetHeaderBar}
+      \usebeamerfont{section title}\insertsection\par
+    \end{beamercolorbox}
+  \end{centering}
+}
+
+\setbeamertemplate{itemize item}{\small\raise0.5pt\hbox{\textbullet}}
+\setbeamertemplate{itemize subitem}{\footnotesize\raise0.5pt\hbox{\textbullet}}
+\setbeamertemplate{itemize subsubitem}{\footnotesize\raise0.5pt\hbox{\textbullet}}
+
+% Content blocks.
+\usefonttheme[onlymath]{serif} % Math mode should not be sans-serif.
+\setbeamertemplate{block begin}{
+    \centering
+    \vskip0.5cm
+    \begin{beamercolorbox}[colsep*=0pt]{block title}
+        \usebeamerfont{block title}
+        \vskip0.5cm
+        \leftskip0.5cm
+        \insertblocktitle
+        \vskip0.5cm
+    \end{beamercolorbox}
+
+    {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}
+    \begin{beamercolorbox}[colsep*=0pt,sep=0.5em,vmode]{block body}
+        \vskip0.5cm
+        \usebeamerfont{block body}
+        \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}
+
+        % Use a minipage to prevent text spilling too far to the right.
+        \begin{minipage}{0.95\linewidth}
+}
+\setbeamertemplate{block end}{
+        \end{minipage}
+        \vskip0.5cm
+    \end{beamercolorbox}
+}
+
+% Do not include symbols for moving between slides.
+\setbeamertemplate{navigation symbols}{}
+
+% Footer containing (optional) sponsorship details.
+\newcommand{\sponsortext}[1]{\def\foottext{#1}}
+\newcommand{\sponsorlogo}[1]{\def\footimage{#1}}
+\setbeamerfont{footline}{size=\small,family=\sffamily}
+
+\setbeamertemplate{footline}{
+    \begin{beamercolorbox}[wd=\textwidth]{ColorsetFooterBar}
+        \raggedright
+        \hspace*{5mm}
+        {\tiny \inserttitle}
+        {\hfill \insertpagenumber}
+        \hspace*{5mm}
+        \vskip1mm
+    \end{beamercolorbox}
+}
