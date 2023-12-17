@@ -12,29 +12,40 @@ module forbidSeqBlock ();
 
   // Reset DFF, e.g. control-path.
   always_ff @(posedge clk)
-    if (rst)          ctrl_q <= '0;
-    else if (clkgate) ctrl_q <= ctrl_d;
-    else              ctrl_q <= ctrl_q;
+    if (rst)
+      ctrl_q <= '0;
+    else if (clkgate)
+      ctrl_q <= ctrl_d;
+    else
+      ctrl_q <= ctrl_q;
 
   // always_ff keyword prevents multi-driving of LHS.
   always_ff @(posedge clk)
-    if (rst)          foo_q <= '0;
-    else if (clkgate) ctrl_q <= foo_d; // Woops!
-    else              foo_q <= foo_q;
+    if (rst)
+      foo_q <= '0;
+    else if (clkgate)
+      ctrl_q <= foo_d; // Woops!
+    else
+      foo_q <= foo_q;
 
   // Enforced exclusive updates.
   always_ff @(posedge clk)
-    if (a) ping1_q <= data_q;
-    else   pong1_q <= data_q;
+    if (a)
+      ping1_q <= data_q;
+    else
+      pong1_q <= data_q;
 
-  // Enforced exclusive updates, with reset and clockgate.
+  // Enforced exclusive updates, with synchronous reset and clockgate.
   always_ff @(posedge clk)
-    if (rst) {ping2_q, pong2_q} <= '0;
+    if (rst)
+      {ping2_q, pong2_q} <= '0;
     else if (clkgate)
-      if (a) ping2_q <= data_q;
-      else   pong2_q <= data_q;
-  // Optional explicit else here:
-  //else  {ping2_q, pong2_q} <= {ping2_q, pong2_q};
+      if (a)
+        ping2_q <= data_q;
+      else
+        pong2_q <= data_q;
+  //else // Optional explicit `else` clause.
+  //  {ping2_q, pong2_q} <= {ping2_q, pong2_q};
 
   // Enforced exclusivity of address decode.
   always_ff @(posedge clk)
