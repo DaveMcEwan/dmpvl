@@ -1,0 +1,195 @@
+QUESTA
+
+Internal assignments, i.e. within child module
+ continuous
+  input
+    $typename(u_internal_continuous.i_logic)=logic
+    $size(u_internal_continuous.i_logic)=x
+    u_internal_continuous.i_logic=x
+
+    $typename(u_internal_continuous.i_var_logic)=reg
+    $size(u_internal_continuous.i_var_logic)=x
+    u_internal_continuous.i_var_logic=1
+
+    $typename(u_internal_continuous.i_tri_logic)=logic
+    $size(u_internal_continuous.i_tri_logic)=x
+    u_internal_continuous.i_tri_logic=x
+
+    $typename(u_internal_continuous.i_wire_logic)=logic
+    $size(u_internal_continuous.i_wire_logic)=x
+    u_internal_continuous.i_wire_logic=x
+
+  output
+    $typename(u_internal_continuous.o_logic)=reg
+    $size(u_internal_continuous.o_logic)=x
+    u_internal_continuous.o_logic=1
+
+    $typename(u_internal_continuous.o_var_logic)=reg
+    $size(u_internal_continuous.o_var_logic)=x
+    u_internal_continuous.o_var_logic=1
+
+    $typename(u_internal_continuous.o_tri_logic)=logic
+    $size(u_internal_continuous.o_tri_logic)=x
+    u_internal_continuous.o_tri_logic=x
+
+    $typename(u_internal_continuous.o_wire_logic)=logic
+    $size(u_internal_continuous.o_wire_logic)=x
+    u_internal_continuous.o_wire_logic=x
+
+  inout
+    $typename(u_internal_continuous.b_logic)=logic
+    $size(u_internal_continuous.b_logic)=x
+    u_internal_continuous.b_logic=x
+
+    $typename(u_internal_continuous.b_var_logic)=logic
+    $size(u_internal_continuous.b_var_logic)=x
+    u_internal_continuous.b_var_logic=x
+
+    $typename(u_internal_continuous.b_tri_logic)=logic
+    $size(u_internal_continuous.b_tri_logic)=x
+    u_internal_continuous.b_tri_logic=x
+
+    $typename(u_internal_continuous.b_wire_logic)=logic
+    $size(u_internal_continuous.b_wire_logic)=x
+    u_internal_continuous.b_wire_logic=x
+ procedural
+  input
+    $typename(u_internal_procedural.i_logic)=logic
+    $size(u_internal_procedural.i_logic)=x
+    u_internal_procedural.i_logic=z
+
+    $typename(u_internal_procedural.i_var_logic)=reg
+    $size(u_internal_procedural.i_var_logic)=x
+    u_internal_procedural.i_var_logic=x
+
+    $typename(u_internal_procedural.i_tri_logic)=logic
+    $size(u_internal_procedural.i_tri_logic)=x
+    u_internal_procedural.i_tri_logic=z
+
+    $typename(u_internal_procedural.i_wire_logic)=logic
+    $size(u_internal_procedural.i_wire_logic)=x
+    u_internal_procedural.i_wire_logic=z
+
+  output
+    $typename(u_internal_procedural.o_logic)=reg
+    $size(u_internal_procedural.o_logic)=x
+    u_internal_procedural.o_logic=x
+
+    $typename(u_internal_procedural.o_var_logic)=reg
+    $size(u_internal_procedural.o_var_logic)=x
+    u_internal_procedural.o_var_logic=x
+
+    $typename(u_internal_procedural.o_tri_logic)=logic
+    $size(u_internal_procedural.o_tri_logic)=x
+    u_internal_procedural.o_tri_logic=z
+
+    $typename(u_internal_procedural.o_wire_logic)=logic
+    $size(u_internal_procedural.o_wire_logic)=x
+    u_internal_procedural.o_wire_logic=z
+
+  inout
+    $typename(u_internal_procedural.b_tri_logic)=logic
+    $size(u_internal_procedural.b_tri_logic)=x
+    u_internal_procedural.b_tri_logic=z
+
+    $typename(u_internal_procedural.b_wire_logic)=logic
+    $size(u_internal_procedural.b_wire_logic)=x
+    u_internal_procedural.b_wire_logic=z
+
+
+External assignments, i.e. outwith child module
+ continuous
+  input
+    $typename(u_external_continuous.i_logic)=logic
+    $size(u_external_continuous.i_logic)=x
+    u_external_continuous.i_logic=x
+
+    $typename(u_external_continuous.i_var_logic)=reg
+    $size(u_external_continuous.i_var_logic)=x
+    u_external_continuous.i_var_logic=1
+
+    $typename(u_external_continuous.i_tri_logic)=logic
+    $size(u_external_continuous.i_tri_logic)=x
+    u_external_continuous.i_tri_logic=x
+
+    $typename(u_external_continuous.i_wire_logic)=logic
+    $size(u_external_continuous.i_wire_logic)=x
+    u_external_continuous.i_wire_logic=x
+
+  output
+    $typename(u_external_continuous.o_logic)=reg
+    $size(u_external_continuous.o_logic)=x
+    u_external_continuous.o_logic=1
+
+    $typename(u_external_continuous.o_var_logic)=reg
+    $size(u_external_continuous.o_var_logic)=x
+    u_external_continuous.o_var_logic=1
+
+    $typename(u_external_continuous.o_tri_logic)=logic
+    $size(u_external_continuous.o_tri_logic)=x
+    u_external_continuous.o_tri_logic=x
+
+    $typename(u_external_continuous.o_wire_logic)=logic
+    $size(u_external_continuous.o_wire_logic)=x
+    u_external_continuous.o_wire_logic=x
+
+  inout
+    $typename(u_external_continuous.b_logic)=logic
+    $size(u_external_continuous.b_logic)=x
+    u_external_continuous.b_logic=x
+
+    $typename(u_external_continuous.b_var_logic)=logic
+    $size(u_external_continuous.b_var_logic)=x
+    u_external_continuous.b_var_logic=x
+
+    $typename(u_external_continuous.b_tri_logic)=logic
+    $size(u_external_continuous.b_tri_logic)=x
+    u_external_continuous.b_tri_logic=x
+
+    $typename(u_external_continuous.b_wire_logic)=logic
+    $size(u_external_continuous.b_wire_logic)=x
+    u_external_continuous.b_wire_logic=x
+ procedural
+  input
+    $typename(u_external_procedural.i_logic)=logic
+    $size(u_external_procedural.i_logic)=x
+    u_external_procedural.i_logic=x
+
+    $typename(u_external_procedural.i_var_logic)=reg
+    $size(u_external_procedural.i_var_logic)=x
+    u_external_procedural.i_var_logic=x
+
+    $typename(u_external_procedural.i_tri_logic)=logic
+    $size(u_external_procedural.i_tri_logic)=x
+    u_external_procedural.i_tri_logic=x
+
+    $typename(u_external_procedural.i_wire_logic)=logic
+    $size(u_external_procedural.i_wire_logic)=x
+    u_external_procedural.i_wire_logic=x
+
+  output
+    $typename(u_external_procedural.o_logic)=reg
+    $size(u_external_procedural.o_logic)=x
+    u_external_procedural.o_logic=x
+
+    $typename(u_external_procedural.o_var_logic)=reg
+    $size(u_external_procedural.o_var_logic)=x
+    u_external_procedural.o_var_logic=x
+
+    $typename(u_external_procedural.o_tri_logic)=logic
+    $size(u_external_procedural.o_tri_logic)=x
+    u_external_procedural.o_tri_logic=z
+
+    $typename(u_external_procedural.o_wire_logic)=logic
+    $size(u_external_procedural.o_wire_logic)=x
+    u_external_procedural.o_wire_logic=z
+
+  inout
+    $typename(u_external_procedural.b_tri_logic)=logic
+    $size(u_external_procedural.b_tri_logic)=x
+    u_external_procedural.b_tri_logic=z
+
+    $typename(u_external_procedural.b_wire_logic)=logic
+    $size(u_external_procedural.b_wire_logic)=x
+    u_external_procedural.b_wire_logic=z
+
