@@ -53,7 +53,8 @@
   on the syntax tree emitted from the parser.
 - That means it doesn't know anything about wrongly driven signals, or
   unconnected ports, or X-propagation, or any of those higher-level concepts.
-- However, you can save quite a bit of time, if you can be sure of certain
+- So without all those things, what's the point?
+- You can save quite a bit of time, if you can be sure of certain
   things before wasting time in a code review.
 - Things like
   - naming conventions are followed
@@ -174,3 +175,10 @@
 - 30s : 8m55s .. 9m25s
 
 ## Thanks for Listening. Questions?
+- In summary, it's a easy-to-use free tool that helps you check your code for
+  obvious mistakes.
+- It's not my project, but I've done a lot of contributions.
+- If you'd like more information, you can check it out on GitHub.
+- There's plenty of detail in the manual, and I think these slides will be
+  distributed afterwards.
+- Or just say hi after the presentations.
